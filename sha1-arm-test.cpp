@@ -185,10 +185,15 @@ int main() {
     alignas(16) const uint8_t str[] = "The quick brown fox jumps over the lazy dog\n";
     alignas(16) uint8_t data[sizeof(str) - 1];
     memcpy(data, str, sizeof(data));
-    alignas(16) std::array<uint8_t, SHA1_OUTPUT_SIZE> hash_result = SHA1::hash(data);
+    alignas(16) std::array<uint8_t, SHA1_OUTPUT_SIZE> h = SHA1::hash(data);
     alignas(16) char hex_str[SHA1_OUTPUT_SIZE * 2 + 1];
-    SHA1::digest_to_hex(hash_result.data(), hex_str);
+    printf("SHA-1 Digest dumb: "
+           "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%"
+           "02hhx%02hhx%02hhx%02hhx%02hhx%02hhx\n",
+           h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13],
+           h[14], h[15], h[16], h[17], h[18], h[19]);
+    SHA1::digest_to_hex(h.data(), hex_str);
 
-    printf("SHA-1 Digest: %s\n", hex_str);
+    printf("SHA-1 Digest     : %s\n", hex_str);
     return 0;
 }
