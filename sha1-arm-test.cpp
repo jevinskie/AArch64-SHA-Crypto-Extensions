@@ -85,6 +85,13 @@ public:
         hex_str[SHA1_OUTPUT_SIZE * 2]               = '\0';
     }
 
+    static void digest_to_hex_simple(const uint8_t *__restrict digest, char *__restrict hex_str) {
+        for (size_t i = 0; i < SHA1_OUTPUT_SIZE; ++i, hex_str += 2) {
+            byte_to_ascii_hex(digest[i], hex_str);
+        }
+        *hex_str = '\0';
+    }
+
 private:
     static constexpr uint32_t K[4] = {0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
 
@@ -181,6 +188,21 @@ private:
 
         return hash_output;
     }
+
+    static uint8_t nibble_to_ascii_hex(const uint8_t chr) {
+        if (chr <= 9) {
+            return chr + '0';
+        } else if (chr >= 0xA && chr <= 0xF) {
+            return chr - 0xA + 'a';
+        } else {
+            __builtin_unreachable();
+        }
+    }
+
+    static void byte_to_ascii_hex(uint8_t n, char *hex) {
+        hex[0] = static_cast<char>(nibble_to_ascii_hex(n >> 4));
+        hex[1] = static_cast<char>(nibble_to_ascii_hex(n & 0xF));
+    }
 };
 
 int main() {
@@ -190,13 +212,18 @@ int main() {
     memcpy(data, str, sizeof(data));
     alignas(16) std::array<uint8_t, SHA1_OUTPUT_SIZE> h = SHA1::hash(data);
     alignas(16) char hex_str[SHA1_OUTPUT_SIZE * 2 + 1];
-    printf("SHA-1 Digest dumb: "
+
+    printf("SHA-1 Digest dumb:   "
            "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%"
            "02hhx%02hhx%02hhx%02hhx%02hhx%02hhx\n",
            h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13],
            h[14], h[15], h[16], h[17], h[18], h[19]);
-    SHA1::digest_to_hex(h.data(), hex_str);
 
-    printf("SHA-1 Digest     : %s\n", hex_str);
+    SHA1::digest_to_hex_simple(h.data(), hex_str);
+    printf("SHA-1 Digest simple: %s\n", hex_str);
+
+    SHA1::digest_to_hex(h.data(), hex_str);
+    printf("SHA-1 Digest:        %s\n", hex_str);
+
     return 0;
 }
