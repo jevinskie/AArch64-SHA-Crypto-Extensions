@@ -22,4 +22,4 @@ scan:
 	scan-build -V $(MAKE) -B -f $(MAKEFILE_LIST)
 
 tidy:
-	echo TODO
+	clang-tidy sha1-arm-test.cpp
