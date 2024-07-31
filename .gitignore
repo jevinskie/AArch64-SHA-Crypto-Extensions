@@ -1,0 +1,5 @@
+**/.vscode/
+**/.vscode-ctags
+**/*.dSYM/
+/sha1-arm-test
+/compile_commands.json
