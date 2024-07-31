@@ -1,6 +1,7 @@
 TARGETS := sha1-arm-test sha1-arm-test.asm
 
 CXXFLAGS := -Wall -Wextra -Wpedantic -Weverything -Wno-c++98-compat -Wno-poison-system-directories -std=c++2b
+CXXFLAGS += -fsafe-buffer-usage-suggestions
 CXXFLAGS += -g3 -gfull -glldb -gcolumn-info -gdwarf-aranges -ggnu-pubnames
 CXXFLAGS += -O0
 # CXXFLAGS += -v -Wl,-v
