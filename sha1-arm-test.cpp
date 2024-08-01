@@ -29,9 +29,6 @@ consteval std::array<T, N - 1> cstrlit_to_std_array(const char (&str)[N]) {
     for (auto it = arr.begin(), ite = arr.end(); it != ite; ++it, ++sit) {
         *it = static_cast<uint8_t>(*sit);
     }
-    // for (size_t i = 0; i < N - 1; ++i) {
-    //     arr[i] = static_cast<uint8_t>(str[i]);
-    // }
     return arr;
 }
 
