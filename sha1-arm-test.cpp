@@ -157,7 +157,7 @@ public:
             low_nibbles + base_digits +
             ((is_digit_low ^ 0x1010101010101010ULL) >> 1ULL & 0x2020202020202020ULL);
 
-        const uint64_t hex_packed = (high_hex << 32ULL) | low_hex;
+        const uint64_t hex_packed = ((high_hex & UINT32_MAX) << 32ULL) | low_hex;
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         *reinterpret_cast<uint64_t *>(hex_str + 32) = hex_packed;
@@ -184,7 +184,11 @@ private:
         state.e    = 0xC3D2E1F0;
     }
 
-    static void process_block(const uint8_t *__restrict block, SHA1State &state) {
+#if defined(__clang__)
+    __attribute__((no_sanitize("unsigned-integer-overflow")))
+#endif
+    static void
+    process_block(const uint8_t *__restrict block, SHA1State &state) {
         uint32x4_t abcd = state.abcd;
         uint32_t e      = state.e;
 

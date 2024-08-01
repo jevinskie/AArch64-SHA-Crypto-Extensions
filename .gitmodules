@@ -1,0 +1,4 @@
+[submodule "3rdparty/teeny-sha1"]
+	path = 3rdparty/teeny-sha1
+	url = https://github.com/jevinskie/teeny-sha1
+	branch = jev/trace
