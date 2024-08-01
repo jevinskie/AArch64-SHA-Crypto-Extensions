@@ -9,6 +9,8 @@
 #include <cstring>
 #include <type_traits>
 
+extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data, size_t databytes);
+
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 // #define to_from_cast(T, F, V) \
 //     __extension__({ \
@@ -16,9 +18,52 @@
 //         reinterpret_cast<T>(static_cast<F>(V)); \
 //     })
 
-constexpr std::size_t align_val = 16;
+constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
+constexpr std::size_t SHA1_OUTPUT_SIZE = 20;
+
+constexpr std::size_t align_val        = 16;
+constexpr std::size_t digest_align_val = 32;
+constexpr std::size_t block_align_val  = SHA1_BLOCK_SIZE;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+struct alignas(digest_align_val) SHA1Digest {
+    std::array<uint32_t, 5> words;
+    [[nodiscard]] uint32_t *data() {
+        return words.data();
+    }
+    [[nodiscard]] const uint32_t *data() const {
+        return words.data();
+    }
+    [[nodiscard]] uint8_t *bytes() {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        return reinterpret_cast<uint8_t *>(words.data());
+    }
+    [[nodiscard]] const uint8_t *bytes() const {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        return reinterpret_cast<const uint8_t *>(words.data());
+    }
+    [[nodiscard]] uint8_t &operator[](size_t i) {
+        return bytes()[i];
+    }
+    [[nodiscard]] const uint8_t &operator[](size_t i) const {
+        return bytes()[i];
+    }
+};
+#pragma GCC diagnostic pop
 
 namespace {
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+const char impl_name[] = "sha1-arm";
+
+using SHA1StateScalar = std::array<uint8_t, 20>;
+using SHA1BlockScalar = std::array<uint8_t, 64>;
+
+extern "C" void dump_sha1_state(const char *const _Nonnull name, const size_t i,
+                                const SHA1StateScalar &state);
+extern "C" void dump_sha1_block(const char *const _Nonnull name, const size_t i,
+                                const SHA1BlockScalar &block);
 
 // Helper function to determine the size of the string literal
 template <typename T, std::size_t N>
@@ -40,13 +85,14 @@ template <typename T, typename F> constexpr T to_from_cast(const F &val) {
 }
 
 template <typename T, typename F>
-constexpr T to_from_cast(const F *__restrict val) { // NOLINT(misc-include-cleaner)
+constexpr T to_from_cast(const F *__restrict _Nonnull val) { // NOLINT(misc-include-cleaner)
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return reinterpret_cast<T>(static_cast<F *>(val));
 }
 
 template <typename T, typename F>
-constexpr T to_from_cast(std::remove_pointer_t<F> *__restrict val) { // NOLINT(misc-include-cleaner)
+constexpr T
+to_from_cast(std::remove_pointer_t<F> *__restrict _Nonnull val) { // NOLINT(misc-include-cleaner)
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return reinterpret_cast<T>(static_cast<std::remove_pointer_t<F> *>(val));
 }
@@ -54,13 +100,10 @@ constexpr T to_from_cast(std::remove_pointer_t<F> *__restrict val) { // NOLINT(m
 
 } // namespace
 
-constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
-constexpr std::size_t SHA1_OUTPUT_SIZE = 20;
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
-struct alignas(32) SHA1State {
+struct alignas(digest_align_val) SHA1State {
     SHA1State() {
         abcd = vsetq_lane_u32(0x67452301, vdupq_n_u32(0), 0);
         abcd = vsetq_lane_u32(0xEFCDAB89, abcd, 1);
@@ -73,15 +116,62 @@ struct alignas(32) SHA1State {
 // NOLINTEND(misc-non-private-member-variables-in-classes)
 #pragma GCC diagnostic pop
 
-struct alignas(SHA1_BLOCK_SIZE) SHA1Block {
+struct alignas(block_align_val) SHA1Block {
     std::array<uint32_t, 16> words;
+    [[nodiscard]] uint32_t &data() {
+        return *words.data();
+    }
+    [[nodiscard]] const uint32_t &data() const {
+        return *words.data();
+    }
+    [[nodiscard]] uint8_t &bytes() {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        return *reinterpret_cast<uint8_t *>(words.data());
+    }
+    [[nodiscard]] const uint8_t &bytes() const {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        return *reinterpret_cast<const uint8_t *>(words.data());
+    }
 };
+
+namespace {
+
+extern "C" void dump_sha1_block(const char *const _Nonnull name, const size_t i,
+                                const SHA1BlockScalar &block) {
+    printf("block[%10zu] %10s %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
+           i, name, block[0], block[1], block[2], block[3], block[4], block[5], block[6], block[7],
+           block[8], block[9], block[10], block[11], block[12], block[13], block[14], block[15]);
+}
+
+void dump_sha1_block(const char *const _Nonnull name, const size_t i, const SHA1Block &block) {
+    SHA1BlockScalar scalar_block{};
+    std::memcpy(scalar_block.data(), &block, sizeof(block));
+    dump_sha1_block(name, i, scalar_block);
+}
+
+extern "C" void dump_sha1_state(const char *const _Nonnull name, const size_t i,
+                                const SHA1StateScalar &state) {
+    printf("state[%10zu] %10s %08x%08x%08x%08x%08x\n", i, name, state[0], state[1], state[2],
+           state[3], state[4]);
+}
+
+void dump_sha1_state(const char *const _Nonnull name, const size_t i, const SHA1State &state) {
+    SHA1StateScalar scalar_state{};
+    std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
+    std::memcpy(scalar_state.data() + sizeof(state.abcd), &state.e, sizeof(state.e));
+    dump_sha1_state(name, i, scalar_state);
+}
+
+} // namespace
+
+static size_t block_cnt;
+static size_t state_cnt;
 
 class SHA1 {
 public:
     template <std::size_t N>
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-    static std::array<uint8_t, SHA1_OUTPUT_SIZE> hash(const uint8_t (&data)[N]) {
+    static SHA1Digest hash(const uint8_t (&data)[N]) {
         static_assert(N > 0, "Input data must be non-empty");
         SHA1State state{};
         if constexpr (N <= 32) {
@@ -91,11 +181,10 @@ public:
         } else {
             process_large(data, N, state);
         }
-        return state_to_bytes(state);
+        return state_to_digest(state);
     }
 
-    template <std::size_t N>
-    static std::array<uint8_t, SHA1_OUTPUT_SIZE> hash(const std::array<uint8_t, N> &data) {
+    template <std::size_t N> static SHA1Digest hash(const std::array<uint8_t, N> &data) {
         static_assert(N > 0, "Input data must be non-empty");
         SHA1State state{};
         if constexpr (N <= 32) {
@@ -105,12 +194,13 @@ public:
         } else {
             process_large(data.data(), N, state);
         }
-        return state_to_bytes(state);
+        return state_to_digest(state);
     }
 
     // clang-tidy complains about __restrict not being in an included header -_-
     // NOLINTNEXTLINE(misc-include-cleaner)
-    static void digest_to_hex(const uint8_t *__restrict digest, char *__restrict hex_str) {
+    static void digest_to_hex(const uint8_t *__restrict _Nonnull digest,
+                              char *__restrict _Nonnull hex_str) {
         alignas(align_val) const uint8x16_t mask4 = vdupq_n_u8(0x0F); // Mask for low 4 bits
         alignas(align_val) const uint8x16_t mask8 = vdupq_n_u8(0xF0); // Mask for high 4 bits
 
@@ -164,7 +254,8 @@ public:
         hex_str[SHA1_OUTPUT_SIZE * 2]               = '\0';
     }
 
-    static void digest_to_hex_simple(const uint8_t *__restrict digest, char *__restrict hex_str) {
+    static void digest_to_hex_simple(const uint8_t *__restrict _Nonnull digest,
+                                     char *__restrict _Nonnull hex_str) {
         for (size_t i = 0; i < SHA1_OUTPUT_SIZE; ++i, hex_str += 2) {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             byte_to_ascii_hex(digest[i], reinterpret_cast<std::array<char, 2> &>(*hex_str));
@@ -176,19 +267,14 @@ private:
     static constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU,
                                                   0xCA62C1D6U};
 
-    static void initialize(SHA1State &state) {
-        state.abcd = vsetq_lane_u32(0x67452301, vdupq_n_u32(0), 0);
-        state.abcd = vsetq_lane_u32(0xEFCDAB89, state.abcd, 1);
-        state.abcd = vsetq_lane_u32(0x98BADCFE, state.abcd, 2);
-        state.abcd = vsetq_lane_u32(0x10325476, state.abcd, 3);
-        state.e    = 0xC3D2E1F0;
-    }
-
 #if defined(__clang__)
     __attribute__((no_sanitize("unsigned-integer-overflow")))
 #endif
     static void
-    process_block(const uint8_t *__restrict block, SHA1State &state) {
+    process_block(const uint8_t *__restrict _Nonnull block, SHA1State &state) {
+        dump_sha1_state(impl_name, state_cnt++, state);
+        dump_sha1_block(impl_name, block_cnt++, reinterpret_cast<const SHA1BlockScalar &>(*block));
+
         uint32x4_t abcd = state.abcd;
         uint32_t e      = state.e;
 
@@ -222,7 +308,7 @@ private:
         state.e += e;
     }
 
-    static void pad_and_finalize(const uint8_t *__restrict data, std::size_t len,
+    static void pad_and_finalize(const uint8_t *__restrict _Nonnull data, std::size_t len,
                                  SHA1State &state) {
         alignas(SHA1_BLOCK_SIZE) SHA1Block buffer = {};
         assert(len <= sizeof(buffer));
@@ -243,19 +329,22 @@ private:
         process_block(reinterpret_cast<const uint8_t *>(buffer.words.data()), state);
     }
 
-    static void process_short(const uint8_t *__restrict data, std::size_t len, SHA1State &state) {
+    static void process_short(const uint8_t *__restrict _Nonnull data, std::size_t len,
+                              SHA1State &state) {
         pad_and_finalize(data, len, state);
     }
 
-    static void process_medium(const uint8_t *__restrict data, std::size_t len, SHA1State &state) {
-        const uint8_t *__restrict end = data + len - (len % SHA1_BLOCK_SIZE);
-        for (const uint8_t *__restrict p = data; p < end; p += SHA1_BLOCK_SIZE) {
+    static void process_medium(const uint8_t *__restrict _Nonnull data, std::size_t len,
+                               SHA1State &state) {
+        const uint8_t *__restrict _Nonnull end = data + len - (len % SHA1_BLOCK_SIZE);
+        for (const uint8_t *__restrict _Nonnull p = data; p < end; p += SHA1_BLOCK_SIZE) {
             process_block(p, state);
         }
         pad_and_finalize(end, len % SHA1_BLOCK_SIZE, state);
     }
 
-    static void process_large(const uint8_t *__restrict data, std::size_t len, SHA1State &state) {
+    static void process_large(const uint8_t *__restrict _Nonnull data, std::size_t len,
+                              SHA1State &state) {
         const size_t block_total_sz = len - (len % SHA1_BLOCK_SIZE);
         const size_t remainder_sz   = len - block_total_sz;
         for (size_t i = 0; i < block_total_sz; i += SHA1_BLOCK_SIZE) {
@@ -264,18 +353,18 @@ private:
         pad_and_finalize(&data[block_total_sz], remainder_sz, state);
     }
 
-    static std::array<uint8_t, SHA1_OUTPUT_SIZE> state_to_bytes(const SHA1State &state) {
-        std::array<uint8_t, SHA1_OUTPUT_SIZE> hash_output{};
+    static SHA1Digest state_to_digest(const SHA1State &state) {
+        SHA1Digest hash_output{};
 
         // Use NEON intrinsics to convert state.abcd to bytes
         const uint8x16_t abcd_bytes = vreinterpretq_u8_u32(state.abcd);
-        vst1q_u8(hash_output.data(), abcd_bytes);
+        vst1q_u8(hash_output.bytes(), abcd_bytes);
 
         // Convert state.e to bytes and store it
-        hash_output[16] = (state.e >> 24U) & 0xFFU;
-        hash_output[17] = (state.e >> 16U) & 0xFFU;
-        hash_output[18] = (state.e >> 8U) & 0xFFU;
-        hash_output[19] = state.e & 0xFFU;
+        hash_output.bytes()[16] = (state.e >> 24U) & 0xFFU;
+        hash_output[17]         = (state.e >> 16U) & 0xFFU;
+        hash_output[18]         = (state.e >> 8U) & 0xFFU;
+        hash_output[19]         = state.e & 0xFFU;
 
         return hash_output;
     }
@@ -298,22 +387,39 @@ private:
 
 int main() {
     // Example data
-    alignas(align_val) static constinit auto str =
+    alignas(SHA1_BLOCK_SIZE) static constinit auto str =
         cstrlit_to_std_array<uint8_t>("The quick brown fox jumps over the lazy dog\n");
-    alignas(align_val) const std::array<uint8_t, SHA1_OUTPUT_SIZE> h = SHA1::hash(str);
+    const auto h = SHA1::hash(str);
     alignas(align_val) std::array<char, SHA1_OUTPUT_SIZE * 2 + 1> hex_str{};
 
-    printf("SHA-1 Digest dumb:   "
+    printf("SHA-1 Digest dumb:         "
            "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%"
            "02hhx%02hhx%02hhx%02hhx%02hhx%02hhx\n",
            h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13],
            h[14], h[15], h[16], h[17], h[18], h[19]);
 
-    SHA1::digest_to_hex_simple(h.data(), hex_str.data());
-    printf("SHA-1 Digest simple: %s\n", hex_str.data());
+    SHA1::digest_to_hex_simple(h.bytes(), hex_str.data());
+    printf("SHA-1 Digest simple:       %s\n", hex_str.data());
 
-    SHA1::digest_to_hex(h.data(), hex_str.data());
-    printf("SHA-1 Digest:        %s\n", hex_str.data());
+    SHA1::digest_to_hex(h.bytes(), hex_str.data());
+    printf("SHA-1 Digest:              %s\n", hex_str.data());
+
+    SHA1Digest teeny_h{};
+    assert(!sha1digest(teeny_h.bytes(), hex_str.data(), static_cast<const uint8_t *>(str.data()),
+                       str.size()));
+
+    printf("SHA-1 Digest dumb teeny:   "
+           "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%"
+           "02hhx%02hhx%02hhx%02hhx%02hhx%02hhx\n",
+           teeny_h[0], teeny_h[1], teeny_h[2], teeny_h[3], teeny_h[4], teeny_h[5], teeny_h[6],
+           teeny_h[7], teeny_h[8], teeny_h[9], teeny_h[10], teeny_h[11], teeny_h[12], teeny_h[13],
+           teeny_h[14], teeny_h[15], teeny_h[16], teeny_h[17], teeny_h[18], teeny_h[19]);
+
+    SHA1::digest_to_hex_simple(teeny_h.bytes(), hex_str.data());
+    printf("SHA-1 Digest simple teeny: %s\n", hex_str.data());
+
+    SHA1::digest_to_hex(teeny_h.bytes(), hex_str.data());
+    printf("SHA-1 Digest teeny:        %s\n", hex_str.data());
 
     return 0;
 }

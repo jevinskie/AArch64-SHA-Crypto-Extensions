@@ -22,9 +22,12 @@ TARGETS := sha1-arm-test sha1-arm-test-asan sha1-arm-test-ubsan \
 	sha1-arm-test-O3-no-inline-no-unroll.asm sha1-arm-test-O3-no-inline-no-unroll-demangled.asm sha1-arm-test-O3-no-inline-no-unroll.ll sha1-arm-test-O3-no-inline-no-unroll-demangled.ll
 
 
-CXXFLAGS := -Wall -Wextra -Wpedantic -Weverything -Warray-bounds -Wno-c++98-compat-pedantic -Wno-c++20-compat-pedantic -Wno-poison-system-directories -std=c++2b
-CXXFLAGS += -fsafe-buffer-usage-suggestions
-CXXFLAGS += -mcpu=apple-m1
+C_CXX_FLAGS := -Wall -Wextra -Wpedantic -Weverything -Warray-bounds -Wno-poison-system-directories -Wno-documentation-unknown-command
+C_CXX_FLAGS += -Wno-nullability-extension
+C_CXX_FLAGS += -fsafe-buffer-usage-suggestions
+C_CXX_FLAGS += -mcpu=apple-m1
+CFLAGS := $(C_CXX_FLAGS) -std=c2x
+CXXFLAGS := $(C_CXX_FLAGS) -std=c++2b -Wno-c++98-compat-pedantic -Wno-c++20-compat-pedantic
 DBG_FLAGS := -fno-omit-frame-pointer -g3 -gfull -glldb -gcolumn-info -gdwarf-aranges -ggnu-pubnames
 VERBOSE_FLAGS := -v -Wl,-v
 NOOPT_FLAGS := -O0
@@ -44,17 +47,27 @@ clean:
 	rm -rf *.dSYM/
 	rm -f $(TARGETS)
 	rm -f compile_commands.json
+	rm -rf *.o
 
-%: %.cpp
+teeny-sha1.o: 3rdparty/teeny-sha1/teeny-sha1.c
+	$(CC) -c -o $@ $^ $(CFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
+
+teeny-sha1-asan.o: 3rdparty/teeny-sha1/teeny-sha1.c
+	$(CC) -c -o $@ $^ $(CFLAGS) $(ASAN_FLAGS)
+
+teeny-sha1-ubsan.o: 3rdparty/teeny-sha1/teeny-sha1.c
+	$(CC) -c -o $@ $^ $(CFLAGS) $(UBSAN_FLAGS)
+
+sha1-arm-test: sha1-arm-test.cpp teeny-sha1.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-%-asan: %.cpp
+sha1-arm-test-asan: sha1-arm-test.cpp teeny-sha1-asan.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(ASAN_FLAGS)
 
 run-asan: sha1-arm-test-asan
 	ASAN_OPTIONS=print_stacktrace=1 ./$^
 
-%-ubsan: %.cpp
+sha1-arm-test-ubsan: sha1-arm-test.cpp teeny-sha1-ubsan.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(UBSAN_FLAGS)
 
 run-ubsan: sha1-arm-test-ubsan
