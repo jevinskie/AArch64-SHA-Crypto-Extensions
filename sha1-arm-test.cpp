@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <type_traits>
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 // #define to_from_cast(T, F, V) \
@@ -18,21 +19,42 @@
 constexpr std::size_t align_val = 16;
 
 namespace {
+
 // Helper function to determine the size of the string literal
 template <typename T, std::size_t N>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-constexpr std::array<T, N - 1> cstrlit_to_std_array(const char (&str)[N]) {
+consteval std::array<T, N - 1> cstrlit_to_std_array(const char (&str)[N]) {
     std::array<T, N - 1> arr = {};
-    for (std::size_t i = 0; i < N - 1; ++i) {
-        arr[i] = static_cast<uint8_t>(str[i]);
+    auto sit                 = std::begin(str);
+    for (auto it = arr.begin(), ite = arr.end(); it != ite; ++it, ++sit) {
+        *it = static_cast<uint8_t>(*sit);
     }
+    // for (size_t i = 0; i < N - 1; ++i) {
+    //     arr[i] = static_cast<uint8_t>(str[i]);
+    // }
     return arr;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-template"
 template <typename T, typename F> constexpr T to_from_cast(const F &val) {
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast) */
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return reinterpret_cast<T>(static_cast<F>(val));
 }
+
+template <typename T, typename F>
+constexpr T to_from_cast(const F *__restrict val) { // NOLINT(misc-include-cleaner)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return reinterpret_cast<T>(static_cast<F *>(val));
+}
+
+template <typename T, typename F>
+constexpr T to_from_cast(std::remove_pointer_t<F> *__restrict val) { // NOLINT(misc-include-cleaner)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return reinterpret_cast<T>(static_cast<std::remove_pointer_t<F> *>(val));
+}
+#pragma GCC diagnostic pop
+
 } // namespace
 
 constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
@@ -100,9 +122,9 @@ public:
         alignas(align_val) const uint8x16_t hi    = vshrq_n_u8(input, 4); // Shift high nibbles down
         alignas(align_val) const uint8x16_t lo    = vandq_u8(input, mask4); // Isolate low nibbles
 
-        alignas(align_val) static const std::array<uint8_t, 16> hex_chars = {
+        alignas(align_val) static constinit std::array<uint8_t, 16> hex_chars = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-        alignas(align_val) static const uint8x16_t lut = vld1q_u8(hex_chars.data());
+        alignas(align_val) const uint8x16_t lut = vld1q_u8(hex_chars.data());
 
         // Convert to ASCII hex characters
         alignas(align_val) const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
@@ -114,8 +136,10 @@ public:
         vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
 
         // Handle the remaining 4 bytes using SWAR in GPRs
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
         alignas(align_val) const uint32_t remaining_bytes =
             *reinterpret_cast<const uint32_t *>(digest + 16);
+        // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
         const uint64_t high_nibbles = (remaining_bytes & 0xF0F0F0F0U) >> 4ULL;
         const uint64_t low_nibbles  = remaining_bytes & 0x0F0F0F0FU;
@@ -138,19 +162,22 @@ public:
 
         const uint64_t hex_packed = (high_hex << 32ULL) | low_hex;
 
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         *reinterpret_cast<uint64_t *>(hex_str + 32) = hex_packed;
         hex_str[SHA1_OUTPUT_SIZE * 2]               = '\0';
     }
 
     static void digest_to_hex_simple(const uint8_t *__restrict digest, char *__restrict hex_str) {
         for (size_t i = 0; i < SHA1_OUTPUT_SIZE; ++i, hex_str += 2) {
-            byte_to_ascii_hex(digest[i], reinterpret_cast<std::array<char, 2> &>(hex_str));
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            byte_to_ascii_hex(digest[i], reinterpret_cast<std::array<char, 2> &>(*hex_str));
         }
         *hex_str = '\0';
     }
 
 private:
-    static constexpr uint32_t K[4] = {0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
+    static constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU,
+                                                  0xCA62C1D6U};
 
     static void initialize(SHA1State &state) {
         state.abcd = vsetq_lane_u32(0x67452301, vdupq_n_u32(0), 0);
@@ -165,6 +192,7 @@ private:
         uint32_t e      = state.e;
 
         // Use aligned loads for the message schedule
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         const uint32x4x4_t w = vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
 
         for (int i = 0; i < 20; ++i) {
@@ -196,10 +224,13 @@ private:
     static void pad_and_finalize(const uint8_t *__restrict data, std::size_t len,
                                  SHA1State &state) {
         alignas(SHA1_BLOCK_SIZE) SHA1Block buffer = {};
+        assert(len <= sizeof(buffer));
         std::memcpy(buffer.words.data(), data, len);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<uint8_t *>(buffer.words.data())[len] = 0x80;
 
         if (len >= 56) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             process_block(reinterpret_cast<const uint8_t *>(buffer.words.data()), state);
             std::memset(&buffer, 0, sizeof(buffer));
         }
@@ -207,6 +238,7 @@ private:
         buffer.words[14] = 0;
         buffer.words[15] = static_cast<uint32_t>(len * 8); // Length in bits
 
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         process_block(reinterpret_cast<const uint8_t *>(buffer.words.data()), state);
     }
 
@@ -265,7 +297,7 @@ private:
 
 int main() {
     // Example data
-    alignas(align_val) constexpr auto str =
+    alignas(align_val) static constinit auto str =
         cstrlit_to_std_array<uint8_t>("The quick brown fox jumps over the lazy dog\n");
     alignas(align_val) const std::array<uint8_t, SHA1_OUTPUT_SIZE> h = SHA1::hash(str);
     alignas(align_val) std::array<char, SHA1_OUTPUT_SIZE * 2 + 1> hex_str{};

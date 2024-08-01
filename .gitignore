@@ -5,3 +5,6 @@
 /compile_commands.json
 /sha1-arm-test-opt-remarks.txt
 /sha1-arm-test.asm
+/sha1-arm-test-demangled.asm
+/sha1-arm-test-no-inline.asm
+/sha1-arm-test-no-inline-demangled.asm
