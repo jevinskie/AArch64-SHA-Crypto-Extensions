@@ -11,6 +11,8 @@
 
 extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data, size_t databytes);
 
+#include "cifra-sha1.h"
+
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 // #define to_from_cast(T, F, V) \
 //     __extension__({ \
