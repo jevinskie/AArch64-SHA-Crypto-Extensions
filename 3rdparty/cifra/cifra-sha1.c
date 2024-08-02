@@ -252,6 +252,8 @@ static void sha1_update_block(void *vctx, const uint8_t *inp) {
         a             = temp;
     }
 
+    dump_sha1_block(impl_name, block_cnt++, (const uint8_t *)W);
+
     ctx->H[0] += a;
     ctx->H[1] += b;
     ctx->H[2] += c;
@@ -298,9 +300,3 @@ void cf_sha1_digest_final(cf_sha1_context *ctx, uint8_t hash[CF_SHA1_HASHSZ]) {
 
     memset(ctx, 0, sizeof *ctx);
 }
-
-const cf_chash cf_sha1 = {.hashsz  = CF_SHA1_HASHSZ,
-                          .blocksz = CF_SHA1_BLOCKSZ,
-                          .init    = (cf_chash_init)cf_sha1_init,
-                          .update  = (cf_chash_update)cf_sha1_update,
-                          .digest  = (cf_chash_digest)cf_sha1_digest};
