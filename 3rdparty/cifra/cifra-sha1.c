@@ -17,6 +17,15 @@
 
 #include "cifra-sha1.h"
 
+extern void dump_sha1_state(const char *const _Nonnull name, const size_t i,
+                            const uint8_t *const _Nonnull state);
+extern void dump_sha1_block(const char *const _Nonnull name, const size_t i,
+                            const uint8_t *const _Nonnull block);
+
+static const char impl_name[] = "sha1-cifra";
+static size_t block_cnt;
+static size_t state_cnt;
+
 #define CF_MIN(x, y)                                                                               \
     ({                                                                                             \
         typeof(x) __x = (x);                                                                       \
@@ -194,6 +203,8 @@ void cf_sha1_init(cf_sha1_context *ctx) {
 
 static void sha1_update_block(void *vctx, const uint8_t *inp) {
     cf_sha1_context *ctx = vctx;
+
+    dump_sha1_state(impl_name, state_cnt++, (const uint8_t *)ctx->H);
 
     /* This is a 16-word window into the whole W array. */
     uint32_t W[16];
