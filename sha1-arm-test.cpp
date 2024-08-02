@@ -1,5 +1,7 @@
+// clang-formt: off
 #undef NDEBUG
 #include <cassert>
+// clang-format: on
 
 #include <arm_acle.h>
 #include <arm_neon.h>
@@ -11,7 +13,9 @@
 
 extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data, size_t databytes);
 
-#include "cifra-sha1.h"
+// clang-format: off
+#include "3rdparty/cifra/cifra-sha1.h"
+// clang-format: on
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 // #define to_from_cast(T, F, V) \
@@ -405,6 +409,7 @@ int main() {
 
     SHA1::digest_to_hex(h.bytes(), hex_str.data());
     printf("SHA-1 Digest:              %s\n", hex_str.data());
+    printf("\n\n\n");
 
     SHA1Digest teeny_h{};
     assert(!sha1digest(teeny_h.bytes(), hex_str.data(), static_cast<const uint8_t *>(str.data()),
@@ -422,6 +427,26 @@ int main() {
 
     SHA1::digest_to_hex(teeny_h.bytes(), hex_str.data());
     printf("SHA-1 Digest teeny:        %s\n", hex_str.data());
+    printf("\n\n\n");
+
+    SHA1Digest cifra_h{};
+    cf_sha1_context cifra_ctx{};
+    cf_sha1_init(&cifra_ctx);
+    cf_sha1_update(&cifra_ctx, str.data(), str.size());
+    cf_sha1_digest_final(&cifra_ctx, cifra_h.bytes());
+
+    printf("SHA-1 Digest dumb cifra:   "
+           "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%"
+           "02hhx%02hhx%02hhx%02hhx%02hhx%02hhx\n",
+           cifra_h[0], cifra_h[1], cifra_h[2], cifra_h[3], cifra_h[4], cifra_h[5], cifra_h[6],
+           cifra_h[7], cifra_h[8], cifra_h[9], cifra_h[10], cifra_h[11], cifra_h[12], cifra_h[13],
+           cifra_h[14], cifra_h[15], cifra_h[16], cifra_h[17], cifra_h[18], cifra_h[19]);
+
+    SHA1::digest_to_hex_simple(cifra_h.bytes(), hex_str.data());
+    printf("SHA-1 Digest simple cifra: %s\n", hex_str.data());
+
+    SHA1::digest_to_hex(cifra_h.bytes(), hex_str.data());
+    printf("SHA-1 Digest cifra:        %s\n", hex_str.data());
 
     return 0;
 }
