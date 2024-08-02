@@ -90,14 +90,13 @@ typedef void (*cf_chash_digest)(const void *ctx, uint8_t *hash);
  * Completion function.
  *
  */
-typedef struct
-{
-  size_t hashsz;
-  size_t blocksz;
+typedef struct {
+    size_t hashsz;
+    size_t blocksz;
 
-  cf_chash_init init;
-  cf_chash_update update;
-  cf_chash_digest digest;
+    cf_chash_init init;
+    cf_chash_update update;
+    cf_chash_digest digest;
 } cf_chash;
 
 /**
@@ -130,12 +129,11 @@ typedef struct
  * .. c:member:: cf_sha1_context.blocks
  * Number of full blocks processed.
  */
-typedef struct
-{
-  uint32_t H[5];                    /* State. */
-  uint8_t partial[CF_SHA1_BLOCKSZ]; /* Partial block of input. */
-  uint32_t blocks;                  /* Number of full blocks processed into H. */
-  size_t npartial;                  /* Number of bytes in prefix of partial. */
+typedef struct {
+    uint32_t H[5];                    /* State. */
+    uint8_t partial[CF_SHA1_BLOCKSZ]; /* Partial block of input. */
+    uint32_t blocks;                  /* Number of full blocks processed into H. */
+    size_t npartial;                  /* Number of bytes in prefix of partial. */
 } cf_sha1_context;
 
 /* .. c:function:: $DECL
