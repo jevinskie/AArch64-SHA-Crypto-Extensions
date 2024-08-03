@@ -286,32 +286,64 @@ private:
 
         // Use aligned loads for the message schedule
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        const uint32x4x4_t w = vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
+        uint32x4x4_t w = vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
 
-        for (int i = 0; i < 20; ++i) {
-            uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[0]);
+        // First 16 rounds
+        for (int i = 0; i < 16; ++i) {
+            uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[i % 4]);
             abcd            = vextq_u32(abcd, abcd, 1); // Rotate the lanes of abcd
             abcd            = vsetq_lane_u32(e, abcd, 3);
             e               = vgetq_lane_u32(temp, 0);
+        }
 
-            temp = vsha1cq_u32(abcd, e, w.val[1]);
-            abcd = vextq_u32(abcd, abcd, 1);
-            abcd = vsetq_lane_u32(e, abcd, 3);
-            e    = vgetq_lane_u32(temp, 0);
+        // Rounds 16 to 19
+        for (int i = 16; i < 20; ++i) {
+            uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
+            abcd            = vextq_u32(abcd, abcd, 1);
+            abcd            = vsetq_lane_u32(e, abcd, 3);
+            e               = vgetq_lane_u32(temp, 0);
+        }
 
-            temp = vsha1cq_u32(abcd, e, w.val[2]);
-            abcd = vextq_u32(abcd, abcd, 1);
-            abcd = vsetq_lane_u32(e, abcd, 3);
-            e    = vgetq_lane_u32(temp, 0);
+        // Rounds 20 to 39
+        for (int i = 20; i < 40; ++i) {
+            uint32x4_t w_schedule =
+                vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
+            w_schedule      = vsha1su1q_u32(w_schedule, w.val[(i + 1) % 4]);
+            uint32x4_t temp = vsha1mq_u32(abcd, e, w_schedule);
+            abcd            = vextq_u32(abcd, abcd, 1);
+            abcd            = vsetq_lane_u32(e, abcd, 3);
+            e               = vgetq_lane_u32(temp, 0);
+            w.val[i % 4]    = w_schedule;
+        }
 
-            temp = vsha1cq_u32(abcd, e, w.val[3]);
-            abcd = vextq_u32(abcd, abcd, 1);
-            abcd = vsetq_lane_u32(e, abcd, 3);
-            e    = vgetq_lane_u32(temp, 0);
+        // Rounds 40 to 59
+        for (int i = 40; i < 60; ++i) {
+            uint32x4_t w_schedule =
+                vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
+            w_schedule      = vsha1su1q_u32(w_schedule, w.val[(i + 1) % 4]);
+            uint32x4_t temp = vsha1pq_u32(abcd, e, w_schedule);
+            abcd            = vextq_u32(abcd, abcd, 1);
+            abcd            = vsetq_lane_u32(e, abcd, 3);
+            e               = vgetq_lane_u32(temp, 0);
+            w.val[i % 4]    = w_schedule;
+        }
+
+        // Rounds 60 to 79
+        for (int i = 60; i < 80; ++i) {
+            uint32x4_t w_schedule =
+                vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
+            w_schedule      = vsha1su1q_u32(w_schedule, w.val[(i + 1) % 4]);
+            uint32x4_t temp = vsha1mq_u32(abcd, e, w_schedule);
+            abcd            = vextq_u32(abcd, abcd, 1);
+            abcd            = vsetq_lane_u32(e, abcd, 3);
+            e               = vgetq_lane_u32(temp, 0);
+            w.val[i % 4]    = w_schedule;
         }
 
         state.abcd = vaddq_u32(state.abcd, abcd);
         state.e += e;
+
+        dump_sha1_state(impl_name, state_cnt++, state);
     }
 
     static void pad_and_finalize(const uint8_t *__restrict _Nonnull data, std::size_t len,

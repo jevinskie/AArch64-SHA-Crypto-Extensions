@@ -205,6 +205,7 @@ static void sha1_update_block(void *vctx, const uint8_t *inp) {
     cf_sha1_context *ctx = vctx;
 
     dump_sha1_state(impl_name, state_cnt++, (const uint8_t *)ctx->H);
+    dump_sha1_block(impl_name, block_cnt++, inp);
 
     /* This is a 16-word window into the whole W array. */
     uint32_t W[16];
@@ -252,13 +253,14 @@ static void sha1_update_block(void *vctx, const uint8_t *inp) {
         a             = temp;
     }
 
-    dump_sha1_block(impl_name, block_cnt++, (const uint8_t *)W);
-
     ctx->H[0] += a;
     ctx->H[1] += b;
     ctx->H[2] += c;
     ctx->H[3] += d;
     ctx->H[4] += e;
+
+    dump_sha1_state(impl_name, state_cnt++, (const uint8_t *)ctx->H);
+    dump_sha1_block(impl_name, block_cnt++, (const uint8_t *)W);
 
     ctx->blocks++;
 }
