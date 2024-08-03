@@ -358,17 +358,20 @@ private:
                 w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
             }
 
-            uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[i % 4]);
-            abcd            = vextq_u32(abcd, abcd, 1); // Rotate the lanes of abcd
-            abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
+            // uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[i % 4]);
+            // abcd            = vextq_u32(abcd, abcd, 1); // Rotate the lanes of abcd
+            // abcd            = vsetq_lane_u32(e, abcd, 3);
+            // e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
+
+            abcd = vsha1cq_u32(abcd, e, w.val[i % 4]);
+            e    = vsha1h_u32(vgetq_lane_u32(abcd, 0));
 
             if (i >= 16) {
                 w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
             }
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k1);
 
-            if (i == 15) {
+            if (i == 0 || i == 15) {
                 dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
                 dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
             }
