@@ -75,9 +75,9 @@ const char impl_name[] = "sha1-arm";
 using SHA1StateScalar = std::array<uint8_t, 20>;
 using SHA1BlockScalar = std::array<uint8_t, 64>;
 
-extern "C" void dump_sha1_state(const char *const _Nonnull name, const size_t i,
+extern "C" void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
                                 const SHA1StateScalar &state);
-extern "C" void dump_sha1_block(const char *const _Nonnull name, const size_t i,
+extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
                                 const SHA1BlockScalar &block);
 
 // Helper function to determine the size of the string literal
@@ -157,32 +157,35 @@ struct alignas(block_align_val) SHA1Block {
 
 namespace {
 
-extern "C" void dump_sha1_block(const char *const _Nonnull name, const size_t i,
+extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
                                 const SHA1BlockScalar &block) {
     printf(ANSI_BOLD_RED_FG
            "block[%10zu]" ANSI_RESET
-           " %10s %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
-           i, name, block[0], block[1], block[2], block[3], block[4], block[5], block[6], block[7],
-           block[8], block[9], block[10], block[11], block[12], block[13], block[14], block[15]);
+           " %10s:%03d %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
+           i, name, line, block[0], block[1], block[2], block[3], block[4], block[5], block[6],
+           block[7], block[8], block[9], block[10], block[11], block[12], block[13], block[14],
+           block[15]);
 }
 
-void dump_sha1_block(const char *const _Nonnull name, const size_t i, const SHA1Block &block) {
+void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
+                     const SHA1Block &block) {
     SHA1BlockScalar scalar_block{};
     std::memcpy(scalar_block.data(), &block, sizeof(block));
-    dump_sha1_block(name, i, scalar_block);
+    dump_sha1_block(name, line, i, scalar_block);
 }
 
-extern "C" void dump_sha1_state(const char *const _Nonnull name, const size_t i,
+extern "C" void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
                                 const SHA1StateScalar &state) {
-    printf(ANSI_BOLD_GREEN_FG "state[%10zu]" ANSI_RESET " %10s %08x%08x%08x%08x%08x\n", i, name,
-           state[0], state[1], state[2], state[3], state[4]);
+    printf(ANSI_BOLD_GREEN_FG "state[%10zu]" ANSI_RESET " %10s:%03d %08x%08x%08x%08x%08x\n", i,
+           name, line, state[0], state[1], state[2], state[3], state[4]);
 }
 
-void dump_sha1_state(const char *const _Nonnull name, const size_t i, const SHA1State &state) {
+void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
+                     const SHA1State &state) {
     SHA1StateScalar scalar_state{};
     std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
     std::memcpy(scalar_state.data() + sizeof(state.abcd), &state.e, sizeof(state.e));
-    dump_sha1_state(name, i, scalar_state);
+    dump_sha1_state(name, line, i, scalar_state);
 }
 
 } // namespace
@@ -296,8 +299,9 @@ private:
     static void
     process_block(const uint8_t *__restrict _Nonnull block, SHA1State &state) {
         SHA1Block db{};
-        dump_sha1_state(impl_name, state_cnt++, state);
-        dump_sha1_block(impl_name, block_cnt++, reinterpret_cast<const SHA1BlockScalar &>(*block));
+        dump_sha1_state(impl_name, __LINE__, state_cnt++, state);
+        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++,
+                        reinterpret_cast<const SHA1BlockScalar &>(*block));
 
         uint32x4_t abcd = state.abcd;
         uint32_t e      = state.e;
@@ -307,8 +311,8 @@ private:
         alignas(block_align_val) uint32x4x4_t w =
             vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
 
-        dump_sha1_state(impl_name, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, block_cnt++, db = w);
+        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Byte swap the initial words
         w.val[0] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[0])));
@@ -316,8 +320,8 @@ private:
         w.val[2] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[2])));
         w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
 
-        dump_sha1_state(impl_name, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, block_cnt++, db = w);
+        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Constants for each set of 20 rounds
         const uint32x4_t k1 = vdupq_n_u32(0x5A827999);
@@ -342,8 +346,8 @@ private:
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k1);
         }
 
-        dump_sha1_state(impl_name, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, block_cnt++, db = w);
+        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Rounds 21-40 (K2)
         for (int i = 20; i < 40; ++i) {
@@ -387,8 +391,8 @@ private:
         state.abcd = vaddq_u32(state.abcd, abcd);
         state.e += e;
 
-        dump_sha1_state(impl_name, state_cnt++, state);
-        dump_sha1_block(impl_name, block_cnt++, db = w);
+        dump_sha1_state(impl_name, __LINE__, state_cnt++, state);
+        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
     }
 
     static void pad_and_finalize(const uint8_t *__restrict _Nonnull data, std::size_t len,

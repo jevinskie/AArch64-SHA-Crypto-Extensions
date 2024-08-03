@@ -17,9 +17,9 @@
 
 #include "cifra-sha1.h"
 
-extern void dump_sha1_state(const char *const _Nonnull name, const size_t i,
+extern void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
                             const uint8_t *const _Nonnull state);
-extern void dump_sha1_block(const char *const _Nonnull name, const size_t i,
+extern void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
                             const uint8_t *const _Nonnull block);
 
 static const char impl_name[] = "sha1-cifra";
@@ -212,18 +212,21 @@ static void
 sha1_update_block(void *vctx, const uint8_t *inp) {
     cf_sha1_context *ctx = vctx;
 
-    dump_sha1_state(impl_name, state_cnt++, (const uint8_t *)ctx->H);
-    dump_sha1_block(impl_name, block_cnt++, inp);
+    dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+    dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, inp);
 
     /* This is a 16-word window into the whole W array. */
     uint32_t W[16];
 
     uint32_t a = ctx->H[0], b = ctx->H[1], c = ctx->H[2], d = ctx->H[3], e = ctx->H[4], Wt;
 
+    dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+    dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, inp);
+
     for (size_t t = 0; t < 80; t++) {
-        if (t == 0 || t == 20) {
-            dump_sha1_state(impl_name, state_cnt++, (const uint8_t *)ctx->H);
-            dump_sha1_block(impl_name, block_cnt++, (const uint8_t *)W);
+        if (t == 20) {
+            dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+            dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, (const uint8_t *)W);
         }
         /* For W[0..16] we process the input into W.
          * For W[16..79] we compute the next W value:
@@ -271,8 +274,8 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
     ctx->H[3] += d;
     ctx->H[4] += e;
 
-    dump_sha1_state(impl_name, state_cnt++, (const uint8_t *)ctx->H);
-    dump_sha1_block(impl_name, block_cnt++, (const uint8_t *)W);
+    dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+    dump_sha1_block(impl_name, __LINE__, block_cnt++, (const uint8_t *)W);
 
     ctx->blocks++;
 }
