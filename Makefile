@@ -4,6 +4,10 @@ TARGETS := sha1-arm-test sha1-arm-test-asan sha1-arm-test-ubsan \
 	sha1-arm-test-no-inline.asm sha1-arm-test-no-inline-demangled.asm sha1-arm-test-no-inline.ll sha1-arm-test-no-inline-demangled.ll \
 	sha1-arm-test-no-unroll.asm sha1-arm-test-no-unroll-demangled.asm sha1-arm-test-no-unroll.ll sha1-arm-test-no-unroll-demangled.ll \
 	sha1-arm-test-no-inline-no-unroll.asm sha1-arm-test-no-inline-no-unroll-demangled.asm sha1-arm-test-no-inline-no-unroll.ll sha1-arm-test-no-inline-no-unroll-demangled.ll \
+	sha1-arm-test-O0.asm sha1-arm-test-O0-demangled.asm sha1-arm-test-O0.ll sha1-arm-test-O0-demangled.ll \
+	sha1-arm-test-O0-no-inline.asm sha1-arm-test-O0-no-inline-demangled.asm sha1-arm-test-O0-no-inline.ll sha1-arm-test-O0-no-inline-demangled.ll \
+	sha1-arm-test-O0-no-unroll.asm sha1-arm-test-O0-no-unroll-demangled.asm sha1-arm-test-O0-no-unroll.ll sha1-arm-test-O0-no-unroll-demangled.ll \
+	sha1-arm-test-O0-no-inline-no-unroll.asm sha1-arm-test-O0-no-inline-no-unroll-demangled.asm sha1-arm-test-O0-no-inline-no-unroll.ll sha1-arm-test-O0-no-inline-no-unroll-demangled.ll \
 	sha1-arm-test-Oz.asm sha1-arm-test-Oz-demangled.asm sha1-arm-test-Oz.ll sha1-arm-test-Oz-demangled.ll \
 	sha1-arm-test-Oz-no-inline.asm sha1-arm-test-Oz-no-inline-demangled.asm sha1-arm-test-Oz-no-inline.ll sha1-arm-test-Oz-no-inline-demangled.ll \
 	sha1-arm-test-Oz-no-unroll.asm sha1-arm-test-Oz-no-unroll-demangled.asm sha1-arm-test-Oz-no-unroll.ll sha1-arm-test-Oz-no-unroll-demangled.ll \
@@ -82,8 +86,10 @@ sha1-arm-test-ubsan: sha1-arm-test.cpp teeny-sha1-ubsan.o cifra-sha1-ubsan.o
 run-ubsan: sha1-arm-test-ubsan
 	UBSAN_OPTIONS=print_stacktrace=1 ./$^
 
+
 %.ii: %.cpp
 	$(CXX) -o $@ $^ $(CXXFLAGS) -E
+
 
 %.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) $(NOOUTLINE_FLAGS)
@@ -109,6 +115,32 @@ run-ubsan: sha1-arm-test-ubsan
 %-no-inline-no-unroll.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) $(NOOUTLINE_FLAGS) -fno-inline -fno-unroll-loops
 
+
+%-O0.ll: %.cpp
+	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS)
+
+%-O0.asm: %.cpp
+	$(CXX) -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS)
+
+%-O0-no-inline.asm: %.cpp
+	$(CXX) -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS) -fno-inline
+
+%-O0-no-inline.ll: %.cpp
+	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS) -fno-inline
+
+%-O0-no-unroll.asm: %.cpp
+	$(CXX) -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS) -fno-unroll-loops
+
+%-O0-no-unroll.ll: %.cpp
+	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS) -fno-unroll-loops
+
+%-O0-no-inline-no-unroll.asm: %.cpp
+	$(CXX) -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS) -fno-inline -fno-unroll-loops
+
+%-O0-no-inline-no-unroll.ll: %.cpp
+	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O0 $(NOOUTLINE_FLAGS) -fno-inline -fno-unroll-loops
+
+
 %-Oz.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -Oz $(NOOUTLINE_FLAGS)
 
@@ -132,6 +164,7 @@ run-ubsan: sha1-arm-test-ubsan
 
 %-Oz-no-inline-no-unroll.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -Oz $(NOOUTLINE_FLAGS) -fno-inline -fno-unroll-loops
+
 
 %-Os.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -Os $(NOOUTLINE_FLAGS)
@@ -157,6 +190,7 @@ run-ubsan: sha1-arm-test-ubsan
 %-Os-no-inline-no-unroll.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -Os $(NOOUTLINE_FLAGS) -fno-inline -fno-unroll-loops
 
+
 %-O2.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O2 $(NOOUTLINE_FLAGS)
 
@@ -180,6 +214,7 @@ run-ubsan: sha1-arm-test-ubsan
 
 %-O2-no-inline-no-unroll.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O2 $(NOOUTLINE_FLAGS) -fno-inline -fno-unroll-loops
+
 
 %-O3.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O3 $(NOOUTLINE_FLAGS)
@@ -205,11 +240,13 @@ run-ubsan: sha1-arm-test-ubsan
 %-O3-no-inline-no-unroll.ll: %.cpp
 	$(CXX) -emit-llvm -S -o $@ $^ $(CXXFLAGS) $(ASMFLAGS) -O3 $(NOOUTLINE_FLAGS) -fno-inline -fno-unroll-loops
 
+
 %-demangled.asm: %.asm
 	c++filt -t < $^ | c++filt -n -t | c++filt -t > $@
 
 %-demangled.ll: %.ll
 	c++filt -t < $^ | c++filt -n -t | c++filt -t > $@
+
 
 compile_commands.json:
 	bear -- $(MAKE) -B -f $(MAKEFILE_LIST)

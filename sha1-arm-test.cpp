@@ -295,57 +295,65 @@ private:
         w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
 
         // Constants for each set of 20 rounds
-        const uint32x4_t k1 = vdupq_n_u32(K[0]);
-        const uint32x4_t k2 = vdupq_n_u32(K[1]);
-        const uint32x4_t k3 = vdupq_n_u32(K[2]);
-        const uint32x4_t k4 = vdupq_n_u32(K[3]);
+        const uint32x4_t k1 = vdupq_n_u32(0x5A827999);
+        const uint32x4_t k2 = vdupq_n_u32(0x6ED9EBA1);
+        const uint32x4_t k3 = vdupq_n_u32(0x8F1BBCDC);
+        const uint32x4_t k4 = vdupq_n_u32(0xCA62C1D6);
 
-        // First 20 rounds
+        // First 20 rounds (K1)
         for (int i = 0; i < 20; ++i) {
+            if (i >= 16) {
+                w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
+            }
+
             uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[i % 4]);
             abcd            = vextq_u32(abcd, abcd, 1); // Rotate the lanes of abcd
             abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vgetq_lane_u32(temp, 0);
+            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
-            w.val[i % 4] =
-                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
-            w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
+            if (i >= 16) {
+                w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
+            }
+            w.val[i % 4] = vaddq_u32(w.val[i % 4], k1);
         }
 
-        // Rounds 21-40
+        // Rounds 21-40 (K2)
         for (int i = 20; i < 40; ++i) {
-            uint32x4_t temp = vsha1mq_u32(abcd, e, w.val[i % 4]);
-            abcd            = vextq_u32(abcd, abcd, 1);
-            abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vgetq_lane_u32(temp, 0);
+            w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
 
-            w.val[i % 4] =
-                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
-            w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
-        }
-
-        // Rounds 41-60
-        for (int i = 40; i < 60; ++i) {
             uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
             abcd            = vextq_u32(abcd, abcd, 1);
             abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vgetq_lane_u32(temp, 0);
+            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
-            w.val[i % 4] =
-                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
             w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
+            w.val[i % 4] = vaddq_u32(w.val[i % 4], k2);
         }
 
-        // Rounds 61-80
-        for (int i = 60; i < 80; ++i) {
+        // Rounds 41-60 (K3)
+        for (int i = 40; i < 60; ++i) {
+            w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
+
             uint32x4_t temp = vsha1mq_u32(abcd, e, w.val[i % 4]);
             abcd            = vextq_u32(abcd, abcd, 1);
             abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vgetq_lane_u32(temp, 0);
+            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
-            w.val[i % 4] =
-                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
             w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
+            w.val[i % 4] = vaddq_u32(w.val[i % 4], k3);
+        }
+
+        // Rounds 61-80 (K4)
+        for (int i = 60; i < 80; ++i) {
+            w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
+
+            uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
+            abcd            = vextq_u32(abcd, abcd, 1);
+            abcd            = vsetq_lane_u32(e, abcd, 3);
+            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
+
+            w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
+            w.val[i % 4] = vaddq_u32(w.val[i % 4], k4);
         }
 
         state.abcd = vaddq_u32(state.abcd, abcd);

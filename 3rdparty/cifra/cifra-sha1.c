@@ -35,7 +35,11 @@ static size_t state_cnt;
 
 /** Circularly rotate left x by n bits.
  *  0 > n > 32. */
-static inline uint32_t rotl32(uint32_t x, unsigned n) {
+#if defined(__clang__)
+__attribute__((no_sanitize("unsigned-shift-base")))
+#endif
+static inline uint32_t
+rotl32(uint32_t x, unsigned n) {
     return (x << n) | (x >> (32 - n));
 }
 
@@ -201,7 +205,11 @@ void cf_sha1_init(cf_sha1_context *ctx) {
     ctx->H[4] = 0xc3d2e1f0;
 }
 
-static void sha1_update_block(void *vctx, const uint8_t *inp) {
+#if defined(__clang__)
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#endif
+static void
+sha1_update_block(void *vctx, const uint8_t *inp) {
     cf_sha1_context *ctx = vctx;
 
     dump_sha1_state(impl_name, state_cnt++, (const uint8_t *)ctx->H);
