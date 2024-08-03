@@ -12,6 +12,7 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+#include <arm_neon.h>
 #include <assert.h>
 #include <string.h>
 
@@ -21,6 +22,8 @@ extern void dump_sha1_state(const char *const _Nonnull name, const int line, con
                             const uint8_t *const _Nonnull state);
 extern void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
                             const uint8_t *const _Nonnull block);
+
+extern void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t(v)[4]);
 
 static const char impl_name[] = "sha1-cifra";
 static size_t block_cnt;
@@ -236,7 +239,28 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
          * But all W indices are reduced mod 16 into our window.
          */
         if (t < 16) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+            if (t == 0) {
+                dump_uint32x4_t("w.val[0] before:", (const uint32_t *)inp);
+            } else if (t == 4) {
+                dump_uint32x4_t("w.val[1] before:", (const uint32_t *)inp);
+            } else if (t == 8) {
+                dump_uint32x4_t("w.val[2] before:", (const uint32_t *)inp);
+            } else if (t == 12) {
+                dump_uint32x4_t("w.val[3] before:", (const uint32_t *)inp);
+            }
+#pragma GCC diagnostic pop
             W[t] = Wt = read32_be(inp);
+            if (t == 3) {
+                dump_uint32x4_t("w.val[0] after: ", &W[0]);
+            } else if (t == 7) {
+                dump_uint32x4_t("w.val[1] after: ", &W[4]);
+            } else if (t == 11) {
+                dump_uint32x4_t("w.val[2] after: ", &W[8]);
+            } else if (t == 15) {
+                dump_uint32x4_t("w.val[3] after: ", &W[12]);
+            }
             inp += 4;
         } else {
             Wt        = W[(t - 3) % 16] ^ W[(t - 8) % 16] ^ W[(t - 14) % 16] ^ W[(t - 16) % 16];

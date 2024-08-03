@@ -80,6 +80,8 @@ extern "C" void dump_sha1_state(const char *const _Nonnull name, const int line,
 extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
                                 const SHA1BlockScalar &block);
 
+extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]);
+
 // Helper function to determine the size of the string literal
 template <typename T, std::size_t N>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
@@ -186,6 +188,16 @@ void dump_sha1_state(const char *const _Nonnull name, const int line, const size
     std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
     std::memcpy(scalar_state.data() + sizeof(state.abcd), &state.e, sizeof(state.e));
     dump_sha1_state(name, line, i, scalar_state);
+}
+
+void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
+    printf("%s v[0]: 0x%08x v[1]: 0x%08x v[2]: 0x%08x v[3]: 0x%08x\n", prefix, v[0], v[1], v[2],
+           v[3]);
+}
+
+extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]) {
+    uint32x4_t dv{v[0], v[1], v[2], v[3]};
+    dump_uint32x4_t(prefix, dv);
 }
 
 } // namespace
@@ -315,19 +327,27 @@ private:
         dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Byte swap the initial words
+        dump_uint32x4_t("w.val[0] before:", w.val[0]);
         w.val[0] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[0])));
+        dump_uint32x4_t("w.val[0] after: ", w.val[0]);
+        dump_uint32x4_t("w.val[1] before:", w.val[1]);
         w.val[1] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[1])));
+        dump_uint32x4_t("w.val[1] after: ", w.val[1]);
+        dump_uint32x4_t("w.val[2] before:", w.val[2]);
         w.val[2] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[2])));
+        dump_uint32x4_t("w.val[2] after: ", w.val[2]);
+        dump_uint32x4_t("w.val[3] before:", w.val[3]);
         w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
+        dump_uint32x4_t("w.val[3] after: ", w.val[3]);
 
         dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
         dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Constants for each set of 20 rounds
-        const uint32x4_t k1 = vdupq_n_u32(0x5A827999);
-        const uint32x4_t k2 = vdupq_n_u32(0x6ED9EBA1);
-        const uint32x4_t k3 = vdupq_n_u32(0x8F1BBCDC);
-        const uint32x4_t k4 = vdupq_n_u32(0xCA62C1D6);
+        const uint32x4_t k1 = vdupq_n_u32(K[0]);
+        const uint32x4_t k2 = vdupq_n_u32(K[1]);
+        const uint32x4_t k3 = vdupq_n_u32(K[2]);
+        const uint32x4_t k4 = vdupq_n_u32(K[3]);
 
         // First 20 rounds (K1)
         for (int i = 0; i < 20; ++i) {
