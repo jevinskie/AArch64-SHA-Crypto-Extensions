@@ -29,6 +29,10 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #endif
 // clang-format: on
 
+#define ANSI_BOLD_RED_FG "\x1b[1;31m"
+#define ANSI_BOLD_GREEN_FG "\x1b[1;32m"
+#define ANSI_RESET "\x1b[1;0m"
+
 constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
 constexpr std::size_t SHA1_OUTPUT_SIZE = 20;
 
@@ -155,7 +159,9 @@ namespace {
 
 extern "C" void dump_sha1_block(const char *const _Nonnull name, const size_t i,
                                 const SHA1BlockScalar &block) {
-    printf("block[%10zu] %10s %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
+    printf(ANSI_BOLD_RED_FG
+           "block[%10zu]" ANSI_RESET
+           " %10s %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
            i, name, block[0], block[1], block[2], block[3], block[4], block[5], block[6], block[7],
            block[8], block[9], block[10], block[11], block[12], block[13], block[14], block[15]);
 }
@@ -168,8 +174,8 @@ void dump_sha1_block(const char *const _Nonnull name, const size_t i, const SHA1
 
 extern "C" void dump_sha1_state(const char *const _Nonnull name, const size_t i,
                                 const SHA1StateScalar &state) {
-    printf("state[%10zu] %10s %08x%08x%08x%08x%08x\n", i, name, state[0], state[1], state[2],
-           state[3], state[4]);
+    printf(ANSI_BOLD_GREEN_FG "state[%10zu]" ANSI_RESET " %10s %08x%08x%08x%08x%08x\n", i, name,
+           state[0], state[1], state[2], state[3], state[4]);
 }
 
 void dump_sha1_state(const char *const _Nonnull name, const size_t i, const SHA1State &state) {
