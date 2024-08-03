@@ -6,6 +6,7 @@
 #include <arm_acle.h>
 #include <arm_neon.h>
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -326,19 +327,21 @@ private:
         dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
         dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
-        // Byte swap the initial words
-        dump_uint32x4_t("w.val[0] before:", w.val[0]);
-        w.val[0] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[0])));
-        dump_uint32x4_t("w.val[0] after: ", w.val[0]);
-        dump_uint32x4_t("w.val[1] before:", w.val[1]);
-        w.val[1] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[1])));
-        dump_uint32x4_t("w.val[1] after: ", w.val[1]);
-        dump_uint32x4_t("w.val[2] before:", w.val[2]);
-        w.val[2] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[2])));
-        dump_uint32x4_t("w.val[2] after: ", w.val[2]);
-        dump_uint32x4_t("w.val[3] before:", w.val[3]);
-        w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
-        dump_uint32x4_t("w.val[3] after: ", w.val[3]);
+        if constexpr (std::endian::native == std::endian::little) {
+            // Byte swap the initial words
+            dump_uint32x4_t("w.val[0] before:", w.val[0]);
+            w.val[0] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[0])));
+            dump_uint32x4_t("w.val[0] after: ", w.val[0]);
+            dump_uint32x4_t("w.val[1] before:", w.val[1]);
+            w.val[1] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[1])));
+            dump_uint32x4_t("w.val[1] after: ", w.val[1]);
+            dump_uint32x4_t("w.val[2] before:", w.val[2]);
+            w.val[2] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[2])));
+            dump_uint32x4_t("w.val[2] after: ", w.val[2]);
+            dump_uint32x4_t("w.val[3] before:", w.val[3]);
+            w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
+            dump_uint32x4_t("w.val[3] after: ", w.val[3]);
+        }
 
         dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
         dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
@@ -430,21 +433,22 @@ private:
                                  SHA1State &state) {
         alignas(SHA1_BLOCK_SIZE) SHA1Block buffer = {};
         assert(len <= sizeof(buffer));
-        std::memcpy(buffer.words.data(), data, len);
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<uint8_t *>(buffer.words.data())[len] = 0x80;
+        std::memcpy(buffer.data(), data, len);
+        buffer.bytes()[len] = 0x80;
 
         if (len >= 56) {
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            process_block(reinterpret_cast<const uint8_t *>(buffer.words.data()), state);
+            process_block(buffer.bytes(), state);
             std::memset(&buffer, 0, sizeof(buffer));
         }
 
-        buffer.words[14] = 0;
-        buffer.words[15] = static_cast<uint32_t>(len * 8); // Length in bits
+        buffer.data()[14] = 0;
+        if constexpr (std::endian::native == std::endian::little) {
+            buffer.data()[15] = std::byteswap(static_cast<uint32_t>(len * 8)); // Length in bits
+        } else {
+            buffer.data()[15] = static_cast<uint32_t>(len * 8); // Length in bits
+        }
 
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        process_block(reinterpret_cast<const uint8_t *>(buffer.words.data()), state);
+        process_block(buffer.bytes(), state);
     }
 
     static void process_short(const uint8_t *__restrict _Nonnull data, std::size_t len,
