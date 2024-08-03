@@ -24,15 +24,21 @@
 extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data, size_t databytes);
 #endif
 
+#if 0
+#define DO_DUMP
+#endif
+
 // clang-format: off
 #ifdef USE_CIFRA
 #include "3rdparty/cifra/cifra-sha1.h"
 #endif
 // clang-format: on
 
+#ifdef DO_DUMP
 #define ANSI_BOLD_RED_FG "\x1b[1;31m"
 #define ANSI_BOLD_GREEN_FG "\x1b[1;32m"
 #define ANSI_RESET "\x1b[1;0m"
+#endif
 
 constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
 constexpr std::size_t SHA1_OUTPUT_SIZE = 20;
@@ -162,43 +168,81 @@ namespace {
 
 extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
                                 const SHA1BlockScalar &block) {
+#ifdef DO_DUMP
     printf(ANSI_BOLD_RED_FG
            "block[%10zu]" ANSI_RESET
            " %10s:%03d %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
            i, name, line, block[0], block[1], block[2], block[3], block[4], block[5], block[6],
            block[7], block[8], block[9], block[10], block[11], block[12], block[13], block[14],
            block[15]);
+#else
+    (void)name;
+    (void)line;
+    (void)i;
+    (void)block;
+#endif
 }
 
 void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
                      const SHA1Block &block) {
+#ifdef DO_DUMP
     SHA1BlockScalar scalar_block{};
     std::memcpy(scalar_block.data(), &block, sizeof(block));
     dump_sha1_block(name, line, i, scalar_block);
+#else
+    (void)name;
+    (void)line;
+    (void)i;
+    (void)block;
+#endif
 }
 
 extern "C" void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
                                 const SHA1StateScalar &state) {
+#ifdef DO_DUMP
     printf(ANSI_BOLD_GREEN_FG "state[%10zu]" ANSI_RESET " %10s:%03d %08x%08x%08x%08x%08x\n", i,
            name, line, state[0], state[1], state[2], state[3], state[4]);
+#else
+    (void)name;
+    (void)line;
+    (void)i;
+    (void)state;
+#endif
 }
 
 void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
                      const SHA1State &state) {
+#ifdef DO_DUMP
     SHA1StateScalar scalar_state{};
     std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
     std::memcpy(scalar_state.data() + sizeof(state.abcd), &state.e, sizeof(state.e));
     dump_sha1_state(name, line, i, scalar_state);
+#else
+    (void)name;
+    (void)line;
+    (void)i;
+    (void)state;
+#endif
 }
 
 void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
+#ifdef DO_DUMP
     printf("%s v[0]: 0x%08x v[1]: 0x%08x v[2]: 0x%08x v[3]: 0x%08x\n", prefix, v[0], v[1], v[2],
            v[3]);
+#else
+    (void)prefix;
+    (void)v;
+#endif
 }
 
 extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]) {
+#ifdef DO_DUMP
     uint32x4_t dv{v[0], v[1], v[2], v[3]};
     dump_uint32x4_t(prefix, dv);
+#else
+    (void)prefix;
+    (void)v;
+#endif
 }
 
 } // namespace
@@ -354,7 +398,7 @@ private:
 
         // First 20 rounds (K1)
         for (int i = 0; i < 20; ++i) {
-            if (i >= 16) {
+            if (i < 16) {
                 w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
             }
 
@@ -366,7 +410,7 @@ private:
             abcd = vsha1cq_u32(abcd, e, w.val[i % 4]);
             e    = vsha1h_u32(vgetq_lane_u32(abcd, 0));
 
-            if (i >= 16) {
+            if (i < 16) {
                 w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
             }
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k1);
