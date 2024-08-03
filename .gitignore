@@ -2,6 +2,7 @@
 **/.vscode-ctags
 **/*.dSYM/
 /sha1-arm-test
+/sha1-arm-test-O0
 /sha1-arm-test-asan
 /sha1-arm-test-ubsan
 /compile_commands.json

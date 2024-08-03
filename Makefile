@@ -1,4 +1,4 @@
-TARGETS := sha1-arm-test sha1-arm-test-asan sha1-arm-test-ubsan \
+TARGETS := sha1-arm-test sha1-arm-test-O0 sha1-arm-test-asan sha1-arm-test-ubsan \
 	sha1-arm-test.ii \
 	sha1-arm-test.asm sha1-arm-test-demangled.asm sha1-arm-test.ll sha1-arm-test-demangled.ll \
 	sha1-arm-test-no-inline.asm sha1-arm-test-no-inline-demangled.asm sha1-arm-test-no-inline.ll sha1-arm-test-no-inline-demangled.ll \
@@ -56,6 +56,9 @@ clean:
 teeny-sha1.o: 3rdparty/teeny-sha1/teeny-sha1.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
+teeny-sha1-O0.o: 3rdparty/teeny-sha1/teeny-sha1.c
+	$(CC) -c -o $@ $^ $(CFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
+
 teeny-sha1-asan.o: 3rdparty/teeny-sha1/teeny-sha1.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(ASAN_FLAGS)
 
@@ -65,6 +68,9 @@ teeny-sha1-ubsan.o: 3rdparty/teeny-sha1/teeny-sha1.c
 cifra-sha1.o: 3rdparty/cifra/cifra-sha1.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
+cifra-sha1-O0.o: 3rdparty/cifra/cifra-sha1.c
+	$(CC) -c -o $@ $^ $(CFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
+
 cifra-sha1-asan.o: 3rdparty/cifra/cifra-sha1.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(ASAN_FLAGS)
 
@@ -73,6 +79,9 @@ cifra-sha1-ubsan.o: 3rdparty/cifra/cifra-sha1.c
 
 sha1-arm-test: sha1-arm-test.cpp teeny-sha1.o cifra-sha1.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
+
+sha1-arm-test-O0: sha1-arm-test.cpp teeny-sha1.o cifra-sha1.o
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
 sha1-arm-test-asan: sha1-arm-test.cpp teeny-sha1-asan.o cifra-sha1-asan.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(ASAN_FLAGS)

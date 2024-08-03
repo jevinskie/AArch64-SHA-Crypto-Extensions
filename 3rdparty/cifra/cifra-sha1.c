@@ -205,6 +205,10 @@ void cf_sha1_init(cf_sha1_context *ctx) {
     ctx->H[4] = 0xc3d2e1f0;
 }
 
+typedef struct {
+    uint32_t a, b, c, d, e;
+} dstate_t;
+
 #if defined(__clang__)
 __attribute__((no_sanitize("unsigned-integer-overflow")))
 #endif
@@ -224,10 +228,6 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
     dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, inp);
 
     for (size_t t = 0; t < 80; t++) {
-        if (t == 20) {
-            dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
-            dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, (const uint8_t *)W);
-        }
         /* For W[0..16] we process the input into W.
          * For W[16..79] we compute the next W value:
          *
@@ -266,6 +266,11 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
         c             = rotl32(b, 30);
         b             = a;
         a             = temp;
+        if (t == 15 || t == 19 || t == 39 || t == 59 || t == 79) {
+            dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+            dstate_t ds = {a, b, c, d, e};
+            dump_sha1_block(impl_name, __LINE__ - 2, block_cnt++, (const uint8_t *)&ds);
+        }
     }
 
     ctx->H[0] += a;
@@ -275,7 +280,7 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
     ctx->H[4] += e;
 
     dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
-    dump_sha1_block(impl_name, __LINE__, block_cnt++, (const uint8_t *)W);
+    dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, (const uint8_t *)W);
 
     ctx->blocks++;
 }

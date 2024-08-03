@@ -344,6 +344,11 @@ private:
                 w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
             }
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k1);
+
+            if (i == 15) {
+                dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+                dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+            }
         }
 
         dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
@@ -362,6 +367,9 @@ private:
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k2);
         }
 
+        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+
         // Rounds 41-60 (K3)
         for (int i = 40; i < 60; ++i) {
             w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
@@ -374,6 +382,9 @@ private:
             w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k3);
         }
+
+        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Rounds 61-80 (K4)
         for (int i = 60; i < 80; ++i) {
