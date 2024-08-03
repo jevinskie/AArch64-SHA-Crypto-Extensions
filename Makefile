@@ -80,7 +80,7 @@ cifra-sha1-ubsan.o: 3rdparty/cifra/cifra-sha1.c
 sha1-arm-test: sha1-arm-test.cpp teeny-sha1.o cifra-sha1.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-sha1-arm-test-O0: sha1-arm-test.cpp teeny-sha1.o cifra-sha1.o
+sha1-arm-test-O0: sha1-arm-test.cpp teeny-sha1-O0.o cifra-sha1-O0.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
 sha1-arm-test-asan: sha1-arm-test.cpp teeny-sha1-asan.o cifra-sha1-asan.o

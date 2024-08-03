@@ -267,9 +267,9 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
         b             = a;
         a             = temp;
         if (t == 15 || t == 19 || t == 39 || t == 59 || t == 79) {
-            dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
-            dstate_t ds = {a, b, c, d, e};
-            dump_sha1_block(impl_name, __LINE__ - 2, block_cnt++, (const uint8_t *)&ds);
+            dump_sha1_state(impl_name, __LINE__, state_cnt++,
+                            (const uint8_t *)&(dstate_t){a, b, c, d, e});
+            dump_sha1_block(impl_name, __LINE__ - 2, block_cnt++, (const uint8_t *)W);
         }
     }
 
