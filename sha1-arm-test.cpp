@@ -11,18 +11,23 @@
 #include <cstring>
 #include <type_traits>
 
+#if 0
+#define USE_TEENY
+#endif
+
+#if 1
+#define USE_CIFRA
+#endif
+
+#ifdef USE_TEENY
 extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data, size_t databytes);
+#endif
 
 // clang-format: off
+#ifdef USE_CIFRA
 #include "3rdparty/cifra/cifra-sha1.h"
+#endif
 // clang-format: on
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-// #define to_from_cast(T, F, V) \
-//     __extension__({ \
-//         /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast) */ \
-//         reinterpret_cast<T>(static_cast<F>(V)); \
-//     })
 
 constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
 constexpr std::size_t SHA1_OUTPUT_SIZE = 20;
@@ -116,6 +121,7 @@ struct alignas(digest_align_val) SHA1State {
         abcd = vsetq_lane_u32(0x98BADCFE, abcd, 2);
         abcd = vsetq_lane_u32(0x10325476, abcd, 3);
     }
+    SHA1State(const uint32x4_t abcd_, const uint32_t e_) : abcd{abcd_}, e{e_} {}
     uint32x4_t abcd;        // Represents H0, H1, H2, H3
     uint32_t e{0xC3D2E1F0}; // Represents H4
 };
@@ -124,6 +130,11 @@ struct alignas(digest_align_val) SHA1State {
 
 struct alignas(block_align_val) SHA1Block {
     std::array<uint32_t, 16> words;
+    SHA1Block &operator=(const uint32x4x4_t &block) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        *reinterpret_cast<uint32x4x4_t *>(words.data()) = block;
+        return *this;
+    }
     [[nodiscard]] uint32_t *data() {
         return words.data();
     }
@@ -278,6 +289,7 @@ private:
 #endif
     static void
     process_block(const uint8_t *__restrict _Nonnull block, SHA1State &state) {
+        SHA1Block db{};
         dump_sha1_state(impl_name, state_cnt++, state);
         dump_sha1_block(impl_name, block_cnt++, reinterpret_cast<const SHA1BlockScalar &>(*block));
 
@@ -286,13 +298,20 @@ private:
 
         // Use aligned loads for the message schedule
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        uint32x4x4_t w = vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
+        alignas(block_align_val) uint32x4x4_t w =
+            vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
+
+        dump_sha1_state(impl_name, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, block_cnt++, db = w);
 
         // Byte swap the initial words
         w.val[0] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[0])));
         w.val[1] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[1])));
         w.val[2] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[2])));
         w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
+
+        dump_sha1_state(impl_name, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, block_cnt++, db = w);
 
         // Constants for each set of 20 rounds
         const uint32x4_t k1 = vdupq_n_u32(0x5A827999);
@@ -316,6 +335,9 @@ private:
             }
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k1);
         }
+
+        dump_sha1_state(impl_name, state_cnt++, SHA1State{abcd, e});
+        dump_sha1_block(impl_name, block_cnt++, db = w);
 
         // Rounds 21-40 (K2)
         for (int i = 20; i < 40; ++i) {
@@ -360,10 +382,7 @@ private:
         state.e += e;
 
         dump_sha1_state(impl_name, state_cnt++, state);
-        SHA1Block db{};
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        *reinterpret_cast<uint32x4x4_t *>(db.data()) = w;
-        dump_sha1_block(impl_name, block_cnt++, db);
+        dump_sha1_block(impl_name, block_cnt++, db = w);
     }
 
     static void pad_and_finalize(const uint8_t *__restrict _Nonnull data, std::size_t len,
@@ -463,6 +482,7 @@ int main() {
     printf("SHA-1 Digest:              %s\n", hex_str.data());
     printf("\n\n\n");
 
+#ifdef USE_TEENY
     SHA1Digest teeny_h{};
     assert(!sha1digest(teeny_h.bytes(), hex_str.data(), static_cast<const uint8_t *>(str.data()),
                        str.size()));
@@ -480,7 +500,9 @@ int main() {
     SHA1::digest_to_hex(teeny_h.bytes(), hex_str.data());
     printf("SHA-1 Digest teeny:        %s\n", hex_str.data());
     printf("\n\n\n");
+#endif
 
+#ifdef USE_CIFRA
     SHA1Digest cifra_h{};
     cf_sha1_context cifra_ctx{};
     cf_sha1_init(&cifra_ctx);
@@ -499,6 +521,7 @@ int main() {
 
     SHA1::digest_to_hex(cifra_h.bytes(), hex_str.data());
     printf("SHA-1 Digest cifra:        %s\n", hex_str.data());
+#endif
 
     return 0;
 }
