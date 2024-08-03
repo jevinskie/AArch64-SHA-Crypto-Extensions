@@ -124,19 +124,19 @@ struct alignas(digest_align_val) SHA1State {
 
 struct alignas(block_align_val) SHA1Block {
     std::array<uint32_t, 16> words;
-    [[nodiscard]] uint32_t &data() {
-        return *words.data();
+    [[nodiscard]] uint32_t *data() {
+        return words.data();
     }
-    [[nodiscard]] const uint32_t &data() const {
-        return *words.data();
+    [[nodiscard]] const uint32_t *data() const {
+        return words.data();
     }
-    [[nodiscard]] uint8_t &bytes() {
+    [[nodiscard]] uint8_t *bytes() {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        return *reinterpret_cast<uint8_t *>(words.data());
+        return reinterpret_cast<uint8_t *>(words.data());
     }
-    [[nodiscard]] const uint8_t &bytes() const {
+    [[nodiscard]] const uint8_t *bytes() const {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        return *reinterpret_cast<const uint8_t *>(words.data());
+        return reinterpret_cast<const uint8_t *>(words.data());
     }
 };
 
@@ -288,62 +288,74 @@ private:
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         uint32x4x4_t w = vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
 
-        // First 16 rounds
-        for (int i = 0; i < 16; ++i) {
+        // Byte swap the initial words
+        w.val[0] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[0])));
+        w.val[1] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[1])));
+        w.val[2] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[2])));
+        w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
+
+        // Constants for each set of 20 rounds
+        const uint32x4_t k1 = vdupq_n_u32(K[0]);
+        const uint32x4_t k2 = vdupq_n_u32(K[1]);
+        const uint32x4_t k3 = vdupq_n_u32(K[2]);
+        const uint32x4_t k4 = vdupq_n_u32(K[3]);
+
+        // First 20 rounds
+        for (int i = 0; i < 20; ++i) {
             uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[i % 4]);
             abcd            = vextq_u32(abcd, abcd, 1); // Rotate the lanes of abcd
             abcd            = vsetq_lane_u32(e, abcd, 3);
             e               = vgetq_lane_u32(temp, 0);
+
+            w.val[i % 4] =
+                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
+            w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
         }
 
-        // Rounds 16 to 19
-        for (int i = 16; i < 20; ++i) {
+        // Rounds 21-40
+        for (int i = 20; i < 40; ++i) {
+            uint32x4_t temp = vsha1mq_u32(abcd, e, w.val[i % 4]);
+            abcd            = vextq_u32(abcd, abcd, 1);
+            abcd            = vsetq_lane_u32(e, abcd, 3);
+            e               = vgetq_lane_u32(temp, 0);
+
+            w.val[i % 4] =
+                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
+            w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
+        }
+
+        // Rounds 41-60
+        for (int i = 40; i < 60; ++i) {
             uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
             abcd            = vextq_u32(abcd, abcd, 1);
             abcd            = vsetq_lane_u32(e, abcd, 3);
             e               = vgetq_lane_u32(temp, 0);
+
+            w.val[i % 4] =
+                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
+            w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
         }
 
-        // Rounds 20 to 39
-        for (int i = 20; i < 40; ++i) {
-            uint32x4_t w_schedule =
-                vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
-            w_schedule      = vsha1su1q_u32(w_schedule, w.val[(i + 1) % 4]);
-            uint32x4_t temp = vsha1mq_u32(abcd, e, w_schedule);
-            abcd            = vextq_u32(abcd, abcd, 1);
-            abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vgetq_lane_u32(temp, 0);
-            w.val[i % 4]    = w_schedule;
-        }
-
-        // Rounds 40 to 59
-        for (int i = 40; i < 60; ++i) {
-            uint32x4_t w_schedule =
-                vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
-            w_schedule      = vsha1su1q_u32(w_schedule, w.val[(i + 1) % 4]);
-            uint32x4_t temp = vsha1pq_u32(abcd, e, w_schedule);
-            abcd            = vextq_u32(abcd, abcd, 1);
-            abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vgetq_lane_u32(temp, 0);
-            w.val[i % 4]    = w_schedule;
-        }
-
-        // Rounds 60 to 79
+        // Rounds 61-80
         for (int i = 60; i < 80; ++i) {
-            uint32x4_t w_schedule =
-                vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
-            w_schedule      = vsha1su1q_u32(w_schedule, w.val[(i + 1) % 4]);
-            uint32x4_t temp = vsha1mq_u32(abcd, e, w_schedule);
+            uint32x4_t temp = vsha1mq_u32(abcd, e, w.val[i % 4]);
             abcd            = vextq_u32(abcd, abcd, 1);
             abcd            = vsetq_lane_u32(e, abcd, 3);
             e               = vgetq_lane_u32(temp, 0);
-            w.val[i % 4]    = w_schedule;
+
+            w.val[i % 4] =
+                vsha1su0q_u32(w.val[(i + 1) % 4], w.val[(i + 2) % 4], w.val[(i + 3) % 4]);
+            w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
         }
 
         state.abcd = vaddq_u32(state.abcd, abcd);
         state.e += e;
 
         dump_sha1_state(impl_name, state_cnt++, state);
+        SHA1Block db{};
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        *reinterpret_cast<uint32x4x4_t *>(db.data()) = w;
+        dump_sha1_block(impl_name, block_cnt++, db);
     }
 
     static void pad_and_finalize(const uint8_t *__restrict _Nonnull data, std::size_t len,
