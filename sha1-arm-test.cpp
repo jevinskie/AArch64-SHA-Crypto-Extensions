@@ -372,7 +372,7 @@ public:
         printf("hexil hex: %s\n", hexil_b);
 
         // vst2q_u8(to_from_cast(uint8_t *, char *, hex_str), hex_chars_interleaved);
-        vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
+        vst1q_u8_x2((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
         // vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
         // *(uint8x16x2_t *)(hex_chars.data()) = hex_chars_interleaved;
         printf("hex_str step 1: %s\n", hex_str);
@@ -625,9 +625,11 @@ int main() {
            h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15], h[16],
            h[17], h[18], h[19]);
 
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
     SHA1::digest_to_hex_simple(h.bytes(), hex_str.data());
     printf("SHA-1 Digest simple:       %s\n", hex_str.data());
 
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
     SHA1::digest_to_hex(h.bytes(), hex_str.data());
     printf("SHA-1 Digest:              %s\n", hex_str.data());
     printf("\n\n\n");
@@ -642,9 +644,11 @@ int main() {
            th[0], th[1], th[2], th[3], th[4], th[5], th[6], th[7], th[8], th[9], th[10], th[11], th[12], th[13], th[14],
            th[15], th[16], th[17], th[18], th[19]);
 
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
     SHA1::digest_to_hex_simple(th.bytes(), hex_str.data());
     printf("SHA-1 Digest simple teeny: %s\n", hex_str.data());
 
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
     SHA1::digest_to_hex(th.bytes(), hex_str.data());
     printf("SHA-1 Digest teeny:        %s\n", hex_str.data());
     printf("\n\n\n");
@@ -663,9 +667,11 @@ int main() {
            ch[0], ch[1], ch[2], ch[3], ch[4], ch[5], ch[6], ch[7], ch[8], ch[9], ch[10], ch[11], ch[12], ch[13], ch[14],
            ch[15], ch[16], ch[17], ch[18], ch[19]);
 
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
     SHA1::digest_to_hex_simple(ch.bytes(), hex_str.data());
     printf("SHA-1 Digest simple cifra: %s\n", hex_str.data());
 
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
     SHA1::digest_to_hex(ch.bytes(), hex_str.data());
     printf("SHA-1 Digest cifra:        %s\n", hex_str.data());
 #endif
