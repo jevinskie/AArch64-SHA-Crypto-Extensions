@@ -31,9 +31,9 @@ static size_t state_cnt;
 
 #define CF_MIN(x, y)                                                                               \
     ({                                                                                             \
-        typeof(x) __x = (x);                                                                       \
-        typeof(y) __y = (y);                                                                       \
-        __x < __y ? __x : __y;                                                                     \
+        typeof(x) CF_MIN__x = (x);                                                                 \
+        typeof(y) CF_MIN__y = (y);                                                                 \
+        CF_MIN__x < CF_MIN__y ? CF_MIN__x : CF_MIN__y;                                             \
     })
 
 /** Circularly rotate left x by n bits.

@@ -28,6 +28,8 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #define DO_DUMP
 #endif
 
+#define DO_DUMP_8x16
+
 // clang-format: off
 #ifdef USE_CIFRA
 #include "3rdparty/cifra/cifra-sha1.h"
@@ -88,6 +90,7 @@ extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line,
                                 const SHA1BlockScalar &block);
 
 extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]);
+extern "C" void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]);
 
 // Helper function to determine the size of the string literal
 template <typename T, std::size_t N>
@@ -245,6 +248,31 @@ extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_
 #endif
 }
 
+void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
+#ifdef DO_DUMP_8x16
+    printf("%s v[0]: 0x%02hhx, v[1]: 0x%02hhx, v[2]: 0x%02hhx, v[3]: 0x%02hhx, v[4]: 0x%02hhx, "
+           "v[5]: 0x%02hhx, v[6]: 0x%02hhx, v[7]: 0x%02hhx, v[8]: 0x%02hhx, v[9]: 0x%02hhx, v[10]: "
+           "0x%02hhx, v[11]: 0x%02hhx, v[12]: 0x%02hhx, v[13]: 0x%02hhx, v[14]: 0x%02hhx, v[15]: "
+           "0x%02hhx\n",
+           prefix, v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12],
+           v[13], v[14], v[15]);
+#else
+    (void)prefix;
+    (void)v;
+#endif
+}
+
+extern "C" void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]) {
+#ifdef DO_DUMP_8x16
+    uint8x16_t dv{v[0], v[1], v[2],  v[3],  v[4],  v[5],  v[6],  v[7],
+                  v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]};
+    dump_uint8x16_t(prefix, dv);
+#else
+    (void)prefix;
+    (void)v;
+#endif
+}
+
 } // namespace
 
 static size_t block_cnt;
@@ -291,6 +319,9 @@ public:
         alignas(align_val) const uint8x16_t input = vld1q_u8(digest);
         alignas(align_val) const uint8x16_t hi    = vshrq_n_u8(input, 4); // Shift high nibbles down
         alignas(align_val) const uint8x16_t lo    = vandq_u8(input, mask4); // Isolate low nibbles
+        dump_uint8x16_t("input", input);
+        dump_uint8x16_t("   hi", hi);
+        dump_uint8x16_t("   lo", lo);
 
         alignas(align_val) static constinit std::array<uint8_t, 16> hex_chars = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
