@@ -45,13 +45,17 @@ ASMFLAGS := -fverbose-asm -fno-exceptions -fno-rtti -fno-unwind-tables -fno-asyn
 
 all: $(TARGETS)
 
-.PHONY: clean compile_commands.json scan tidy run-asan run-ubsan
+.PHONY: clean-targets clean-compile-commands clean compile_commands.json scan tidy run-asan run-ubsan
 
-clean:
+clean-targets:
 	rm -rf *.dSYM/
 	rm -f $(TARGETS)
-	rm -f compile_commands.json
 	rm -rf *.o
+
+clean-compile-commands:
+	rm -f compile_commands.json
+
+clean: clean-targets clean-compile-commands
 
 teeny-sha1.o: 3rdparty/teeny-sha1/teeny-sha1.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
@@ -258,7 +262,8 @@ run-ubsan: sha1-arm-test-ubsan
 
 
 compile_commands.json:
-	bear -- $(MAKE) -B -f $(MAKEFILE_LIST)
+	bear -- $(MAKE) -B -f $(MAKEFILE_LIST) RUNNING_BEAR=1
+	$(MAKE) -f $(MAKEFILE_LIST) clean-targets
 
 scan:
 	scan-build -V $(MAKE) -B -f $(MAKEFILE_LIST)

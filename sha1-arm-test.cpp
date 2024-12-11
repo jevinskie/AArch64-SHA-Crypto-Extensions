@@ -285,7 +285,7 @@ public:
     static void digest_to_hex(const uint8_t *__restrict _Nonnull digest,
                               char *__restrict _Nonnull hex_str) {
         alignas(align_val) const uint8x16_t mask4 = vdupq_n_u8(0x0F); // Mask for low 4 bits
-        alignas(align_val) const uint8x16_t mask8 = vdupq_n_u8(0xF0); // Mask for high 4 bits
+        // alignas(align_val) const uint8x16_t mask8 = vdupq_n_u8(0xF0); // Mask for high 4 bits
 
         // Load the first 16 bytes of the digest
         alignas(align_val) const uint8x16_t input = vld1q_u8(digest);
