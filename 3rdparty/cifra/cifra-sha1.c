@@ -29,11 +29,11 @@ static const char impl_name[] = "sha1-cifra";
 static size_t block_cnt;
 static size_t state_cnt;
 
-#define CF_MIN(x, y)                                                                               \
-    ({                                                                                             \
-        typeof(x) CF_MIN__x = (x);                                                                 \
-        typeof(y) CF_MIN__y = (y);                                                                 \
-        CF_MIN__x < CF_MIN__y ? CF_MIN__x : CF_MIN__y;                                             \
+#define CF_MIN(x, y)                                   \
+    ({                                                 \
+        typeof(x) CF_MIN__x = (x);                     \
+        typeof(y) CF_MIN__y = (y);                     \
+        CF_MIN__x < CF_MIN__y ? CF_MIN__x : CF_MIN__y; \
     })
 
 /** Circularly rotate left x by n bits.
@@ -48,8 +48,7 @@ rotl32(uint32_t x, unsigned n) {
 
 /** Read 4 bytes from buf, as a 32-bit big endian quantity. */
 static inline uint32_t read32_be(const uint8_t buf[4]) {
-    return ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) | ((uint32_t)buf[2] << 8) |
-           ((uint32_t)buf[3]);
+    return ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) | ((uint32_t)buf[2] << 8) | ((uint32_t)buf[3]);
 }
 
 /** Encode v as a 32-bit big endian quantity into buf. */
@@ -74,10 +73,9 @@ static inline void write64_be(uint64_t v, uint8_t buf[8]) {
 
 typedef void (*cf_blockwise_in_fn)(void *ctx, const uint8_t *data);
 
-static void cf_blockwise_accumulate_final(uint8_t *partial, size_t *npartial, size_t nblock,
-                                          const void *inp, size_t nbytes,
-                                          cf_blockwise_in_fn process,
-                                          cf_blockwise_in_fn process_final, void *ctx) {
+static void cf_blockwise_accumulate_final(uint8_t *partial, size_t *npartial, size_t nblock, const void *inp,
+                                          size_t nbytes, cf_blockwise_in_fn process, cf_blockwise_in_fn process_final,
+                                          void *ctx) {
     const uint8_t *bufin = inp;
     assert(partial && *npartial < nblock);
     assert(inp || !nbytes);
@@ -136,14 +134,13 @@ static void cf_blockwise_accumulate_final(uint8_t *partial, size_t *npartial, si
     }
 }
 
-static void cf_blockwise_accumulate(uint8_t *partial, size_t *npartial, size_t nblock,
-                                    const void *inp, size_t nbytes, cf_blockwise_in_fn process,
-                                    void *ctx) {
+static void cf_blockwise_accumulate(uint8_t *partial, size_t *npartial, size_t nblock, const void *inp, size_t nbytes,
+                                    cf_blockwise_in_fn process, void *ctx) {
     cf_blockwise_accumulate_final(partial, npartial, nblock, inp, nbytes, process, process, ctx);
 }
 
-static void cf_blockwise_acc_byte(uint8_t *partial, size_t *npartial, size_t nblock, uint8_t byte,
-                                  size_t nbytes, cf_blockwise_in_fn process, void *ctx) {
+static void cf_blockwise_acc_byte(uint8_t *partial, size_t *npartial, size_t nblock, uint8_t byte, size_t nbytes,
+                                  cf_blockwise_in_fn process, void *ctx) {
     /* only memset the whole of the block once */
     int filled = 0;
 
@@ -168,9 +165,8 @@ static void cf_blockwise_acc_byte(uint8_t *partial, size_t *npartial, size_t nbl
     }
 }
 
-static void cf_blockwise_acc_pad(uint8_t *partial, size_t *npartial, size_t nblock, uint8_t fbyte,
-                                 uint8_t mbyte, uint8_t lbyte, size_t nbytes,
-                                 cf_blockwise_in_fn process, void *ctx) {
+static void cf_blockwise_acc_pad(uint8_t *partial, size_t *npartial, size_t nblock, uint8_t fbyte, uint8_t mbyte,
+                                 uint8_t lbyte, size_t nbytes, cf_blockwise_in_fn process, void *ctx) {
 
     switch (nbytes) {
     case 0:
@@ -291,8 +287,7 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
         b             = a;
         a             = temp;
         if (t == 15 || t == 19 || t == 39 || t == 59 || t == 79) {
-            dump_sha1_state(impl_name, __LINE__, state_cnt++,
-                            (const uint8_t *)&(dstate_t){a, b, c, d, e});
+            dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)&(dstate_t){a, b, c, d, e});
             dump_sha1_block(impl_name, __LINE__ - 2, block_cnt++, (const uint8_t *)W);
         }
     }
@@ -310,8 +305,7 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
 }
 
 void cf_sha1_update(cf_sha1_context *ctx, const void *data, size_t nbytes) {
-    cf_blockwise_accumulate(ctx->partial, &ctx->npartial, sizeof ctx->partial, data, nbytes,
-                            sha1_update_block, ctx);
+    cf_blockwise_accumulate(ctx->partial, &ctx->npartial, sizeof ctx->partial, data, nbytes, sha1_update_block, ctx);
 }
 
 void cf_sha1_digest(const cf_sha1_context *ctx, uint8_t hash[CF_SHA1_HASHSZ]) {
@@ -327,8 +321,8 @@ void cf_sha1_digest_final(cf_sha1_context *ctx, uint8_t hash[CF_SHA1_HASHSZ]) {
     size_t padbytes = CF_SHA1_BLOCKSZ - ((digested_bytes + 8) % CF_SHA1_BLOCKSZ);
 
     /* Hash 0x80 00 ... block first. */
-    cf_blockwise_acc_pad(ctx->partial, &ctx->npartial, sizeof ctx->partial, 0x80, 0x00, 0x00,
-                         padbytes, sha1_update_block, ctx);
+    cf_blockwise_acc_pad(ctx->partial, &ctx->npartial, sizeof ctx->partial, 0x80, 0x00, 0x00, padbytes,
+                         sha1_update_block, ctx);
 
     /* Now hash length. */
     uint8_t buf[8];

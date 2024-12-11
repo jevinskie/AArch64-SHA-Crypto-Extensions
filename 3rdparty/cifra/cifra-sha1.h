@@ -30,7 +30,7 @@ extern "C" {
 
 /* .. c:macro:: CF_SHA1_HASHSZ
  * The output size of SHA1: 20 bytes. */
-#define CF_SHA1_HASHSZ 20
+#define CF_SHA1_HASHSZ  20
 
 /* .. c:macro:: CF_SHA1_BLOCKSZ
  * The block size of SHA1: 64 bytes. */
