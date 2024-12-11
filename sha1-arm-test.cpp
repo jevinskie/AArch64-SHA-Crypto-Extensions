@@ -91,6 +91,7 @@ extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line,
 
 extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]);
 extern "C" void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]);
+extern "C" void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]);
 
 // Helper function to determine the size of the string literal
 template <typename T, std::size_t N>
@@ -265,6 +266,40 @@ extern "C" void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t
 #endif
 }
 
+void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) {
+#ifdef DO_DUMP_8x16
+    const uint8x16x2_t mv = v;
+    uint8_t b[32];
+    static_assert(sizeof(mv) == sizeof(b));
+    std::memcpy(b, &mv, sizeof(mv));
+
+    printf("%s v[0]: 0x%02hhx, v[1]: 0x%02hhx, v[2]: 0x%02hhx, v[3]: 0x%02hhx, v[4]: 0x%02hhx, v[5]: 0x%02hhx, v[6]: "
+           "0x%02hhx, v[7]: 0x%02hhx, v[8]: 0x%02hhx, v[9]: 0x%02hhx, v[10]: 0x%02hhx, v[11]: 0x%02hhx, v[12]: "
+           "0x%02hhx, v[13]: 0x%02hhx, v[14]: 0x%02hhx, v[15]: 0x%02hhx, v[16]: 0x%02hhx, v[17]: 0x%02hhx, v[18]: "
+           "0x%02hhx, v[19]: 0x%02hhx, v[20]: 0x%02hhx, v[21]: 0x%02hhx, v[22]: 0x%02hhx, v[23]: 0x%02hhx, v[24]: "
+           "0x%02hhx, v[25]: 0x%02hhx, v[26]: 0x%02hhx, v[27]: 0x%02hhx, v[28]: 0x%02hhx, v[29]: 0x%02hhx, v[30]: "
+           "0x%02hhx, v[31]: 0x%02hhx\n",
+           prefix, b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15],
+           b[16], b[17], b[18], b[19], b[20], b[21], b[22], b[23], b[24], b[25], b[26], b[27], b[28], b[29], b[30],
+           b[31]);
+#else
+    (void)prefix;
+    (void)v;
+#endif
+}
+
+extern "C" void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]) {
+#ifdef DO_DUMP_8x16
+    uint8x16x2_t dv{v[0],  v[1],  v[2],  v[3],  v[4],  v[5],  v[6],  v[7],  v[8],  v[9],  v[10],
+                    v[11], v[12], v[13], v[14], v[15], v[16], v[17], v[18], v[19], v[20], v[21],
+                    v[22], v[23], v[24], v[25], v[26], v[27], v[28], v[29], v[30], v[31]};
+    dump_uint8x16x2_t(prefix, dv);
+#else
+    (void)prefix;
+    (void)v;
+#endif
+}
+
 } // namespace
 
 static size_t block_cnt;
@@ -317,13 +352,17 @@ public:
         alignas(align_val) static constinit std::array<uint8_t, 16> hex_chars = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
         alignas(align_val) const uint8x16_t lut = vld1q_u8(hex_chars.data());
+        dump_uint8x16_t("  lut", lut);
 
         // Convert to ASCII hex characters
         alignas(align_val) const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
         alignas(align_val) const uint8x16_t hex_lo = vqtbl1q_u8(lut, lo);
+        dump_uint8x16_t("hexhi", hex_hi);
+        dump_uint8x16_t("hexlo", hex_lo);
 
         // Store the results interleaved
         alignas(align_val) const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
+        dump_uint8x16x2_t("hexil", hex_chars_interleaved);
         // vst2q_u8(to_from_cast(uint8_t *, char *, hex_str), hex_chars_interleaved);
         vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
 
