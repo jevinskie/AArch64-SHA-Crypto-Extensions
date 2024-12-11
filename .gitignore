@@ -7,6 +7,7 @@
 /sha1-arm-test-ubsan
 /compile_commands.json
 /sha1-arm-test-opt-remarks.txt
+/uint32_to_ascii_hex
 /*.asm
 /*.ll
 /*.ii
