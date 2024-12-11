@@ -363,8 +363,14 @@ public:
         // Store the results interleaved
         alignas(align_val) const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
         dump_uint8x16x2_t("hexil", hex_chars_interleaved);
+        char hexil_b[33] = {};
+        static_assert(sizeof(hex_chars_interleaved) == sizeof(hexil_b) - 1);
+        std::memcpy(hexil_b, &hex_chars_interleaved, sizeof(hex_chars_interleaved));
+        printf("hexil hex: %s\n", hexil_b);
+
         // vst2q_u8(to_from_cast(uint8_t *, char *, hex_str), hex_chars_interleaved);
         vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
+        printf("hex_str step 1: %s\n", hex_str);
 
         // Handle the remaining 4 bytes using SWAR in GPRs
         // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
