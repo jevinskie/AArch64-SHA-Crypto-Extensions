@@ -84,14 +84,14 @@ const char impl_name[] = "sha1-arm";
 using SHA1StateScalar = std::array<uint8_t, 20>;
 using SHA1BlockScalar = std::array<uint8_t, 64>;
 
-extern "C" void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
-                                const SHA1StateScalar &state);
-extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
-                                const SHA1BlockScalar &block);
+extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
+                                                  const SHA1StateScalar &state);
+extern "C" [[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
+                                                  const SHA1BlockScalar &block);
 
-extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]);
-extern "C" void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]);
-extern "C" void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]);
+extern "C" [[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]);
+extern "C" [[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]);
+extern "C" [[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]);
 
 // Helper function to determine the size of the string literal
 template <typename T, std::size_t N>
@@ -169,8 +169,8 @@ struct alignas(block_align_val) SHA1Block {
 
 namespace {
 
-extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
-                                const SHA1BlockScalar &block) {
+extern "C" [[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
+                                                  const SHA1BlockScalar &block) {
 #ifdef DO_DUMP
     printf(ANSI_BOLD_RED_FG "block[%10zu]" ANSI_RESET
                             " %10s:%03d %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
@@ -184,7 +184,8 @@ extern "C" void dump_sha1_block(const char *const _Nonnull name, const int line,
 #endif
 }
 
-void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i, const SHA1Block &block) {
+[[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
+                                       const SHA1Block &block) {
 #ifdef DO_DUMP
     SHA1BlockScalar scalar_block{};
     std::memcpy(scalar_block.data(), &block, sizeof(block));
@@ -197,8 +198,8 @@ void dump_sha1_block(const char *const _Nonnull name, const int line, const size
 #endif
 }
 
-extern "C" void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
-                                const SHA1StateScalar &state) {
+extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
+                                                  const SHA1StateScalar &state) {
 #ifdef DO_DUMP
     printf(ANSI_BOLD_GREEN_FG "state[%10zu]" ANSI_RESET " %10s:%03d %08x%08x%08x%08x%08x\n", i, name, line, state[0],
            state[1], state[2], state[3], state[4]);
@@ -210,7 +211,8 @@ extern "C" void dump_sha1_state(const char *const _Nonnull name, const int line,
 #endif
 }
 
-void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i, const SHA1State &state) {
+[[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
+                                       const SHA1State &state) {
 #ifdef DO_DUMP
     SHA1StateScalar scalar_state{};
     std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
@@ -224,7 +226,7 @@ void dump_sha1_state(const char *const _Nonnull name, const int line, const size
 #endif
 }
 
-void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
+[[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
 #ifdef DO_DUMP
     printf("%s v[0]: 0x%08x v[1]: 0x%08x v[2]: 0x%08x v[3]: 0x%08x\n", prefix, v[0], v[1], v[2], v[3]);
 #else
@@ -233,7 +235,7 @@ void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
 #endif
 }
 
-extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]) {
+extern "C" [[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]) {
 #ifdef DO_DUMP
     uint32x4_t dv{v[0], v[1], v[2], v[3]};
     dump_uint32x4_t(prefix, dv);
@@ -243,7 +245,7 @@ extern "C" void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_
 #endif
 }
 
-void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
+[[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
 #ifdef DO_DUMP_8x16
     printf("%s v[0]: 0x%02hhx, v[1]: 0x%02hhx, v[2]: 0x%02hhx, v[3]: 0x%02hhx, v[4]: 0x%02hhx, v[5]: 0x%02hhx, v[6]: "
            "0x%02hhx, v[7]: 0x%02hhx, v[8]: 0x%02hhx, v[9]: 0x%02hhx, v[10]: 0x%02hhx, v[11]: 0x%02hhx, v[12]: "
@@ -256,7 +258,7 @@ void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
 #endif
 }
 
-extern "C" void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]) {
+extern "C" [[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]) {
 #ifdef DO_DUMP_8x16
     uint8x16_t dv{v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]};
     dump_uint8x16_t(prefix, dv);
@@ -266,7 +268,7 @@ extern "C" void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t
 #endif
 }
 
-void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) {
+[[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) {
 #ifdef DO_DUMP_8x16
     const uint8x16x2_t mv = v;
     uint8_t b[32];
@@ -288,7 +290,7 @@ void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) 
 #endif
 }
 
-extern "C" void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]) {
+extern "C" [[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]) {
 #ifdef DO_DUMP_8x16
     uint8x16x2_t dv{v[0],  v[1],  v[2],  v[3],  v[4],  v[5],  v[6],  v[7],  v[8],  v[9],  v[10],
                     v[11], v[12], v[13], v[14], v[15], v[16], v[17], v[18], v[19], v[20], v[21],
@@ -337,7 +339,8 @@ public:
 
     // clang-tidy complains about __restrict not being in an included header -_-
     // NOLINTNEXTLINE(misc-include-cleaner)
-    static void digest_to_hex(const uint8_t *__restrict _Nonnull digest, char *__restrict _Nonnull hex_str) {
+    [[gnu::noinline]] static void digest_to_hex(const uint8_t *__restrict _Nonnull digest,
+                                                char *__restrict _Nonnull hex_str) {
         alignas(align_val) const uint8x16_t mask4 = vdupq_n_u8(0x0F); // Mask for low 4 bits
         // alignas(align_val) const uint8x16_t mask8 = vdupq_n_u8(0xF0); // Mask for high 4 bits
 
@@ -370,6 +373,8 @@ public:
 
         // vst2q_u8(to_from_cast(uint8_t *, char *, hex_str), hex_chars_interleaved);
         vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
+        // vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
+        // *(uint8x16x2_t *)(hex_chars.data()) = hex_chars_interleaved;
         printf("hex_str step 1: %s\n", hex_str);
 
         // Handle the remaining 4 bytes using SWAR in GPRs
