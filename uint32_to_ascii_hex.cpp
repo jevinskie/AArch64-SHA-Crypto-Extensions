@@ -27,6 +27,36 @@ uint32_t nibbles_to_hex_swar(uint32_t nibbles) {
     return ascii09 + (mask & correction);
 }
 
+constexpr uint32_t nibble_expand32_naive(const uint32_t x) {
+    if ((uint32_t)x > (uint32_t)UINT16_MAX) {
+        __builtin_unreachable();
+    }
+
+    const uint32_t n0 = x & 0x0f;
+    const uint32_t n1 = (x >> 4) & 0x0f;
+    const uint32_t n2 = (x >> 8) & 0x0f;
+    const uint32_t n3 = (x >> 12) & 0x0f;
+
+    return n3 | (n2 << 8) | (n1 << 16) | (n0 << 24);
+}
+
+constexpr uint64_t nibble_expand64_naive(const uint32_t x) {
+    if ((uint64_t)x > (uint64_t)UINT32_MAX) {
+        __builtin_unreachable();
+    }
+
+    const uint64_t n0 = x & 0x0f;
+    const uint64_t n1 = (x >> 4) & 0x0f;
+    const uint64_t n2 = (x >> 8) & 0x0f;
+    const uint64_t n3 = (x >> 12) & 0x0f;
+    const uint64_t n4 = (x >> 16) & 0x0f;
+    const uint64_t n5 = (x >> 20) & 0x0f;
+    const uint64_t n6 = (x >> 24) & 0x0f;
+    const uint64_t n7 = (x >> 28) & 0x0f;
+
+    return n7 | (n6 << 8) | (n5 << 16) | (n4 << 24) | (n3 << 32) | (n2 << 40) | (n1 << 48) | (n0 << 56);
+}
+
 [[gnu::noinline]] void u32_to_hex(const uint32_t n, char (&s)[9]) {
     const uint64_t mask_lo = 0x00ff'00ff'00ff'00ffllu;
     const uint64_t mask_hi = 0xff00'ff00'ff00'ff00llu;
@@ -68,8 +98,13 @@ uint32_t nibbles_to_hex_swar(uint32_t nibbles) {
 int main(void) {
     // const uint32_t n = 0xDEAD'BEEFu;
     // const uint32_t n = 0x0D0E'0A0Du;
-    const uint32_t n = 0xD0E0'A0D0u;
-    char s[9]        = {};
+    const uint32_t n    = 0xD0E0'A0D0u;
+    const uint32_t nexp = nibble_expand32_naive(0xDEAD);
+    printf("nexp: 0x%08x\n", nexp);
+    const uint32_t nfull     = 0xDEAD'BEEFu;
+    const uint64_t nfull_exp = nibble_expand64_naive(nfull);
+    printf("nfull_exp: 0x%016llx\n", nfull_exp);
+    char s[9] = {};
     u32_to_hex(n, s);
     printf("n: 0x%08x s: '%s'\n", n, s);
     return 0;
