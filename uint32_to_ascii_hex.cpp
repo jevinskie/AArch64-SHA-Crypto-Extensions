@@ -28,6 +28,10 @@ uint32_t nibbles_to_hex_swar(uint32_t nibbles) {
 }
 
 [[gnu::noinline]] void u32_to_hex(const uint32_t n, char (&s)[9]) {
+    const uint64_t mask_lo = 0x00ff'00ff'00ff'00ffllu;
+    const uint64_t mask_hi = 0xff00'ff00'ff00'ff00llu;
+    printf("mask_lo: 0x%016llx\n", mask_lo);
+    printf("mask_hi: 0x%016llx\n", mask_hi);
 #if 0
     for (int i = 0; i < 8; ++i) {
         s[i] = 'a' + i;
@@ -41,24 +45,30 @@ uint32_t nibbles_to_hex_swar(uint32_t nibbles) {
     const uint32_t nhi = nibbles_to_hex_swar((n >> 4) & 0x0f0f'0f0fu);
     std::memcpy(s, &nhi, sizeof(nhi));
 #endif
-    const uint64_t foo = nhi * 0x0000'0000'0101'0101llu;
-    printf("foo:  0x%016llx\n", foo);
-    std::memset(s, 'x', sizeof(foo));
-    // const uint64_t mask = 0x00ff'00ff'00ff'00ffllu;
-    const uint64_t mask = 0xff00'ff00'ff00'ff00llu;
-    printf("mask: 0x%016llx\n", mask);
-    const uint64_t sx = *(uint64_t *)&s & mask;
-    printf("sx:   0x%016llx\n", sx);
+#if 0
+    std::memset(s, 'x', sizeof(uint64_t));
+
+    const uint64_t foo = nhi * 0x0101'0101'0101'0101llu;
+    printf("foo:   0x%016llx\n", foo);
+    const uint64_t foom = foo & mask_lo;
+    printf("foom:  0x%016llx\n", foom);
+
+    const uint64_t sx = *(uint64_t *)&s & mask_hi;
+    printf("sx:    0x%016llx\n", sx);
     // const uint64_t sx = *(uint64_t *)&s;
-    const uint64_t bar = foo | sx;
+    const uint64_t bar = foom | sx;
     // const uint64_t bar = sx;
-    printf("bar:  0x%016llx\n", bar);
+    printf("bar:   0x%016llx\n", bar);
     std::memcpy(s, &bar, sizeof(bar));
+#endif
+
     s[sizeof(s) - 1] = 0;
 }
 
 int main(void) {
-    const uint32_t n = 0xDEAD'BEEFu;
+    // const uint32_t n = 0xDEAD'BEEFu;
+    // const uint32_t n = 0x0D0E'0A0Du;
+    const uint32_t n = 0xD0E0'A0D0u;
     char s[9]        = {};
     u32_to_hex(n, s);
     printf("n: 0x%08x s: '%s'\n", n, s);
