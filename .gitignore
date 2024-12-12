@@ -1,12 +1,12 @@
 **/.vscode/
 **/.vscode-ctags
 **/*.dSYM/
-/sha1-arm-test
-/sha1-arm-test-O0
-/sha1-arm-test-asan
-/sha1-arm-test-ubsan
+/sha1-arm
+/sha1-arm-O0
+/sha1-arm-asan
+/sha1-arm-ubsan
 /compile_commands.json
-/sha1-arm-test-opt-remarks.txt
+/sha1-arm-opt-remarks.txt
 /uint32_to_ascii_hex
 /*.asm
 /*.ll
