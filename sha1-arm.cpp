@@ -34,7 +34,7 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 
 // clang-format: off
 #ifdef USE_CIFRA
-#include "3rdparty/cifra/cifra-sha1.h"
+#include "sha1-cifra.h"
 #endif
 // clang-format: on
 

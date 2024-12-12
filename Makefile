@@ -70,31 +70,31 @@ teeny-sha1-asan.o: 3rdparty/teeny-sha1/teeny-sha1.c
 teeny-sha1-ubsan.o: 3rdparty/teeny-sha1/teeny-sha1.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(UBSAN_FLAGS)
 
-cifra-sha1.o: 3rdparty/cifra/cifra-sha1.c
+sha1-cifra.o: 3rdparty/cifra/sha1-cifra.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-cifra-sha1-O0.o: 3rdparty/cifra/cifra-sha1.c
+sha1-cifra-O0.o: 3rdparty/cifra/sha1-cifra.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
-cifra-sha1-asan.o: 3rdparty/cifra/cifra-sha1.c
+sha1-cifra-asan.o: 3rdparty/cifra/sha1-cifra.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(ASAN_FLAGS)
 
-cifra-sha1-ubsan.o: 3rdparty/cifra/cifra-sha1.c
+sha1-cifra-ubsan.o: 3rdparty/cifra/sha1-cifra.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(UBSAN_FLAGS)
 
-sha1-arm: sha1-arm.cpp teeny-sha1.o cifra-sha1.o
+sha1-arm: sha1-arm.cpp teeny-sha1.o sha1-cifra.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-sha1-arm-O0: sha1-arm.cpp teeny-sha1-O0.o cifra-sha1-O0.o
+sha1-arm-O0: sha1-arm.cpp teeny-sha1-O0.o sha1-cifra-O0.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
-sha1-arm-asan: sha1-arm.cpp teeny-sha1-asan.o cifra-sha1-asan.o
+sha1-arm-asan: sha1-arm.cpp teeny-sha1-asan.o sha1-cifra-asan.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(ASAN_FLAGS)
 
 run-asan: sha1-arm-asan
 	ASAN_OPTIONS=print_stacktrace=1 ./$^
 
-sha1-arm-ubsan: sha1-arm.cpp teeny-sha1-ubsan.o cifra-sha1-ubsan.o
+sha1-arm-ubsan: sha1-arm.cpp teeny-sha1-ubsan.o sha1-cifra-ubsan.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(UBSAN_FLAGS)
 
 run-ubsan: sha1-arm-ubsan

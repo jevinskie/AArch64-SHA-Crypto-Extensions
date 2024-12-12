@@ -1,1 +1,1 @@
-3rdparty/cifra/cifra-sha1.c
+3rdparty/cifra/sha1-cifra.c

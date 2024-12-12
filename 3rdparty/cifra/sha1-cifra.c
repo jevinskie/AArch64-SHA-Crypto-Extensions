@@ -16,7 +16,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "cifra-sha1.h"
+#include "sha1-cifra.h"
 
 extern void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
                             const uint8_t *const _Nonnull state);
