@@ -28,7 +28,9 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #define DO_DUMP
 #endif
 
+#if 0
 #define DO_DUMP_8x16
+#endif
 
 // clang-format: off
 #ifdef USE_CIFRA
@@ -40,6 +42,20 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #define ANSI_BOLD_RED_FG   "\x1b[1;31m"
 #define ANSI_BOLD_GREEN_FG "\x1b[1;32m"
 #define ANSI_RESET         "\x1b[1;0m"
+#endif
+
+#ifdef DO_MCA
+#define MCA_BEGIN(name)                                         \
+    do {                                                        \
+        __asm volatile("# LLVM-MCA-BEGIN " #name ::: "memory"); \
+    } while (0)
+#define MCA_END()                                      \
+    do {                                               \
+        __asm volatile("# LLVM-MCA-END" ::: "memory"); \
+    } while (0)
+#else
+#define MCA_BEGIN(name)
+#define MCA_END()
 #endif
 
 constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
@@ -169,8 +185,8 @@ struct alignas(block_align_val) SHA1Block {
 
 namespace {
 
-extern "C" [[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
-                                                  const SHA1BlockScalar &block) {
+extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *const _Nonnull name, const int line,
+                                                                const size_t i, const SHA1BlockScalar &block) {
 #ifdef DO_DUMP
     printf(ANSI_BOLD_RED_FG "block[%10zu]" ANSI_RESET
                             " %10s:%03d %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
@@ -184,8 +200,8 @@ extern "C" [[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull nam
 #endif
 }
 
-[[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
-                                       const SHA1Block &block) {
+[[gnu::noinline, maybe_unused]] static void dump_sha1_block(const char *const _Nonnull name, const int line,
+                                                            const size_t i, const SHA1Block &block) {
 #ifdef DO_DUMP
     SHA1BlockScalar scalar_block{};
     std::memcpy(scalar_block.data(), &block, sizeof(block));
@@ -198,8 +214,8 @@ extern "C" [[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull nam
 #endif
 }
 
-extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
-                                                  const SHA1StateScalar &state) {
+extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *const _Nonnull name, const int line,
+                                                                const size_t i, const SHA1StateScalar &state) {
 #ifdef DO_DUMP
     printf(ANSI_BOLD_GREEN_FG "state[%10zu]" ANSI_RESET " %10s:%03d %08x%08x%08x%08x%08x\n", i, name, line, state[0],
            state[1], state[2], state[3], state[4]);
@@ -211,8 +227,8 @@ extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull nam
 #endif
 }
 
-[[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
-                                       const SHA1State &state) {
+[[gnu::noinline, maybe_unused]] static void dump_sha1_state(const char *const _Nonnull name, const int line,
+                                                            const size_t i, const SHA1State &state) {
 #ifdef DO_DUMP
     SHA1StateScalar scalar_state{};
     std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
@@ -226,7 +242,7 @@ extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull nam
 #endif
 }
 
-[[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
+[[gnu::noinline, maybe_unused]] static void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
 #ifdef DO_DUMP
     printf("%s v[0]: 0x%08x v[1]: 0x%08x v[2]: 0x%08x v[3]: 0x%08x\n", prefix, v[0], v[1], v[2], v[3]);
 #else
@@ -235,7 +251,8 @@ extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull nam
 #endif
 }
 
-extern "C" [[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]) {
+extern "C" [[gnu::noinline, maybe_unused]] void dump_uint32x4_t(const char *const _Nonnull prefix,
+                                                                const uint32_t (&v)[4]) {
 #ifdef DO_DUMP
     uint32x4_t dv{v[0], v[1], v[2], v[3]};
     dump_uint32x4_t(prefix, dv);
@@ -245,7 +262,7 @@ extern "C" [[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull pre
 #endif
 }
 
-[[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
+[[gnu::noinline, maybe_unused]] static void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
 #ifdef DO_DUMP_8x16
     printf("%s v[0]: 0x%02hhx, v[1]: 0x%02hhx, v[2]: 0x%02hhx, v[3]: 0x%02hhx, v[4]: 0x%02hhx, v[5]: 0x%02hhx, v[6]: "
            "0x%02hhx, v[7]: 0x%02hhx, v[8]: 0x%02hhx, v[9]: 0x%02hhx, v[10]: 0x%02hhx, v[11]: 0x%02hhx, v[12]: "
@@ -258,7 +275,8 @@ extern "C" [[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull pre
 #endif
 }
 
-extern "C" [[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]) {
+extern "C" [[gnu::noinline, maybe_unused]] void dump_uint8x16_t(const char *const _Nonnull prefix,
+                                                                const uint8_t (&v)[16]) {
 #ifdef DO_DUMP_8x16
     uint8x16_t dv{v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]};
     dump_uint8x16_t(prefix, dv);
@@ -268,7 +286,7 @@ extern "C" [[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull pre
 #endif
 }
 
-[[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) {
+[[gnu::noinline, maybe_unused]] static void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) {
 #ifdef DO_DUMP_8x16
     const uint8x16x2_t mv = v;
     uint8_t b[32];
@@ -290,7 +308,8 @@ extern "C" [[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull pre
 #endif
 }
 
-extern "C" [[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]) {
+extern "C" [[gnu::noinline, maybe_unused]] void dump_uint8x16x2_t(const char *const _Nonnull prefix,
+                                                                  const uint8_t (&v)[32]) {
 #ifdef DO_DUMP_8x16
     uint8x16x2_t dv{v[0],  v[1],  v[2],  v[3],  v[4],  v[5],  v[6],  v[7],  v[8],  v[9],  v[10],
                     v[11], v[12], v[13], v[14], v[15], v[16], v[17], v[18], v[19], v[20], v[21],
@@ -366,13 +385,12 @@ private:
         // Values above '9' ('9' = 0x39) should become 'a'..'f'
         // Check which are greater than '9':
         const uint8x8_t mask = vcgt_u8(nibbles_ascii_stage_0, vdup_n_u8('9'));
-        // Add 0x07 (':' + 0x07 = 'a') to these values
+        // Add 0x27 ('9' + 1 + 0x27 = 'a') to these values
         const uint8x8_t ascii_nibbles = vadd_u8(nibbles_ascii_stage_0, vand_u8(mask, vdup_n_u8(0x27)));
-        // Store result into a 64-bit value
-        uint64_t result;
-        vst1_u8(reinterpret_cast<uint8_t *>(&result), ascii_nibbles);
-        // return std::byteswap(result);
-        return result;
+
+        uint64_t res;
+        vst1_u8(reinterpret_cast<uint8_t *>(&res), ascii_nibbles);
+        return res;
     }
 
 public:
@@ -380,70 +398,35 @@ public:
     // NOLINTNEXTLINE(misc-include-cleaner)
     [[gnu::noinline]] static void digest_to_hex(const uint8_t *__restrict _Nonnull digest,
                                                 char *__restrict _Nonnull hex_str) {
-        uint8x16_t mask4 = vdupq_n_u8(0x0F); // Mask for low 4 bits
-        // alignas(align_val) const uint8x16_t mask8 = vdupq_n_u8(0xF0); // Mask for high 4 bits
+        MCA_BEGIN("digest_to_hex");
+        const uint8x16_t mask_lo = vdupq_n_u8(0x0F); // Mask for low 4 bits
 
         // Load the first 16 bytes of the digest
         const uint8x16_t input = vld1q_u8(digest);
-        const uint8x16_t hi    = vshrq_n_u8(input, 4);   // Shift high nibbles down
-        const uint8x16_t lo    = vandq_u8(input, mask4); // Isolate low nibbles
-        // dump_uint8x16_t("input", input);
-        // dump_uint8x16_t("   hi", hi);
-        // dump_uint8x16_t("   lo", lo);
+        const uint8x16_t hi    = vshrq_n_u8(input, 4);     // Shift high nibbles down
+        const uint8x16_t lo    = vandq_u8(input, mask_lo); // Isolate low nibbles
 
-        alignas(align_val) constexpr std::array<uint8_t, 16> hex_chars = {'0', '1', '2', '3', '4', '5', '6', '7',
-                                                                          '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-        const uint8x16_t lut                                           = vld1q_u8(hex_chars.data());
-        // dump_uint8x16_t("  lut", lut);
+        constexpr uint8x16_t lut = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
         // Convert to ASCII hex characters
         const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
         const uint8x16_t hex_lo = vqtbl1q_u8(lut, lo);
-        // dump_uint8x16_t("hexhi", hex_hi);
-        // dump_uint8x16_t("hexlo", hex_lo);
 
         // Store the results interleaved
         const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
-        // dump_uint8x16x2_t("hexil", hex_chars_interleaved);
-        // char hexil_b[33] = {};
-        // static_assert(sizeof(hex_chars_interleaved) == sizeof(hexil_b) - 1);
-        // std::memcpy(hexil_b, &hex_chars_interleaved, sizeof(hex_chars_interleaved));
-        // printf("hexil hex: %s\n", hexil_b);
-
-        // vst2q_u8(to_from_cast(uint8_t *, char *, hex_str), hex_chars_interleaved);
         vst1q_u8_x2((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
-        // vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
-        // *(uint8x16x2_t *)(hex_chars.data()) = hex_chars_interleaved;
-        // printf("hex_str step 1: %s\n", hex_str);
 
         // Handle the remaining 4 bytes using SWAR in GPRs
         // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
         const uint32_t remaining_bytes = *reinterpret_cast<const uint32_t *>(digest + 16);
         // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
-#if 0
-        const uint64_t high_nibbles = (remaining_bytes & 0xF0F0F0F0U) >> 4ULL;
-        const uint64_t low_nibbles  = remaining_bytes & 0x0F0F0F0FU;
-
-        const uint64_t base_digits   = 0x3030303030303030ULL; // '0' * 8
-        const uint64_t mask_is_digit = 0x0707070707070707ULL; // To differentiate digits from letters
-
-        const uint64_t is_digit_high = ((high_nibbles + mask_is_digit) & 0x1010101010101010ULL) >> 4ULL;
-        const uint64_t high_hex =
-            high_nibbles + base_digits + ((is_digit_high ^ 0x1010101010101010ULL) >> 1U & 0x2020202020202020ULL);
-
-        const uint64_t is_digit_low = ((low_nibbles + mask_is_digit) & 0x1010101010101010ULL) >> 4ULL;
-        const uint64_t low_hex =
-            low_nibbles + base_digits + ((is_digit_low ^ 0x1010101010101010ULL) >> 1ULL & 0x2020202020202020ULL);
-
-        const uint64_t hex_packed = ((high_hex & UINT32_MAX) << 32ULL) | low_hex;
-#else
         const uint64_t hex_packed = u32_to_hex_ascii_u64(remaining_bytes);
-#endif
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         *reinterpret_cast<uint64_t *>(hex_str + 32) = hex_packed;
         hex_str[SHA1_OUTPUT_SIZE * 2]               = '\0';
+        MCA_END();
     }
 
     static void digest_to_hex_simple(const uint8_t *__restrict _Nonnull digest, char *__restrict _Nonnull hex_str) {
