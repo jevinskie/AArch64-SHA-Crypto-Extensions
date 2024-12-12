@@ -26,13 +26,13 @@ TARGETS := sha1-arm sha1-arm-O0 sha1-arm-asan sha1-arm-ubsan \
 	sha1-arm-O3-no-inline-no-unroll.asm sha1-arm-O3-no-inline-no-unroll-demangled.asm sha1-arm-O3-no-inline-no-unroll.ll sha1-arm-O3-no-inline-no-unroll-demangled.ll
 
 
-C_CXX_FLAGS := -Wall -Wextra -Wpedantic -Weverything -Warray-bounds -Wno-poison-system-directories -Wno-documentation-unknown-command -Wno-gnu-statement-expression-from-macro-expansion
+C_CXX_FLAGS := -Wall -Wextra -Wpedantic -Weverything -Warray-bounds -Wno-poison-system-directories -Wno-documentation-unknown-command -Wno-gnu-statement-expression-from-macro-expansion -Wno-gnu-line-marker
 C_CXX_FLAGS += -Wno-nullability-extension
 C_CXX_FLAGS += -fsafe-buffer-usage-suggestions
 C_CXX_FLAGS += -Wno-unsafe-buffer-usage
 C_CXX_FLAGS += -mcpu=apple-m1
 CFLAGS := $(C_CXX_FLAGS) -std=gnu2x  -Wno-declaration-after-statement -Wno-pre-c2x-compat
-CXXFLAGS := $(C_CXX_FLAGS) -std=gnu++2b -Wno-c++98-compat-pedantic -Wno-c++20-compat-pedantic -I 3rdparty/cifra
+CXXFLAGS := $(C_CXX_FLAGS) -std=gnu++2b -fforce-emit-vtables -Wno-c++98-compat-pedantic -Wno-c++20-compat-pedantic -I 3rdparty/cifra
 DBG_FLAGS := -fno-omit-frame-pointer -g3 -gfull -glldb -gcolumn-info -gdwarf-aranges -ggnu-pubnames
 VERBOSE_FLAGS := -v -Wl,-v
 NOOPT_FLAGS := -O0

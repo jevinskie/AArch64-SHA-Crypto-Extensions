@@ -95,7 +95,7 @@ struct alignas(digest_align_val) SHA1Digest {
 namespace {
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-static const char impl_name[] = "sha1-arm.cpp";
+const char impl_name[] = "sha1-arm.cpp";
 
 using SHA1StateScalar = std::array<uint8_t, 20>;
 using SHA1BlockScalar = std::array<uint8_t, 64>;
@@ -141,27 +141,45 @@ constexpr T to_from_cast(std::remove_pointer_t<F> *__restrict _Nonnull val) { //
 }
 #pragma GCC diagnostic pop
 
+// ubsan implicit conversion workaround
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+template <uint32_t p2>
+[[gnu::always_inline]] uint32x4_t my_vsetq_lane_u32(const uint32_t p0, const uint32x4_t p1) noexcept {
+    const uint32_t s0    = p0;
+    const uint32x4_t s1  = p1;
+    const uint32x4_t ret = (uint32x4_t)__builtin_neon_vsetq_lane_i32((int)s0, (int32x4_t)s1, p2);
+    return ret;
+}
+#pragma GCC diagnostic pop
+
 } // namespace
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
-struct alignas(digest_align_val) SHA1State {
+class alignas(digest_align_val) SHA1State {
+public:
     SHA1State() {
-        abcd = vsetq_lane_u32(0x67452301, vdupq_n_u32(0), 0);
-        abcd = vsetq_lane_u32(0xEFCDAB89, abcd, 1);
-        abcd = vsetq_lane_u32(0x98BADCFE, abcd, 2);
-        abcd = vsetq_lane_u32(0x10325476, abcd, 3);
+        // abcd = vsetq_lane_u32(0x67452301u, vdupq_n_u32(0u), 0u);
+        // abcd = vsetq_lane_u32(0xEFCDAB89u, abcd, 1u);
+        // abcd = vsetq_lane_u32(0x98BADCFEu, abcd, 2u);
+        // abcd = vsetq_lane_u32(0x10325476u, abcd, 3u);
+        abcd = my_vsetq_lane_u32<0u>(0x67452301u, vdupq_n_u32(0u));
+        abcd = my_vsetq_lane_u32<1u>(0xEFCDAB89u, abcd);
+        abcd = my_vsetq_lane_u32<2u>(0x98BADCFEu, abcd);
+        abcd = my_vsetq_lane_u32<3u>(0x10325476u, abcd);
     }
     SHA1State(const uint32x4_t abcd_, const uint32_t e_) : abcd{abcd_}, e{e_} {}
-    uint32x4_t abcd;        // Represents H0, H1, H2, H3
-    uint32_t e{0xC3D2E1F0}; // Represents H4
+    uint32x4_t abcd;         // Represents H0, H1, H2, H3
+    uint32_t e{0xC3D2E1F0u}; // Represents H4
 };
 // NOLINTEND(misc-non-private-member-variables-in-classes)
 #pragma GCC diagnostic pop
 
-struct alignas(block_align_val) SHA1Block {
-    std::array<uint32_t, 16> words;
+class alignas(block_align_val) SHA1Block {
+public:
     SHA1Block &operator=(const uint32x4x4_t &block) {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         *reinterpret_cast<uint32x4x4_t *>(words.data()) = block;
@@ -181,6 +199,9 @@ struct alignas(block_align_val) SHA1Block {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         return reinterpret_cast<const uint8_t *>(words.data());
     }
+
+private:
+    std::array<uint32_t, 16> words;
 };
 
 namespace {
@@ -200,8 +221,8 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *cons
 #endif
 }
 
-[[gnu::noinline, maybe_unused]] static void dump_sha1_block(const char *const _Nonnull name, const int line,
-                                                            const size_t i, const SHA1Block &block) {
+[[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
+                                                     const SHA1Block &block) {
 #ifdef DO_DUMP
     SHA1BlockScalar scalar_block{};
     std::memcpy(scalar_block.data(), &block, sizeof(block));
@@ -227,8 +248,8 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *cons
 #endif
 }
 
-[[gnu::noinline, maybe_unused]] static void dump_sha1_state(const char *const _Nonnull name, const int line,
-                                                            const size_t i, const SHA1State &state) {
+[[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
+                                                     const SHA1State &state) {
 #ifdef DO_DUMP
     SHA1StateScalar scalar_state{};
     std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
@@ -242,7 +263,7 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *cons
 #endif
 }
 
-[[gnu::noinline, maybe_unused]] static void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
+[[gnu::noinline, maybe_unused]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v) {
 #ifdef DO_DUMP
     printf("%s v[0]: 0x%08x v[1]: 0x%08x v[2]: 0x%08x v[3]: 0x%08x\n", prefix, v[0], v[1], v[2], v[3]);
 #else
@@ -262,7 +283,7 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_uint32x4_t(const char *cons
 #endif
 }
 
-[[gnu::noinline, maybe_unused]] static void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
+[[gnu::noinline, maybe_unused]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v) {
 #ifdef DO_DUMP_8x16
     printf("%s v[0]: 0x%02hhx, v[1]: 0x%02hhx, v[2]: 0x%02hhx, v[3]: 0x%02hhx, v[4]: 0x%02hhx, v[5]: 0x%02hhx, v[6]: "
            "0x%02hhx, v[7]: 0x%02hhx, v[8]: 0x%02hhx, v[9]: 0x%02hhx, v[10]: 0x%02hhx, v[11]: 0x%02hhx, v[12]: "
@@ -286,7 +307,7 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_uint8x16_t(const char *cons
 #endif
 }
 
-[[gnu::noinline, maybe_unused]] static void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) {
+[[gnu::noinline, maybe_unused]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v) {
 #ifdef DO_DUMP_8x16
     const uint8x16x2_t mv = v;
     uint8_t b[32];
@@ -331,7 +352,7 @@ public:
     template <std::size_t N>
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     static SHA1Digest hash(const uint8_t (&data)[N]) {
-        static_assert(N > 0, "Input data must be non-empty");
+        // static_assert(N > 0, "Input data must be non-empty");
         SHA1State state{};
         if constexpr (N <= 32) {
             process_short(data, N, state);
@@ -344,7 +365,7 @@ public:
     }
 
     template <std::size_t N> static SHA1Digest hash(const std::array<uint8_t, N> &data) {
-        static_assert(N > 0, "Input data must be non-empty");
+        // static_assert(N > 0, "Input data must be non-empty");
         SHA1State state{};
         if constexpr (N <= 32) {
             process_short(data.data(), N, state);
@@ -389,6 +410,7 @@ private:
         const uint8x8_t ascii_nibbles = vadd_u8(nibbles_ascii_stage_0, vand_u8(mask, vdup_n_u8(0x27)));
 
         uint64_t res;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         vst1_u8(reinterpret_cast<uint8_t *>(&res), ascii_nibbles);
         return res;
     }
@@ -490,9 +512,9 @@ private:
                 w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
             }
 
-            // uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[i % 4]);
-            // abcd            = vextq_u32(abcd, abcd, 1); // Rotate the lanes of abcd
-            // abcd            = vsetq_lane_u32(e, abcd, 3);
+            // uint32x4_t temp = vsha1cq_u32(abcd, e, w.val[i % 4u]);
+            // abcd            = vextq_u32(abcd, abcd, 1u); // Rotate the lanes of abcd
+            // abcd            = vsetq_lane_u32(e, abcd, 3u);
             // e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
             abcd = vsha1cq_u32(abcd, e, w.val[i % 4]);
@@ -516,10 +538,11 @@ private:
         for (int i = 20; i < 40; ++i) {
             w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
 
-            uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
-            abcd            = vextq_u32(abcd, abcd, 1);
-            abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
+            const uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
+            abcd                  = vextq_u32(abcd, abcd, 1);
+            // abcd            = vsetq_lane_u32(e, abcd, 3);
+            abcd = my_vsetq_lane_u32<3u>(e, abcd);
+            e    = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
             w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k2);
@@ -532,10 +555,11 @@ private:
         for (int i = 40; i < 60; ++i) {
             w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
 
-            uint32x4_t temp = vsha1mq_u32(abcd, e, w.val[i % 4]);
-            abcd            = vextq_u32(abcd, abcd, 1);
-            abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
+            const uint32x4_t temp = vsha1mq_u32(abcd, e, w.val[i % 4]);
+            abcd                  = vextq_u32(abcd, abcd, 1);
+            // abcd            = vsetq_lane_u32(e, abcd, 3u);
+            abcd = my_vsetq_lane_u32<3u>(e, abcd);
+            e    = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
             w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k3);
@@ -548,10 +572,11 @@ private:
         for (int i = 60; i < 80; ++i) {
             w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
 
-            uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
-            abcd            = vextq_u32(abcd, abcd, 1);
-            abcd            = vsetq_lane_u32(e, abcd, 3);
-            e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
+            const uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
+            abcd                  = vextq_u32(abcd, abcd, 1);
+            // abcd            = vsetq_lane_u32(e, abcd, 3u);
+            abcd = my_vsetq_lane_u32<3u>(e, abcd);
+            e    = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
             w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k4);
@@ -564,7 +589,7 @@ private:
         dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
     }
 
-    static void pad_and_finalize(const uint8_t *__restrict _Nonnull data, std::size_t len, SHA1State &state) {
+    static void pad_and_finalize(const uint8_t *__restrict _Nullable data, std::size_t len, SHA1State &state) {
         alignas(SHA1_BLOCK_SIZE) SHA1Block buffer = {};
         assert(len <= sizeof(buffer));
         std::memcpy(buffer.data(), data, len);
@@ -585,7 +610,7 @@ private:
         process_block(buffer.bytes(), state);
     }
 
-    static void process_short(const uint8_t *__restrict _Nonnull data, std::size_t len, SHA1State &state) {
+    static void process_short(const uint8_t *__restrict _Nullable data, std::size_t len, SHA1State &state) {
         pad_and_finalize(data, len, state);
     }
 
@@ -641,7 +666,8 @@ private:
 int main() {
     // Example data
     alignas(SHA1_BLOCK_SIZE) static constinit auto str =
-        cstrlit_to_std_array<uint8_t>("The quick brown fox jumps over the lazy dog\n");
+        // cstrlit_to_std_array<uint8_t>("The quick brown fox jumps over the lazy dog\n");
+        cstrlit_to_std_array<uint8_t>("");
     const auto h = SHA1::hash(str);
     alignas(align_val) std::array<char, SHA1_OUTPUT_SIZE * 2 + 1> hex_str{};
 
