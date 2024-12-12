@@ -25,7 +25,7 @@ extern void dump_sha1_block(const char *const _Nonnull name, const int line, con
 
 extern void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t(v)[4]);
 
-static const char impl_name[] = "sha1-cifra";
+static const char impl_name[] = "sha1-cifra.c";
 static size_t block_cnt;
 static size_t state_cnt;
 

@@ -24,7 +24,7 @@
 extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data, size_t databytes);
 #endif
 
-#if 0
+#if 1
 #define DO_DUMP
 #endif
 
@@ -95,7 +95,7 @@ struct alignas(digest_align_val) SHA1Digest {
 namespace {
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-const char impl_name[] = "sha1-arm";
+static const char impl_name[] = "sha1-arm.cpp";
 
 using SHA1StateScalar = std::array<uint8_t, 20>;
 using SHA1BlockScalar = std::array<uint8_t, 64>;
