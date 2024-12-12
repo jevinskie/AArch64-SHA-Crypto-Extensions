@@ -337,51 +337,91 @@ public:
         return state_to_digest(state);
     }
 
+private:
+    [[gnu::always_inline, gnu::pure]] static uint64_t u32_to_hex_ascii_u64(const uint32_t value) noexcept {
+        // Load and reverse bytes to get big-endian ordering in one instruction.
+        // Original: [B0, B1, B2, B3]
+        // After vdup_n_u32: [B0,B1,B2,B3, 0,0,0,0]
+        const uint8x8_t bytes = vreinterpret_u8_u32(vdup_n_u32(value));
+
+        // Extract high nibble and low nibble directly:
+        // high nibble = byte >> 4
+        // low nibble = byte & 0x0F
+        // const uint8x8_t nibble_swapped()
+        const uint8x8_t high = vshr_n_u8(bytes, 4);
+        const uint8x8_t low  = vand_u8(bytes, vdup_n_u8(0x0F));
+
+        // Interleave high and low nibbles: [H0,L0,H1,L1,H2,L2,H3,L3,...]
+        // vzip_u8 takes corresponding elements from high and low, interleaving them.
+        const uint8x8x2_t zipped = vzip_u8(high, low);
+        // zipped.val[0] = H0,L0,H1,L1,H2,L2,H3,L3 (first 8 nibbles of interest)
+        // No need to combine further; zipped.val[0] already holds the 8 nibbles we want.
+
+        const uint8x8_t nibbles = zipped.val[0];
+
+        // ASCII conversion:
+        // Add '0' to bring [0..9] into '0'..'9' and [10..15] into ':'..'?'
+        const uint8x8_t nibbles_ascii_stage_0 = vadd_u8(nibbles, vdup_n_u8('0'));
+
+        // Values above '9' ('9' = 0x39) should become 'a'..'f'
+        // Check which are greater than '9':
+        const uint8x8_t mask = vcgt_u8(nibbles_ascii_stage_0, vdup_n_u8('9'));
+        // Add 0x07 (':' + 0x07 = 'a') to these values
+        const uint8x8_t ascii_nibbles = vadd_u8(nibbles_ascii_stage_0, vand_u8(mask, vdup_n_u8(0x27)));
+        // Store result into a 64-bit value
+        uint64_t result;
+        vst1_u8(reinterpret_cast<uint8_t *>(&result), ascii_nibbles);
+        // return std::byteswap(result);
+        return result;
+    }
+
+public:
     // clang-tidy complains about __restrict not being in an included header -_-
     // NOLINTNEXTLINE(misc-include-cleaner)
     [[gnu::noinline]] static void digest_to_hex(const uint8_t *__restrict _Nonnull digest,
                                                 char *__restrict _Nonnull hex_str) {
-        alignas(align_val) const uint8x16_t mask4 = vdupq_n_u8(0x0F); // Mask for low 4 bits
+        uint8x16_t mask4 = vdupq_n_u8(0x0F); // Mask for low 4 bits
         // alignas(align_val) const uint8x16_t mask8 = vdupq_n_u8(0xF0); // Mask for high 4 bits
 
         // Load the first 16 bytes of the digest
-        alignas(align_val) const uint8x16_t input = vld1q_u8(digest);
-        alignas(align_val) const uint8x16_t hi    = vshrq_n_u8(input, 4);   // Shift high nibbles down
-        alignas(align_val) const uint8x16_t lo    = vandq_u8(input, mask4); // Isolate low nibbles
-        dump_uint8x16_t("input", input);
-        dump_uint8x16_t("   hi", hi);
-        dump_uint8x16_t("   lo", lo);
+        const uint8x16_t input = vld1q_u8(digest);
+        const uint8x16_t hi    = vshrq_n_u8(input, 4);   // Shift high nibbles down
+        const uint8x16_t lo    = vandq_u8(input, mask4); // Isolate low nibbles
+        // dump_uint8x16_t("input", input);
+        // dump_uint8x16_t("   hi", hi);
+        // dump_uint8x16_t("   lo", lo);
 
-        alignas(align_val) static constinit std::array<uint8_t, 16> hex_chars = {
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-        alignas(align_val) const uint8x16_t lut = vld1q_u8(hex_chars.data());
-        dump_uint8x16_t("  lut", lut);
+        alignas(align_val) constexpr std::array<uint8_t, 16> hex_chars = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                                                          '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+        const uint8x16_t lut                                           = vld1q_u8(hex_chars.data());
+        // dump_uint8x16_t("  lut", lut);
 
         // Convert to ASCII hex characters
-        alignas(align_val) const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
-        alignas(align_val) const uint8x16_t hex_lo = vqtbl1q_u8(lut, lo);
-        dump_uint8x16_t("hexhi", hex_hi);
-        dump_uint8x16_t("hexlo", hex_lo);
+        const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
+        const uint8x16_t hex_lo = vqtbl1q_u8(lut, lo);
+        // dump_uint8x16_t("hexhi", hex_hi);
+        // dump_uint8x16_t("hexlo", hex_lo);
 
         // Store the results interleaved
-        alignas(align_val) const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
-        dump_uint8x16x2_t("hexil", hex_chars_interleaved);
-        char hexil_b[33] = {};
-        static_assert(sizeof(hex_chars_interleaved) == sizeof(hexil_b) - 1);
-        std::memcpy(hexil_b, &hex_chars_interleaved, sizeof(hex_chars_interleaved));
-        printf("hexil hex: %s\n", hexil_b);
+        const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
+        // dump_uint8x16x2_t("hexil", hex_chars_interleaved);
+        // char hexil_b[33] = {};
+        // static_assert(sizeof(hex_chars_interleaved) == sizeof(hexil_b) - 1);
+        // std::memcpy(hexil_b, &hex_chars_interleaved, sizeof(hex_chars_interleaved));
+        // printf("hexil hex: %s\n", hexil_b);
 
         // vst2q_u8(to_from_cast(uint8_t *, char *, hex_str), hex_chars_interleaved);
         vst1q_u8_x2((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
         // vst2q_u8((to_from_cast<uint8_t *, char *>(hex_str)), hex_chars_interleaved);
         // *(uint8x16x2_t *)(hex_chars.data()) = hex_chars_interleaved;
-        printf("hex_str step 1: %s\n", hex_str);
+        // printf("hex_str step 1: %s\n", hex_str);
 
         // Handle the remaining 4 bytes using SWAR in GPRs
         // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
-        alignas(align_val) const uint32_t remaining_bytes = *reinterpret_cast<const uint32_t *>(digest + 16);
+        const uint32_t remaining_bytes = *reinterpret_cast<const uint32_t *>(digest + 16);
         // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
+#if 0
         const uint64_t high_nibbles = (remaining_bytes & 0xF0F0F0F0U) >> 4ULL;
         const uint64_t low_nibbles  = remaining_bytes & 0x0F0F0F0FU;
 
@@ -397,6 +437,9 @@ public:
             low_nibbles + base_digits + ((is_digit_low ^ 0x1010101010101010ULL) >> 1ULL & 0x2020202020202020ULL);
 
         const uint64_t hex_packed = ((high_hex & UINT32_MAX) << 32ULL) | low_hex;
+#else
+        const uint64_t hex_packed = u32_to_hex_ascii_u64(remaining_bytes);
+#endif
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         *reinterpret_cast<uint64_t *>(hex_str + 32) = hex_packed;
