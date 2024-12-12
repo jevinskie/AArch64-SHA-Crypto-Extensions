@@ -28,7 +28,7 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #define DO_DUMP
 #endif
 
-#if 0
+#if 1
 #define DO_DUMP_8x16
 #endif
 
@@ -43,6 +43,8 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #define ANSI_BOLD_GREEN_FG "\x1b[1;32m"
 #define ANSI_RESET         "\x1b[1;0m"
 #endif
+
+#define DO_MCA
 
 #ifdef DO_MCA
 #define MCA_BEGIN(name)                                         \
@@ -128,14 +130,13 @@ template <typename T, typename F> constexpr T to_from_cast(const F &val) {
     return reinterpret_cast<T>(static_cast<F>(val));
 }
 
-template <typename T, typename F>
-constexpr T to_from_cast(const F *__restrict _Nonnull val) { // NOLINT(misc-include-cleaner)
+template <typename T, typename F> constexpr T to_from_cast(const F *_Nonnull val) { // NOLINT(misc-include-cleaner)
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return reinterpret_cast<T>(static_cast<F *>(val));
 }
 
 template <typename T, typename F>
-constexpr T to_from_cast(std::remove_pointer_t<F> *__restrict _Nonnull val) { // NOLINT(misc-include-cleaner)
+constexpr T to_from_cast(std::remove_pointer_t<F> *_Nonnull val) { // NOLINT(misc-include-cleaner)
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return reinterpret_cast<T>(static_cast<std::remove_pointer_t<F> *>(val));
 }
@@ -323,6 +324,14 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_uint8x16_t(const char *cons
            prefix, b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15],
            b[16], b[17], b[18], b[19], b[20], b[21], b[22], b[23], b[24], b[25], b[26], b[27], b[28], b[29], b[30],
            b[31]);
+
+    printf("%s v[0]: %c, v[1]: %c, v[2]: %c, v[3]: %c, v[4]: %c, v[5]: %c, v[6]: %c, v[7]: %c, v[8]: %c, v[9]: %c, "
+           "v[10]: %c, v[11]: %c, v[12]: %c, v[13]: %c, v[14]: %c, v[15]: %c, v[16]: %c, v[17]: %c, v[18]: %c, v[19]: "
+           "%c, v[20]: %c, v[21]: %c, v[22]: %c, v[23]: %c, v[24]: %c, v[25]: %c, v[26]: %c, v[27]: %c, v[28]: %c, "
+           "v[29]: %c, v[30]: %c, v[31]: %c",
+           prefix, b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15],
+           b[16], b[17], b[18], b[19], b[20], b[21], b[22], b[23], b[24], b[25], b[26], b[27], b[28], b[29], b[30],
+           b[31]);
 #else
     (void)prefix;
     (void)v;
@@ -378,7 +387,30 @@ public:
     }
 
 private:
-    [[gnu::always_inline, gnu::pure]] static uint64_t u32_to_hex_ascii_u64(const uint32_t value) noexcept {
+    static constexpr uint8x16_t lut = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    [[gnu::always_inline]] static void u32_to_hex_ascii_u64(const uint32_t value, char *_Nonnull hex_str) {
+        // printf("u32_to_hex_ascii_u64 val: 0x%08x\n", value);
+        // assert(!"foo");
+        const uint8x16_t mask_lo = vdupq_n_u8(0x0F); // Mask for low 4 bits
+
+        // Load the first 16 bytes of the digest
+        const uint8x16_t input = vdupq_n_u32(value);
+        const uint8x16_t hi    = vshrq_n_u8(input, 4);     // Shift high nibbles down
+        const uint8x16_t lo    = vandq_u8(input, mask_lo); // Isolate low nibbles
+
+        // Convert to ASCII hex characters
+        const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
+        const uint8x16_t hex_lo = vqtbl1q_u8(lut, lo);
+        // dump_uint8x16_t("u32_to_hex_ascii_u64 hex_hi", hex_hi);
+        // dump_uint8x16_t("u32_to_hex_ascii_u64 hex_lo", hex_lo);
+
+        // Store the results interleaved
+        const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
+        // dump_uint8x16x2_t("u32_to_hex_ascii_u64 hex_chars_interleaved", hex_chars_interleaved);
+        vst1q_lane_u64((to_from_cast<uint64_t *, char *>(hex_str)), (uint32x4_t)hex_chars_interleaved.val[0], 0);
+        // return (*((const uint64x2x2_t *)&hex_chars_interleaved)).val[0][0];
+
+#if 0
         // Load and reverse bytes to get big-endian ordering in one instruction.
         // Original: [B0, B1, B2, B3]
         // After vdup_n_u32: [B0,B1,B2,B3, 0,0,0,0]
@@ -413,6 +445,7 @@ private:
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         vst1_u8(reinterpret_cast<uint8_t *>(&res), ascii_nibbles);
         return res;
+#endif
     }
 
 public:
@@ -420,15 +453,13 @@ public:
     // NOLINTNEXTLINE(misc-include-cleaner)
     [[gnu::noinline]] static void digest_to_hex(const uint8_t *__restrict _Nonnull digest,
                                                 char *__restrict _Nonnull hex_str) {
-        MCA_BEGIN("digest_to_hex");
+        // MCA_BEGIN("digest_to_hex");
         const uint8x16_t mask_lo = vdupq_n_u8(0x0F); // Mask for low 4 bits
 
         // Load the first 16 bytes of the digest
         const uint8x16_t input = vld1q_u8(digest);
         const uint8x16_t hi    = vshrq_n_u8(input, 4);     // Shift high nibbles down
         const uint8x16_t lo    = vandq_u8(input, mask_lo); // Isolate low nibbles
-
-        constexpr uint8x16_t lut = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
         // Convert to ASCII hex characters
         const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
@@ -443,12 +474,13 @@ public:
         const uint32_t remaining_bytes = *reinterpret_cast<const uint32_t *>(digest + 16);
         // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
-        const uint64_t hex_packed = u32_to_hex_ascii_u64(remaining_bytes);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        u32_to_hex_ascii_u64(remaining_bytes, hex_str + 32);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        *reinterpret_cast<uint64_t *>(hex_str + 32) = hex_packed;
-        hex_str[SHA1_OUTPUT_SIZE * 2]               = '\0';
-        MCA_END();
+        // *reinterpret_cast<uint64_t *>(hex_str + 32) = hex_packed;
+        hex_str[SHA1_OUTPUT_SIZE * 2] = '\0';
+        // MCA_END();
     }
 
     static void digest_to_hex_simple(const uint8_t *__restrict _Nonnull digest, char *__restrict _Nonnull hex_str) {

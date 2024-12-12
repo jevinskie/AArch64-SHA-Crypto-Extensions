@@ -262,6 +262,9 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
             Wt        = W[(t - 3) % 16] ^ W[(t - 8) % 16] ^ W[(t - 14) % 16] ^ W[(t - 16) % 16];
             Wt        = rotl32(Wt, 1);
             W[t % 16] = Wt;
+            if (t % 16 == 0) {
+                dump_uint32x4_t("w.val[x] after: ", &W[t % 16]);
+            }
         }
 
         uint32_t f, k;
