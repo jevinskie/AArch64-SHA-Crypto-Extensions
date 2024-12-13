@@ -703,7 +703,8 @@ private:
         uint32x4_t msg0, msg1, msg2, msg3;
 
         for (size_t b = 0; b < 20; ++b) {
-            const auto r    = b * 4;
+            const auto r = b * 4;
+            fmt::print("r: {}\n", r);
             const auto keyf = choose_key(r);
             const auto f    = choose_func(r);
             uint32_t new_e  = vsha1h_u32(vgetq_lane_u32(abcd, 0));

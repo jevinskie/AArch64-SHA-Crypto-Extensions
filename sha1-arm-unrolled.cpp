@@ -50,12 +50,14 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         tmp1 = vaddq_u32(msg1, k0);
 
         // Rounds 0-3
+        fmt::print("r: 0\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1cq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg2, k0);
         msg0 = vsha1su0q_u32(msg0, msg1, msg2);
 
         // Rounds 4-7
+        fmt::print("r: 4\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1cq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg3, k0);
@@ -63,6 +65,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg1 = vsha1su0q_u32(msg1, msg2, msg3);
 
         // Rounds 8-11
+        fmt::print("r: 8\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1cq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg0, k0);
@@ -70,6 +73,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg2 = vsha1su0q_u32(msg2, msg3, msg0);
 
         // Rounds 12-15
+        fmt::print("r: 12\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1cq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg1, k1);
@@ -77,6 +81,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg3 = vsha1su0q_u32(msg3, msg0, msg1);
 
         // Rounds 16-19
+        fmt::print("r: 16\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1cq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg2, k1);
@@ -84,6 +89,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg0 = vsha1su0q_u32(msg0, msg1, msg2);
 
         // Rounds 20-23
+        fmt::print("r: 20\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg3, k1);
@@ -91,6 +97,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg1 = vsha1su0q_u32(msg1, msg2, msg3);
 
         // Rounds 24-27
+        fmt::print("r: 24\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg0, k1);
@@ -98,6 +105,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg2 = vsha1su0q_u32(msg2, msg3, msg0);
 
         // Rounds 28-31
+        fmt::print("r: 28\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg1, k1);
@@ -105,6 +113,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg3 = vsha1su0q_u32(msg3, msg0, msg1);
 
         // Rounds 32-35
+        fmt::print("r: 32\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg2, k2);
@@ -112,6 +121,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg0 = vsha1su0q_u32(msg0, msg1, msg2);
 
         // Rounds 36-39
+        fmt::print("r: 36\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg3, k2);
@@ -119,6 +129,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg1 = vsha1su0q_u32(msg1, msg2, msg3);
 
         // Rounds 40-43
+        fmt::print("r: 40\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1mq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg0, k2);
@@ -126,6 +137,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg2 = vsha1su0q_u32(msg2, msg3, msg0);
 
         // Rounds 44-47
+        fmt::print("r: 44\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1mq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg1, k2);
@@ -133,6 +145,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg3 = vsha1su0q_u32(msg3, msg0, msg1);
 
         // Rounds 48-51
+        fmt::print("r: 48\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1mq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg2, k2);
@@ -140,6 +153,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg0 = vsha1su0q_u32(msg0, msg1, msg2);
 
         // Rounds 52-55
+        fmt::print("r: 52\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1mq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg3, k3);
@@ -147,6 +161,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg1 = vsha1su0q_u32(msg1, msg2, msg3);
 
         // Rounds 56-59
+        fmt::print("r: 56\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1mq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg0, k3);
@@ -154,6 +169,7 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg2 = vsha1su0q_u32(msg2, msg3, msg0);
 
         // Rounds 60-63
+        fmt::print("r: 60\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg1, k3);
@@ -161,21 +177,25 @@ sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *_
         msg3 = vsha1su0q_u32(msg3, msg0, msg1);
 
         // Rounds 64-67
+        fmt::print("r: 64\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e0, tmp0);
         tmp0 = vaddq_u32(msg2, k3);
         msg3 = vsha1su1q_u32(msg3, msg2);
 
         // Rounds 68-71
+        fmt::print("r: 68\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e1, tmp1);
         tmp1 = vaddq_u32(msg3, k3);
 
         // Rounds 72-75
+        fmt::print("r: 72\n");
         e1   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e0, tmp0);
 
         // Rounds 76-79
+        fmt::print("r: 76\n");
         e0   = vsha1h_u32(vgetq_lane_u32(abcd, 0));
         abcd = vsha1pq_u32(abcd, e1, tmp1);
 
