@@ -699,8 +699,11 @@ int main() {
     alignas(SHA1_BLOCK_SIZE) static constinit auto str =
         // cstrlit_to_std_array<uint8_t>("The quick brown fox jumps over the lazy dog\n");
         cstrlit_to_std_array<uint8_t>("");
+
+    sha1_wrappers_reset();
     const auto h = SHA1::hash(str);
     alignas(align_val) std::array<char, SHA1_OUTPUT_SIZE * 2 + 1> hex_str{};
+    sha1_wrappers_reset();
 
     printf("SHA-1 Digest dumb:         "
            "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%"
