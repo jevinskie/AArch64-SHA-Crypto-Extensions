@@ -12,6 +12,7 @@
 #include <cstring>
 #include <type_traits>
 
+#include "sha1-arm-unrolled.h"
 #include "sha1-wrappers.h"
 
 #if 0
@@ -62,12 +63,12 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #define MCA_END()
 #endif
 
-constexpr std::size_t SHA1_BLOCK_SIZE  = 64;
-constexpr std::size_t SHA1_OUTPUT_SIZE = 20;
+constexpr size_t SHA1_BLOCK_SIZE  = 64;
+constexpr size_t SHA1_OUTPUT_SIZE = 20;
 
-constexpr std::size_t align_val        = 16;
-constexpr std::size_t digest_align_val = 32;
-constexpr std::size_t block_align_val  = SHA1_BLOCK_SIZE;
+constexpr size_t align_val        = 16;
+constexpr size_t digest_align_val = 32;
+constexpr size_t block_align_val  = SHA1_BLOCK_SIZE;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -187,7 +188,7 @@ namespace {
 const char impl_name[] = "sha1-arm.cpp";
 
 // Helper function to determine the size of the string literal
-template <typename T, std::size_t N>
+template <typename T, size_t N>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 consteval std::array<T, N - 1> cstrlit_to_std_array(const char (&str)[N]) {
     std::array<T, N - 1> arr = {};
@@ -396,7 +397,7 @@ static size_t state_cnt;
 
 class SHA1 {
 public:
-    template <std::size_t N>
+    template <size_t N>
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     static SHA1Digest hash(const uint8_t (&data)[N]) {
         // static_assert(N > 0, "Input data must be non-empty");
@@ -411,7 +412,7 @@ public:
         return state_to_digest(state);
     }
 
-    template <std::size_t N> static SHA1Digest hash(const std::array<uint8_t, N> &data) {
+    template <size_t N> static SHA1Digest hash(const std::array<uint8_t, N> &data) {
         // static_assert(N > 0, "Input data must be non-empty");
         SHA1State state{};
         if constexpr (N <= 32) {
@@ -620,7 +621,7 @@ private:
         dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
     }
 
-    static void pad_and_finalize(const uint8_t *__restrict _Nullable data, std::size_t len, SHA1State &state) {
+    static void pad_and_finalize(const uint8_t *__restrict _Nullable data, size_t len, SHA1State &state) {
         alignas(SHA1_BLOCK_SIZE) SHA1Block buffer = {};
         assert(len <= sizeof(buffer));
         std::memcpy(buffer.data(), data, len);
@@ -641,11 +642,11 @@ private:
         process_block(buffer.bytes(), state);
     }
 
-    static void process_short(const uint8_t *__restrict _Nullable data, std::size_t len, SHA1State &state) {
+    static void process_short(const uint8_t *__restrict _Nullable data, size_t len, SHA1State &state) {
         pad_and_finalize(data, len, state);
     }
 
-    static void process_medium(const uint8_t *__restrict _Nonnull data, std::size_t len, SHA1State &state) {
+    static void process_medium(const uint8_t *__restrict _Nonnull data, size_t len, SHA1State &state) {
         const uint8_t *__restrict _Nonnull end = data + len - (len % SHA1_BLOCK_SIZE);
         for (const uint8_t *__restrict _Nonnull p = data; p < end; p += SHA1_BLOCK_SIZE) {
             process_block(p, state);
@@ -653,7 +654,7 @@ private:
         pad_and_finalize(end, len % SHA1_BLOCK_SIZE, state);
     }
 
-    static void process_large(const uint8_t *__restrict _Nonnull data, std::size_t len, SHA1State &state) {
+    static void process_large(const uint8_t *__restrict _Nonnull data, size_t len, SHA1State &state) {
         const size_t block_total_sz = len - (len % SHA1_BLOCK_SIZE);
         const size_t remainder_sz   = len - block_total_sz;
         for (size_t i = 0; i < block_total_sz; i += SHA1_BLOCK_SIZE) {
@@ -718,6 +719,26 @@ int main() {
     std::memset(hex_str.data(), 0, sizeof(hex_str));
     SHA1::digest_to_hex(h.bytes(), hex_str.data());
     printf("SHA-1 Digest:              %s\n", hex_str.data());
+    printf("\n\n\n");
+
+    SHA1Digest uh{};
+    sha1_wrappers_reset();
+    sha1_arm_unrolled(str.data(), str.size(), uh.bytes());
+    sha1_wrappers_reset();
+
+    printf("SHA-1 Digest dumb unrolled: "
+           "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%"
+           "02hhx%02hhx%02hhx\n",
+           uh[0], uh[1], uh[2], uh[3], uh[4], uh[5], uh[6], uh[7], uh[8], uh[9], uh[10], uh[11], uh[12], uh[13], uh[14],
+           uh[15], uh[16], uh[17], uh[18], uh[19]);
+
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
+    SHA1::digest_to_hex_simple(uh.bytes(), hex_str.data());
+    printf("SHA-1 Digest simple unrolled: %s\n", hex_str.data());
+
+    std::memset(hex_str.data(), 0, sizeof(hex_str));
+    SHA1::digest_to_hex(uh.bytes(), hex_str.data());
+    printf("SHA-1 Digest unrolled: %s\n", hex_str.data());
     printf("\n\n\n");
 
 #ifdef USE_TEENY

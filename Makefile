@@ -1,6 +1,5 @@
 TARGETS := sha1-arm sha1-arm-O0 sha1-arm-asan sha1-arm-ubsan \
-	sha1-arm.ii \
-	sha1-wrappers.ii \
+	sha1-arm.ii sha1-wrappers.ii sha1-arm-unrolled.ii \
 	sha1-arm.asm sha1-arm-demangled.asm sha1-arm.ll sha1-arm-demangled.ll \
 	sha1-arm-no-inline.asm sha1-arm-no-inline-demangled.asm sha1-arm-no-inline.ll sha1-arm-no-inline-demangled.ll \
 	sha1-arm-no-unroll.asm sha1-arm-no-unroll-demangled.asm sha1-arm-no-unroll.ll sha1-arm-no-unroll-demangled.ll \
@@ -76,52 +75,64 @@ teeny-sha1-asan.o: 3rdparty/teeny-sha1/teeny-sha1.c
 teeny-sha1-ubsan.o: 3rdparty/teeny-sha1/teeny-sha1.c
 	$(CC) -c -o $@ $^ $(CFLAGS) $(UBSAN_FLAGS)
 
-sha1-cifra.o: 3rdparty/cifra/sha1-cifra.c
-	$(CC) -c -o $@ $^ $(CFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
+sha1-cifra.o: 3rdparty/cifra/sha1-cifra.c 3rdparty/cifra/sha1-cifra.h
+	$(CC) -c -o $@ $< $(CFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-sha1-cifra-O0.o: 3rdparty/cifra/sha1-cifra.c
-	$(CC) -c -o $@ $^ $(CFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
+sha1-cifra-O0.o: 3rdparty/cifra/sha1-cifra.c 3rdparty/cifra/sha1-cifra.h
+	$(CC) -c -o $@ $< $(CFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
-sha1-cifra-asan.o: 3rdparty/cifra/sha1-cifra.c
-	$(CC) -c -o $@ $^ $(CFLAGS) $(ASAN_FLAGS)
+sha1-cifra-asan.o: 3rdparty/cifra/sha1-cifra.c 3rdparty/cifra/sha1-cifra.h
+	$(CC) -c -o $@ $< $(CFLAGS) $(ASAN_FLAGS)
 
-sha1-cifra-ubsan.o: 3rdparty/cifra/sha1-cifra.c
-	$(CC) -c -o $@ $^ $(CFLAGS) $(UBSAN_FLAGS)
+sha1-cifra-ubsan.o: 3rdparty/cifra/sha1-cifra.c 3rdparty/cifra/sha1-cifra.h
+	$(CC) -c -o $@ $< $(CFLAGS) $(UBSAN_FLAGS)
 
-sha1-wrappers.o: sha1-wrappers.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
+sha1-wrappers.o: sha1-wrappers.cpp sha1-wrappers.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-sha1-wrappers-O0.o: sha1-wrappers.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
+sha1-wrappers-O0.o: sha1-wrappers.cpp sha1-wrappers.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
-sha1-wrappers-asan.o: sha1-wrappers.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(ASAN_FLAGS)
+sha1-wrappers-asan.o: sha1-wrappers.cpp sha1-wrappers.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(ASAN_FLAGS)
 
-sha1-wrappers-ubsan.o: sha1-wrappers.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(UBSAN_FLAGS)
+sha1-wrappers-ubsan.o: sha1-wrappers.cpp sha1-wrappers.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(UBSAN_FLAGS)
 
-sha1-arm.o: sha1-arm.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
+sha1-arm-unrolled.o: sha1-arm-unrolled.cpp sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-sha1-arm-O0.o: sha1-arm.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
+sha1-arm-unrolled-O0.o: sha1-arm-unrolled.cpp sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
-sha1-arm-asan.o: sha1-arm.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(ASAN_FLAGS)
+sha1-arm-unrolled-asan.o: sha1-arm-unrolled.cpp sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(ASAN_FLAGS)
 
-sha1-arm-ubsan.o: sha1-arm.cpp
-	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(UBSAN_FLAGS)
+sha1-arm-unrolled-ubsan.o: sha1-arm-unrolled.cpp sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(UBSAN_FLAGS)
 
-sha1-arm: sha1-arm.o teeny-sha1.o sha1-cifra.o sha1-wrappers.o
+sha1-arm.o: sha1-arm.cpp sha1-wrappers.h sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
+
+sha1-arm-O0.o: sha1-arm.cpp sha1-wrappers.h sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
+
+sha1-arm-asan.o: sha1-arm.cpp sha1-wrappers.h sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(ASAN_FLAGS)
+
+sha1-arm-ubsan.o: sha1-arm.cpp sha1-wrappers.h sha1-arm-unrolled.h
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(UBSAN_FLAGS)
+
+sha1-arm: sha1-arm.o teeny-sha1.o sha1-cifra.o sha1-wrappers.o sha1-arm-unrolled.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
-sha1-arm-O0: sha1-arm-O0.o teeny-sha1-O0.o sha1-cifra-O0.o sha1-wrappers-O0.o
+sha1-arm-O0: sha1-arm-O0.o teeny-sha1-O0.o sha1-cifra-O0.o sha1-wrappers-O0.o sha1-arm-unrolled-O0.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
-sha1-arm-asan: sha1-arm-asan.o teeny-sha1-asan.o sha1-cifra-asan.o sha1-wrappers-asan.o
+sha1-arm-asan: sha1-arm-asan.o teeny-sha1-asan.o sha1-cifra-asan.o sha1-wrappers-asan.o sha1-arm-unrolled-asan.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(ASAN_FLAGS)
 
-sha1-arm-ubsan: sha1-arm-ubsan.o teeny-sha1-ubsan.o sha1-cifra-ubsan.o sha1-wrappers-ubsan.o
+sha1-arm-ubsan: sha1-arm-ubsan.o teeny-sha1-ubsan.o sha1-cifra-ubsan.o sha1-wrappers-ubsan.o sha1-arm-unrolled-ubsan.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(UBSAN_FLAGS)
 
 run-asan: sha1-arm-asan
