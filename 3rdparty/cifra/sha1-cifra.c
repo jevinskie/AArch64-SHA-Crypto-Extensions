@@ -215,16 +215,16 @@ static void
 sha1_update_block(void *vctx, const uint8_t *inp) {
     cf_sha1_context *ctx = vctx;
 
-    dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
-    dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, inp);
+    // dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+    // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, inp);
 
     /* This is a 16-word window into the whole W array. */
     uint32_t W[16];
 
     uint32_t a = ctx->H[0], b = ctx->H[1], c = ctx->H[2], d = ctx->H[3], e = ctx->H[4], Wt;
 
-    dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
-    dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, inp);
+    // dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+    // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, inp);
 
     for (size_t t = 0; t < 80; t++) {
         /* For W[0..16] we process the input into W.
@@ -238,24 +238,24 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
             if (t == 0) {
-                dump_uint32x4_t("w.val[0] before:", (const uint32_t *)inp);
+                // dump_uint32x4_t("w.val[0] before:", (const uint32_t *)inp);
             } else if (t == 4) {
-                dump_uint32x4_t("w.val[1] before:", (const uint32_t *)inp);
+                // dump_uint32x4_t("w.val[1] before:", (const uint32_t *)inp);
             } else if (t == 8) {
-                dump_uint32x4_t("w.val[2] before:", (const uint32_t *)inp);
+                // dump_uint32x4_t("w.val[2] before:", (const uint32_t *)inp);
             } else if (t == 12) {
-                dump_uint32x4_t("w.val[3] before:", (const uint32_t *)inp);
+                // dump_uint32x4_t("w.val[3] before:", (const uint32_t *)inp);
             }
 #pragma GCC diagnostic pop
             W[t] = Wt = read32_be(inp);
             if (t == 3) {
-                dump_uint32x4_t("w.val[0] after: ", &W[0]);
+                // dump_uint32x4_t("w.val[0] after: ", &W[0]);
             } else if (t == 7) {
-                dump_uint32x4_t("w.val[1] after: ", &W[4]);
+                // dump_uint32x4_t("w.val[1] after: ", &W[4]);
             } else if (t == 11) {
-                dump_uint32x4_t("w.val[2] after: ", &W[8]);
+                // dump_uint32x4_t("w.val[2] after: ", &W[8]);
             } else if (t == 15) {
-                dump_uint32x4_t("w.val[3] after: ", &W[12]);
+                // dump_uint32x4_t("w.val[3] after: ", &W[12]);
             }
             inp += 4;
         } else {
@@ -263,7 +263,7 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
             Wt        = rotl32(Wt, 1);
             W[t % 16] = Wt;
             if (t % 16 == 0) {
-                dump_uint32x4_t("w.val[x] after: ", &W[t % 16]);
+                // dump_uint32x4_t("w.val[x] after: ", &W[t % 16]);
             }
         }
 
@@ -290,8 +290,8 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
         b             = a;
         a             = temp;
         if (t == 15 || t == 19 || t == 39 || t == 59 || t == 79) {
-            dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)&(dstate_t){a, b, c, d, e});
-            dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, (const uint8_t *)W);
+            // dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)&(dstate_t){a, b, c, d, e});
+            // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, (const uint8_t *)W);
         }
     }
 
@@ -301,8 +301,8 @@ sha1_update_block(void *vctx, const uint8_t *inp) {
     ctx->H[3] += d;
     ctx->H[4] += e;
 
-    dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
-    dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, (const uint8_t *)W);
+    // dump_sha1_state(impl_name, __LINE__, state_cnt++, (const uint8_t *)ctx->H);
+    // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, (const uint8_t *)W);
 
     ctx->blocks++;
 }

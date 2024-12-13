@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <fmt/format.h>
 #include <type_traits>
 
 #include "sha1-arm-unrolled.h"
@@ -31,7 +32,7 @@ extern "C" int sha1digest(uint8_t *digest, char *hexdigest, const uint8_t *data,
 #define DO_DUMP
 #endif
 
-#if 1
+#if 0
 #define DO_DUMP_8x16
 #endif
 
@@ -185,7 +186,7 @@ extern "C" [[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull p
 namespace {
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-const char impl_name[] = "sha1-arm.cpp";
+[[maybe_unused]] const char impl_name[] = "sha1-arm.cpp";
 
 // Helper function to determine the size of the string literal
 template <typename T, size_t N>
@@ -259,7 +260,7 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *cons
     (void)name;
     (void)line;
     (void)i;
-    (void)state;
+    (void)block;
 #endif
 }
 
@@ -392,8 +393,8 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_uint8x16x2_t(const char *co
 #endif
 }
 
-static size_t block_cnt;
-static size_t state_cnt;
+[[maybe_unused]] static size_t block_cnt;
+[[maybe_unused]] static size_t state_cnt;
 
 class SHA1 {
 public:
@@ -499,9 +500,10 @@ private:
 #endif
     static void
     process_block(const uint8_t *__restrict _Nonnull block, SHA1State &state) {
-        SHA1Block db{};
-        dump_sha1_state(impl_name, __LINE__, state_cnt++, state);
-        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, reinterpret_cast<const SHA1BlockScalar &>(*block));
+        fmt::print("sha1-arm process_block block: {}\n", fmt::ptr(block));
+        [[maybe_unused]] SHA1Block db{};
+        // dump_sha1_state(impl_name, __LINE__, state_cnt++, state);
+        // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, reinterpret_cast<const SHA1BlockScalar &>(*block));
 
         uint32x4_t abcd = state.abcd;
         uint32_t e      = state.e;
@@ -510,27 +512,27 @@ private:
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         alignas(block_align_val) uint32x4x4_t w = vld1q_u32_x4(reinterpret_cast<const uint32_t *>(block));
 
-        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+        // dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         if constexpr (std::endian::native == std::endian::little) {
             // Byte swap the initial words
-            dump_uint32x4_t("w.val[0] before:", w.val[0]);
+            // dump_uint32x4_t("w.val[0] before:", w.val[0]);
             w.val[0] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[0])));
-            dump_uint32x4_t("w.val[0] after: ", w.val[0]);
-            dump_uint32x4_t("w.val[1] before:", w.val[1]);
+            // dump_uint32x4_t("w.val[0] after: ", w.val[0]);
+            // dump_uint32x4_t("w.val[1] before:", w.val[1]);
             w.val[1] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[1])));
-            dump_uint32x4_t("w.val[1] after: ", w.val[1]);
-            dump_uint32x4_t("w.val[2] before:", w.val[2]);
+            // dump_uint32x4_t("w.val[1] after: ", w.val[1]);
+            // dump_uint32x4_t("w.val[2] before:", w.val[2]);
             w.val[2] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[2])));
-            dump_uint32x4_t("w.val[2] after: ", w.val[2]);
-            dump_uint32x4_t("w.val[3] before:", w.val[3]);
+            // dump_uint32x4_t("w.val[2] after: ", w.val[2]);
+            // dump_uint32x4_t("w.val[3] before:", w.val[3]);
             w.val[3] = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(w.val[3])));
-            dump_uint32x4_t("w.val[3] after: ", w.val[3]);
+            // dump_uint32x4_t("w.val[3] after: ", w.val[3]);
         }
 
-        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+        // dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Constants for each set of 20 rounds
         const uint32x4_t k1 = vdupq_n_u32(K[0]);
@@ -538,8 +540,13 @@ private:
         const uint32x4_t k3 = vdupq_n_u32(K[2]);
         const uint32x4_t k4 = vdupq_n_u32(K[3]);
 
+        const uint32x4x4_t ks = {
+            {{K[0], K[0], K[0], K[0]}, {K[1], K[1], K[1], K[1]}, {K[2], K[2], K[2], K[2]}, {K[3], K[3], K[3], K[3]}}};
+
+        uint32_t e_tmp;
+
         // First 20 rounds (K1)
-        for (int i = 0; i < 20; ++i) {
+        for (size_t i = 0; i < 20 / 4; ++i) {
             if (i < 16) {
                 w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
             }
@@ -549,8 +556,9 @@ private:
             // abcd            = vsetq_lane_u32(e, abcd, 3u);
             // e               = vsha1h_u32(vgetq_lane_u32(temp, 0));
 
-            abcd = vsha1cq_u32(abcd, e, w.val[i % 4]);
-            e    = vsha1h_u32(vgetq_lane_u32(abcd, 0));
+            e_tmp = e;
+            e     = vsha1h_u32(vgetq_lane_u32(abcd, 0));
+            abcd  = vsha1cq_u32(abcd, e_tmp, w.val[i % 4]);
 
             if (i < 16) {
                 w.val[i % 4] = vsha1su1q_u32(w.val[i % 4], w.val[(i + 1) % 4]);
@@ -558,16 +566,16 @@ private:
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k1);
 
             if (i == 0 || i == 15) {
-                dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
-                dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+                // dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+                // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
             }
         }
 
-        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+        // dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Rounds 21-40 (K2)
-        for (int i = 20; i < 40; ++i) {
+        for (size_t i = 20 / 4; i < 40 / 4; ++i) {
             w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
 
             const uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
@@ -580,11 +588,11 @@ private:
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k2);
         }
 
-        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+        // dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Rounds 41-60 (K3)
-        for (int i = 40; i < 60; ++i) {
+        for (size_t i = 40 / 4; i < 60 / 4; ++i) {
             w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
 
             const uint32x4_t temp = vsha1mq_u32(abcd, e, w.val[i % 4]);
@@ -597,11 +605,11 @@ private:
             w.val[i % 4] = vaddq_u32(w.val[i % 4], k3);
         }
 
-        dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
-        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+        // dump_sha1_state(impl_name, __LINE__, state_cnt++, SHA1State{abcd, e});
+        // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
 
         // Rounds 61-80 (K4)
-        for (int i = 60; i < 80; ++i) {
+        for (size_t i = 60 / 4; i < 80 / 4; ++i) {
             w.val[i % 4] = vsha1su0q_u32(w.val[(i + 2) % 4], w.val[(i + 3) % 4], w.val[i % 4]);
 
             const uint32x4_t temp = vsha1pq_u32(abcd, e, w.val[i % 4]);
@@ -617,8 +625,8 @@ private:
         state.abcd = vaddq_u32(state.abcd, abcd);
         state.e += e;
 
-        dump_sha1_state(impl_name, __LINE__, state_cnt++, state);
-        dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
+        // dump_sha1_state(impl_name, __LINE__, state_cnt++, state);
+        // dump_sha1_block(impl_name, __LINE__ - 1, block_cnt++, db = w);
     }
 
     static void pad_and_finalize(const uint8_t *__restrict _Nullable data, size_t len, SHA1State &state) {

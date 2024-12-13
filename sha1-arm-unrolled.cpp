@@ -17,25 +17,15 @@
 // MIT license
 
 namespace {
-// ubsan implicit conversion workaround
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-template <uint32_t p2>
-[[gnu::always_inline]] uint32x4_t my_vsetq_lane_u32(const uint32_t p0, const uint32x4_t p1) noexcept {
-    const uint32_t s0    = p0;
-    const uint32x4_t s1  = p1;
-    const uint32x4_t ret = (uint32x4_t)__builtin_neon_vsetq_lane_i32((int)s0, (int32x4_t)s1, p2);
-    return ret;
-}
-#pragma GCC diagnostic pop
-
 constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU, 0xCA62C1D6U};
 } // namespace
 
-[[gnu::noinline]] static void sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state,
-                                                         const uint8_t *__restrict _Nonnull blocks,
-                                                         const size_t num_blocks) {
+#if defined(__clang__)
+__attribute__((no_sanitize("unsigned-integer-overflow")))
+#endif
+[[gnu::noinline]] static void
+sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *__restrict _Nonnull blocks,
+                           const size_t num_blocks) {
     uint32x4_t abcd = vld1q_u32(state);
     uint32_t e0     = state[4];
     uint32_t e1;

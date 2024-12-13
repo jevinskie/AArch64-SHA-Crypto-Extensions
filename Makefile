@@ -23,8 +23,31 @@ TARGETS := sha1-arm sha1-arm-O0 sha1-arm-asan sha1-arm-ubsan \
 	sha1-arm-O3.asm sha1-arm-O3-demangled.asm sha1-arm-O3.ll sha1-arm-O3-demangled.ll \
 	sha1-arm-O3-no-inline.asm sha1-arm-O3-no-inline-demangled.asm sha1-arm-O3-no-inline.ll sha1-arm-O3-no-inline-demangled.ll \
 	sha1-arm-O3-no-unroll.asm sha1-arm-O3-no-unroll-demangled.asm sha1-arm-O3-no-unroll.ll sha1-arm-O3-no-unroll-demangled.ll \
-	sha1-arm-O3-no-inline-no-unroll.asm sha1-arm-O3-no-inline-no-unroll-demangled.asm sha1-arm-O3-no-inline-no-unroll.ll sha1-arm-O3-no-inline-no-unroll-demangled.ll
-
+	sha1-arm-O3-no-inline-no-unroll.asm sha1-arm-O3-no-inline-no-unroll-demangled.asm sha1-arm-O3-no-inline-no-unroll.ll sha1-arm-O3-no-inline-no-unroll-demangled.ll \
+	sha1-arm-unrolled.asm sha1-arm-unrolled-demangled.asm sha1-arm-unrolled.ll sha1-arm-unrolled-demangled.ll \
+	sha1-arm-unrolled-no-inline.asm sha1-arm-unrolled-no-inline-demangled.asm sha1-arm-unrolled-no-inline.ll sha1-arm-unrolled-no-inline-demangled.ll \
+	sha1-arm-unrolled-no-unroll.asm sha1-arm-unrolled-no-unroll-demangled.asm sha1-arm-unrolled-no-unroll.ll sha1-arm-unrolled-no-unroll-demangled.ll \
+	sha1-arm-unrolled-no-inline-no-unroll.asm sha1-arm-unrolled-no-inline-no-unroll-demangled.asm sha1-arm-unrolled-no-inline-no-unroll.ll sha1-arm-unrolled-no-inline-no-unroll-demangled.ll \
+	sha1-arm-unrolled-O0.asm sha1-arm-unrolled-O0-demangled.asm sha1-arm-unrolled-O0.ll sha1-arm-unrolled-O0-demangled.ll \
+	sha1-arm-unrolled-O0-no-inline.asm sha1-arm-unrolled-O0-no-inline-demangled.asm sha1-arm-unrolled-O0-no-inline.ll sha1-arm-unrolled-O0-no-inline-demangled.ll \
+	sha1-arm-unrolled-O0-no-unroll.asm sha1-arm-unrolled-O0-no-unroll-demangled.asm sha1-arm-unrolled-O0-no-unroll.ll sha1-arm-unrolled-O0-no-unroll-demangled.ll \
+	sha1-arm-unrolled-O0-no-inline-no-unroll.asm sha1-arm-unrolled-O0-no-inline-no-unroll-demangled.asm sha1-arm-unrolled-O0-no-inline-no-unroll.ll sha1-arm-unrolled-O0-no-inline-no-unroll-demangled.ll \
+	sha1-arm-unrolled-Oz.asm sha1-arm-unrolled-Oz-demangled.asm sha1-arm-unrolled-Oz.ll sha1-arm-unrolled-Oz-demangled.ll \
+	sha1-arm-unrolled-Oz-no-inline.asm sha1-arm-unrolled-Oz-no-inline-demangled.asm sha1-arm-unrolled-Oz-no-inline.ll sha1-arm-unrolled-Oz-no-inline-demangled.ll \
+	sha1-arm-unrolled-Oz-no-unroll.asm sha1-arm-unrolled-Oz-no-unroll-demangled.asm sha1-arm-unrolled-Oz-no-unroll.ll sha1-arm-unrolled-Oz-no-unroll-demangled.ll \
+	sha1-arm-unrolled-Oz-no-inline-no-unroll.asm sha1-arm-unrolled-Oz-no-inline-no-unroll-demangled.asm sha1-arm-unrolled-Oz-no-inline-no-unroll.ll sha1-arm-unrolled-Oz-no-inline-no-unroll-demangled.ll \
+	sha1-arm-unrolled-Os.asm sha1-arm-unrolled-Os-demangled.asm sha1-arm-unrolled-Os.ll sha1-arm-unrolled-Os-demangled.ll \
+	sha1-arm-unrolled-Os-no-inline.asm sha1-arm-unrolled-Os-no-inline-demangled.asm sha1-arm-unrolled-Os-no-inline.ll sha1-arm-unrolled-Os-no-inline-demangled.ll \
+	sha1-arm-unrolled-Os-no-unroll.asm sha1-arm-unrolled-Os-no-unroll-demangled.asm sha1-arm-unrolled-Os-no-unroll.ll sha1-arm-unrolled-Os-no-unroll-demangled.ll \
+	sha1-arm-unrolled-Os-no-inline-no-unroll.asm sha1-arm-unrolled-Os-no-inline-no-unroll-demangled.asm sha1-arm-unrolled-Os-no-inline-no-unroll.ll sha1-arm-unrolled-Os-no-inline-no-unroll-demangled.ll \
+	sha1-arm-unrolled-O2.asm sha1-arm-unrolled-O2-demangled.asm sha1-arm-unrolled-O2.ll sha1-arm-unrolled-O2-demangled.ll \
+	sha1-arm-unrolled-O2-no-inline.asm sha1-arm-unrolled-O2-no-inline-demangled.asm sha1-arm-unrolled-O2-no-inline.ll sha1-arm-unrolled-O2-no-inline-demangled.ll \
+	sha1-arm-unrolled-O2-no-unroll.asm sha1-arm-unrolled-O2-no-unroll-demangled.asm sha1-arm-unrolled-O2-no-unroll.ll sha1-arm-unrolled-O2-no-unroll-demangled.ll \
+	sha1-arm-unrolled-O2-no-inline-no-unroll.asm sha1-arm-unrolled-O2-no-inline-no-unroll-demangled.asm sha1-arm-unrolled-O2-no-inline-no-unroll.ll sha1-arm-unrolled-O2-no-inline-no-unroll-demangled.ll \
+	sha1-arm-unrolled-O3.asm sha1-arm-unrolled-O3-demangled.asm sha1-arm-unrolled-O3.ll sha1-arm-unrolled-O3-demangled.ll \
+	sha1-arm-unrolled-O3-no-inline.asm sha1-arm-unrolled-O3-no-inline-demangled.asm sha1-arm-unrolled-O3-no-inline.ll sha1-arm-unrolled-O3-no-inline-demangled.ll \
+	sha1-arm-unrolled-O3-no-unroll.asm sha1-arm-unrolled-O3-no-unroll-demangled.asm sha1-arm-unrolled-O3-no-unroll.ll sha1-arm-unrolled-O3-no-unroll-demangled.ll \
+	sha1-arm-unrolled-O3-no-inline-no-unroll.asm sha1-arm-unrolled-O3-no-inline-no-unroll-demangled.asm sha1-arm-unrolled-O3-no-inline-no-unroll.ll sha1-arm-unrolled-O3-no-inline-no-unroll-demangled.ll
 
 C_CXX_FLAGS := -Wall -Wextra -Wpedantic -Weverything -Warray-bounds -Wno-poison-system-directories -Wno-documentation-unknown-command -Wno-gnu-statement-expression-from-macro-expansion -Wno-gnu-line-marker
 C_CXX_FLAGS += -Wno-nullability-extension
@@ -47,7 +70,7 @@ NOOUTLINE_FLAGS := -mno-outline
 ASAN_FLAGS := $(NOOPT_FLAGS) $(DBG_FLAGS) -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope
 UBSAN_FLAGS := $(NOOPT_FLAGS) $(DBG_FLAGS) -fsanitize-recover=all -fsanitize=undefined -fsanitize=implicit-integer-truncation -fsanitize=implicit-integer-arithmetic-value-change -fsanitize=implicit-conversion -fsanitize=integer -fsanitize=nullability -fsanitize=float-divide-by-zero -fsanitize=local-bounds
 # UBSAN_FLAGS += -fsanitize=implicit-integer-conversion
-ASMFLAGS := -fverbose-asm -fno-exceptions -fno-rtti -fno-unwind-tables -fno-asynchronous-unwind-tables
+ASMFLAGS := -fverbose-asm -fno-exceptions -fno-rtti -fno-unwind-tables -fno-asynchronous-unwind-tables -DSHA1_REDIR_DISABLE
 
 all: $(TARGETS)
 
