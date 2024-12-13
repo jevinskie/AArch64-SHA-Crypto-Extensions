@@ -48,7 +48,7 @@ uint32x4_t my_vsha1su1q_u32(uint32x4_t p0, uint32x4_t p1) {
 
 uint32x4_t my_vsha1cq_u32(uint32x4_t p0, uint32_t p1, uint32x4_t p2) {
     dump_uint32x4_t(fmt::format("vsha1cq_u32[{:4d}] p0", vsha1cq_u32_cnt).c_str(), p0);
-    fmt::print("vsha1cq_u32[{:4d}] p1: {:#010x}", vsha1cq_u32_cnt, p1);
+    fmt::print("vsha1cq_u32[{:4d}] p1: {:#010x}\n", vsha1cq_u32_cnt, p1);
     dump_uint32x4_t(fmt::format("vsha1cq_u32[{:4d}] p2", vsha1cq_u32_cnt).c_str(), p2);
     const auto res = vsha1cq_u32(p0, p1, p2);
     dump_uint32x4_t(fmt::format("vsha1cq_u32[{:4d}] res", vsha1cq_u32_cnt).c_str(), res);
