@@ -387,7 +387,8 @@ public:
     }
 
 private:
-    static constexpr uint8x16_t lut = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    static constexpr uint8x16_t hex_lut = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                           '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     [[gnu::always_inline]] static void u32_to_hex_ascii_u64(const uint32_t value, char *_Nonnull hex_str) {
         // printf("u32_to_hex_ascii_u64 val: 0x%08x\n", value);
         // assert(!"foo");
@@ -399,53 +400,13 @@ private:
         const uint8x16_t lo    = vandq_u8(input, mask_lo); // Isolate low nibbles
 
         // Convert to ASCII hex characters
-        const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
-        const uint8x16_t hex_lo = vqtbl1q_u8(lut, lo);
-        // dump_uint8x16_t("u32_to_hex_ascii_u64 hex_hi", hex_hi);
-        // dump_uint8x16_t("u32_to_hex_ascii_u64 hex_lo", hex_lo);
+        const uint8x16_t hex_hi = vqtbl1q_u8(hex_lut, hi);
+        const uint8x16_t hex_lo = vqtbl1q_u8(hex_lut, lo);
 
         // Store the results interleaved
         const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
-        // dump_uint8x16x2_t("u32_to_hex_ascii_u64 hex_chars_interleaved", hex_chars_interleaved);
-        vst1q_lane_u64((to_from_cast<uint64_t *, char *>(hex_str)), (uint32x4_t)hex_chars_interleaved.val[0], 0);
-        // return (*((const uint64x2x2_t *)&hex_chars_interleaved)).val[0][0];
-
-#if 0
-        // Load and reverse bytes to get big-endian ordering in one instruction.
-        // Original: [B0, B1, B2, B3]
-        // After vdup_n_u32: [B0,B1,B2,B3, 0,0,0,0]
-        const uint8x8_t bytes = vreinterpret_u8_u32(vdup_n_u32(value));
-
-        // Extract high nibble and low nibble directly:
-        // high nibble = byte >> 4
-        // low nibble = byte & 0x0F
-        // const uint8x8_t nibble_swapped()
-        const uint8x8_t high = vshr_n_u8(bytes, 4);
-        const uint8x8_t low  = vand_u8(bytes, vdup_n_u8(0x0F));
-
-        // Interleave high and low nibbles: [H0,L0,H1,L1,H2,L2,H3,L3,...]
-        // vzip_u8 takes corresponding elements from high and low, interleaving them.
-        const uint8x8x2_t zipped = vzip_u8(high, low);
-        // zipped.val[0] = H0,L0,H1,L1,H2,L2,H3,L3 (first 8 nibbles of interest)
-        // No need to combine further; zipped.val[0] already holds the 8 nibbles we want.
-
-        const uint8x8_t nibbles = zipped.val[0];
-
-        // ASCII conversion:
-        // Add '0' to bring [0..9] into '0'..'9' and [10..15] into ':'..'?'
-        const uint8x8_t nibbles_ascii_stage_0 = vadd_u8(nibbles, vdup_n_u8('0'));
-
-        // Values above '9' ('9' = 0x39) should become 'a'..'f'
-        // Check which are greater than '9':
-        const uint8x8_t mask = vcgt_u8(nibbles_ascii_stage_0, vdup_n_u8('9'));
-        // Add 0x27 ('9' + 1 + 0x27 = 'a') to these values
-        const uint8x8_t ascii_nibbles = vadd_u8(nibbles_ascii_stage_0, vand_u8(mask, vdup_n_u8(0x27)));
-
-        uint64_t res;
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        vst1_u8(reinterpret_cast<uint8_t *>(&res), ascii_nibbles);
-        return res;
-#endif
+        vst1q_lane_u64((to_from_cast<uint64_t *, char *>(hex_str)),
+                       static_cast<uint32x4_t>(hex_chars_interleaved.val[0]), 0);
     }
 
 public:
@@ -453,7 +414,7 @@ public:
     // NOLINTNEXTLINE(misc-include-cleaner)
     [[gnu::noinline]] static void digest_to_hex(const uint8_t *__restrict _Nonnull digest,
                                                 char *__restrict _Nonnull hex_str) {
-        // MCA_BEGIN("digest_to_hex");
+        MCA_BEGIN("digest_to_hex");
         const uint8x16_t mask_lo = vdupq_n_u8(0x0F); // Mask for low 4 bits
 
         // Load the first 16 bytes of the digest
@@ -462,8 +423,8 @@ public:
         const uint8x16_t lo    = vandq_u8(input, mask_lo); // Isolate low nibbles
 
         // Convert to ASCII hex characters
-        const uint8x16_t hex_hi = vqtbl1q_u8(lut, hi);
-        const uint8x16_t hex_lo = vqtbl1q_u8(lut, lo);
+        const uint8x16_t hex_hi = vqtbl1q_u8(hex_lut, hi);
+        const uint8x16_t hex_lo = vqtbl1q_u8(hex_lut, lo);
 
         // Store the results interleaved
         const uint8x16x2_t hex_chars_interleaved = vzipq_u8(hex_hi, hex_lo);
@@ -474,13 +435,9 @@ public:
         const uint32_t remaining_bytes = *reinterpret_cast<const uint32_t *>(digest + 16);
         // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         u32_to_hex_ascii_u64(remaining_bytes, hex_str + 32);
-
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        // *reinterpret_cast<uint64_t *>(hex_str + 32) = hex_packed;
         hex_str[SHA1_OUTPUT_SIZE * 2] = '\0';
-        // MCA_END();
+        MCA_END();
     }
 
     static void digest_to_hex_simple(const uint8_t *__restrict _Nonnull digest, char *__restrict _Nonnull hex_str) {
