@@ -7,6 +7,7 @@
 #include <array>
 #include <bit>
 #include <cstring>
+#include <fmt/format.h>
 
 #include "sha1-wrappers.h"
 
@@ -186,12 +187,14 @@ constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU, 0x
 
 static void pad_and_finalize(const uint8_t *__restrict _Nullable data, size_t len,
                              uint32_t *__restrict _Nonnull state) {
+    fmt::print("pad_and_finalize len: {} data: {}\n", len, fmt::ptr(data));
     alignas(64) uint8_t buffer[64] = {};
     assert(len <= sizeof(buffer));
     std::memcpy(buffer, data, len);
     buffer[len] = 0x80;
 
     if (len >= 56) {
+        fmt::print("pad_and_finalize len >= 56 sha1_arm_unrolled_compress data: {}\n", fmt::ptr(buffer));
         sha1_arm_unrolled_compress(state, buffer, 1);
         std::memset(buffer, 0, sizeof(buffer));
     }
@@ -203,15 +206,20 @@ static void pad_and_finalize(const uint8_t *__restrict _Nullable data, size_t le
         reinterpret_cast<uint32_t *>(buffer)[15] = static_cast<uint32_t>(len * 8); // Length in bits
     }
 
+    fmt::print("pad_and_finalize final sha1_arm_unrolled_compress data: {}\n", fmt::ptr(buffer));
     sha1_arm_unrolled_compress(state, buffer, 1);
 }
 
 static void process(const uint8_t *__restrict _Nullable data, size_t len, uint32_t *__restrict _Nonnull state) {
     const size_t block_total_sz = len - (len % 64);
     const size_t remainder_sz   = len - block_total_sz;
+    fmt::print("process sz: {} block_total_sz: {} remainder_sz: {}\n", len, block_total_sz, remainder_sz);
     for (size_t i = 0; i < block_total_sz; i += 64) {
+        fmt::print("process sha1_arm_unrolled_compress i: {} data: {}\n", i, fmt::ptr(&data[i]));
         sha1_arm_unrolled_compress(state, &data[i], 1);
     }
+    fmt::print("process pad_and_finalize block_total_sz: {} remainder_sz: {} data: {}\n", block_total_sz, remainder_sz,
+               fmt::ptr(&data[block_total_sz]));
     pad_and_finalize(&data[block_total_sz], remainder_sz, state);
 }
 
