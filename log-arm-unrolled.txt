@@ -1,0 +1,232 @@
+vsha1h_u32[   0] p0: 0x67452301
+vsha1h_u32[   0] res: 0x59d148c0
+vsha1cq_u32[   0] p0 v[0]: 0x67452301 v[1]: 0xefcdab89 v[2]: 0x98badcfe v[3]: 0x10325476
+vsha1cq_u32[   0] p1: 0xc3d2e1f0
+vsha1cq_u32[   0] p2 v[0]: 0xda827999 v[1]: 0x5a827999 v[2]: 0x5a827999 v[3]: 0x5a827999
+vsha1cq_u32[   0] res v[0]: 0xcdecfb5d v[1]: 0x158d2f62 v[2]: 0x1750f8dc v[3]: 0xc7ed262c
+vsha1su0q_u32[   0] p0 v[0]: 0x80000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   0] p1 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   0] p2 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   0] res v[0]: 0x80000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1h_u32[   1] p0: 0xcdecfb5d
+vsha1h_u32[   1] res: 0x737b3ed7
+vsha1cq_u32[   1] p0 v[0]: 0xcdecfb5d v[1]: 0x158d2f62 v[2]: 0x1750f8dc v[3]: 0xc7ed262c
+vsha1cq_u32[   1] p1: 0x59d148c0
+vsha1cq_u32[   1] p2 v[0]: 0x5a827999 v[1]: 0x5a827999 v[2]: 0x5a827999 v[3]: 0x5a827999
+vsha1cq_u32[   1] res v[0]: 0x87074800 v[1]: 0xc09d7f27 v[2]: 0xb912add9 v[3]: 0x9254d597
+vsha1su1q_u32[   0] p0 v[0]: 0x80000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su1q_u32[   0] p1 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su1q_u32[   0] res v[0]: 0x00000001 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000002
+vsha1su0q_u32[   1] p0 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   1] p1 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   1] p2 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   1] res v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1h_u32[   2] p0: 0x87074800
+vsha1h_u32[   2] res: 0x21c1d200
+vsha1cq_u32[   2] p0 v[0]: 0x87074800 v[1]: 0xc09d7f27 v[2]: 0xb912add9 v[3]: 0x9254d597
+vsha1cq_u32[   2] p1: 0x737b3ed7
+vsha1cq_u32[   2] p2 v[0]: 0x5a827999 v[1]: 0x5a827999 v[2]: 0x5a827999 v[3]: 0x5a827999
+vsha1cq_u32[   2] res v[0]: 0xadc0e0ca v[1]: 0x40166973 v[2]: 0x72f6ffcc v[3]: 0x504dd984
+vsha1su1q_u32[   1] p0 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su1q_u32[   1] p1 v[0]: 0x00000001 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000002
+vsha1su1q_u32[   1] res v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000004 v[3]: 0x00000000
+vsha1su0q_u32[   2] p0 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   2] p1 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   2] p2 v[0]: 0x00000001 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000002
+vsha1su0q_u32[   2] res v[0]: 0x00000001 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000002
+vsha1h_u32[   3] p0: 0xadc0e0ca
+vsha1h_u32[   3] res: 0xab703832
+vsha1cq_u32[   3] p0 v[0]: 0xadc0e0ca v[1]: 0x40166973 v[2]: 0x72f6ffcc v[3]: 0x504dd984
+vsha1cq_u32[   3] p1: 0x21c1d200
+vsha1cq_u32[   3] p2 v[0]: 0x5a827999 v[1]: 0x5a827999 v[2]: 0x5a827999 v[3]: 0x5a827999
+vsha1cq_u32[   3] res v[0]: 0xd8fd6547 v[1]: 0x40182905 v[2]: 0x4544b22e v[3]: 0xa13017ac
+vsha1su1q_u32[   2] p0 v[0]: 0x00000001 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000002
+vsha1su1q_u32[   2] p1 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000004 v[3]: 0x00000000
+vsha1su1q_u32[   2] res v[0]: 0x00000002 v[1]: 0x00000008 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   3] p0 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   3] p1 v[0]: 0x00000001 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000002
+vsha1su0q_u32[   3] p2 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000004 v[3]: 0x00000000
+vsha1su0q_u32[   3] res v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000005 v[3]: 0x00000000
+vsha1h_u32[   4] p0: 0xd8fd6547
+vsha1h_u32[   4] res: 0xf63f5951
+vsha1cq_u32[   4] p0 v[0]: 0xd8fd6547 v[1]: 0x40182905 v[2]: 0x4544b22e v[3]: 0xa13017ac
+vsha1cq_u32[   4] p1: 0xab703832
+vsha1cq_u32[   4] p2 v[0]: 0x5a82799a v[1]: 0x5a827999 v[2]: 0x5a827999 v[3]: 0x5a82799b
+vsha1cq_u32[   4] res v[0]: 0xe758e8da v[1]: 0x0b3088dd v[2]: 0x8a2a5483 v[3]: 0xc1afe45c
+vsha1su1q_u32[   3] p0 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000005 v[3]: 0x00000000
+vsha1su1q_u32[   3] p1 v[0]: 0x00000002 v[1]: 0x00000008 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su1q_u32[   3] res v[0]: 0x00000010 v[1]: 0x00000000 v[2]: 0x0000000a v[3]: 0x00000020
+vsha1su0q_u32[   4] p0 v[0]: 0x00000001 v[1]: 0x00000000 v[2]: 0x00000000 v[3]: 0x00000002
+vsha1su0q_u32[   4] p1 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000004 v[3]: 0x00000000
+vsha1su0q_u32[   4] p2 v[0]: 0x00000002 v[1]: 0x00000008 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   4] res v[0]: 0x00000003 v[1]: 0x0000000a v[2]: 0x00000000 v[3]: 0x00000002
+vsha1h_u32[   5] p0: 0xe758e8da
+vsha1h_u32[   5] res: 0xb9d63a36
+vsha1pq_u32[   0] p0 v[0]: 0xe758e8da v[1]: 0x0b3088dd v[2]: 0x8a2a5483 v[3]: 0xc1afe45c
+vsha1pq_u32[   0] p1: 0xf63f5951
+vsha1pq_u32[   0] p2 v[0]: 0x6ed9eba1 v[1]: 0x6ed9eba1 v[2]: 0x6ed9eba5 v[3]: 0x6ed9eba1
+vsha1pq_u32[   0] res v[0]: 0x1e97b73a v[1]: 0x1c64d028 v[2]: 0x5f6ede1f v[3]: 0x243ae614
+vsha1su1q_u32[   4] p0 v[0]: 0x00000003 v[1]: 0x0000000a v[2]: 0x00000000 v[3]: 0x00000002
+vsha1su1q_u32[   4] p1 v[0]: 0x00000010 v[1]: 0x00000000 v[2]: 0x0000000a v[3]: 0x00000020
+vsha1su1q_u32[   4] res v[0]: 0x00000006 v[1]: 0x00000000 v[2]: 0x00000040 v[3]: 0x00000008
+vsha1su0q_u32[   5] p0 v[0]: 0x00000000 v[1]: 0x00000000 v[2]: 0x00000004 v[3]: 0x00000000
+vsha1su0q_u32[   5] p1 v[0]: 0x00000002 v[1]: 0x00000008 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   5] p2 v[0]: 0x00000010 v[1]: 0x00000000 v[2]: 0x0000000a v[3]: 0x00000020
+vsha1su0q_u32[   5] res v[0]: 0x00000014 v[1]: 0x00000000 v[2]: 0x0000000c v[3]: 0x00000028
+vsha1h_u32[   6] p0: 0x1e97b73a
+vsha1h_u32[   6] res: 0x87a5edce
+vsha1pq_u32[   1] p0 v[0]: 0x1e97b73a v[1]: 0x1c64d028 v[2]: 0x5f6ede1f v[3]: 0x243ae614
+vsha1pq_u32[   1] p1: 0xb9d63a36
+vsha1pq_u32[   1] p2 v[0]: 0x6ed9eba3 v[1]: 0x6ed9eba9 v[2]: 0x6ed9eba1 v[3]: 0x6ed9eba1
+vsha1pq_u32[   1] res v[0]: 0xc7b11e2d v[1]: 0x4f2ed1c1 v[2]: 0x0d3cf5b6 v[3]: 0xd8b5fd4f
+vsha1su1q_u32[   5] p0 v[0]: 0x00000014 v[1]: 0x00000000 v[2]: 0x0000000c v[3]: 0x00000028
+vsha1su1q_u32[   5] p1 v[0]: 0x00000006 v[1]: 0x00000000 v[2]: 0x00000040 v[3]: 0x00000008
+vsha1su1q_u32[   5] res v[0]: 0x00000028 v[1]: 0x00000080 v[2]: 0x00000008 v[3]: 0x00000000
+vsha1su0q_u32[   6] p0 v[0]: 0x00000002 v[1]: 0x00000008 v[2]: 0x00000000 v[3]: 0x00000000
+vsha1su0q_u32[   6] p1 v[0]: 0x00000010 v[1]: 0x00000000 v[2]: 0x0000000a v[3]: 0x00000020
+vsha1su0q_u32[   6] p2 v[0]: 0x00000006 v[1]: 0x00000000 v[2]: 0x00000040 v[3]: 0x00000008
+vsha1su0q_u32[   6] res v[0]: 0x00000004 v[1]: 0x00000008 v[2]: 0x00000050 v[3]: 0x00000008
+vsha1h_u32[   7] p0: 0xc7b11e2d
+vsha1h_u32[   7] res: 0x71ec478b
+vsha1pq_u32[   2] p0 v[0]: 0xc7b11e2d v[1]: 0x4f2ed1c1 v[2]: 0x0d3cf5b6 v[3]: 0xd8b5fd4f
+vsha1pq_u32[   2] p1: 0x87a5edce
+vsha1pq_u32[   2] p2 v[0]: 0x6ed9ebb1 v[1]: 0x6ed9eba1 v[2]: 0x6ed9ebab v[3]: 0x6ed9ebc1
+vsha1pq_u32[   2] res v[0]: 0x62ea3d59 v[1]: 0x6a2e466e v[2]: 0xf29155b2 v[3]: 0xe1d2de1b
+vsha1su1q_u32[   6] p0 v[0]: 0x00000004 v[1]: 0x00000008 v[2]: 0x00000050 v[3]: 0x00000008
+vsha1su1q_u32[   6] p1 v[0]: 0x00000028 v[1]: 0x00000080 v[2]: 0x00000008 v[3]: 0x00000000
+vsha1su1q_u32[   6] res v[0]: 0x00000108 v[1]: 0x00000000 v[2]: 0x000000a0 v[3]: 0x00000200
+vsha1su0q_u32[   7] p0 v[0]: 0x00000010 v[1]: 0x00000000 v[2]: 0x0000000a v[3]: 0x00000020
+vsha1su0q_u32[   7] p1 v[0]: 0x00000006 v[1]: 0x00000000 v[2]: 0x00000040 v[3]: 0x00000008
+vsha1su0q_u32[   7] p2 v[0]: 0x00000028 v[1]: 0x00000080 v[2]: 0x00000008 v[3]: 0x00000000
+vsha1su0q_u32[   7] res v[0]: 0x00000032 v[1]: 0x000000a0 v[2]: 0x00000004 v[3]: 0x00000020
+vsha1h_u32[   8] p0: 0x62ea3d59
+vsha1h_u32[   8] res: 0x58ba8f56
+vsha1pq_u32[   3] p0 v[0]: 0x62ea3d59 v[1]: 0x6a2e466e v[2]: 0xf29155b2 v[3]: 0xe1d2de1b
+vsha1pq_u32[   3] p1: 0x71ec478b
+vsha1pq_u32[   3] p2 v[0]: 0x6ed9eba7 v[1]: 0x6ed9eba1 v[2]: 0x6ed9ebe1 v[3]: 0x6ed9eba9
+vsha1pq_u32[   3] res v[0]: 0xabbab988 v[1]: 0x391ef0c4 v[2]: 0x92c4d1f8 v[3]: 0x6ddeeb09
+vsha1su1q_u32[   7] p0 v[0]: 0x00000032 v[1]: 0x000000a0 v[2]: 0x00000004 v[3]: 0x00000020
+vsha1su1q_u32[   7] p1 v[0]: 0x00000108 v[1]: 0x00000000 v[2]: 0x000000a0 v[3]: 0x00000200
+vsha1su1q_u32[   7] res v[0]: 0x00000064 v[1]: 0x00000000 v[2]: 0x00000408 v[3]: 0x00000088
+vsha1su0q_u32[   8] p0 v[0]: 0x00000006 v[1]: 0x00000000 v[2]: 0x00000040 v[3]: 0x00000008
+vsha1su0q_u32[   8] p1 v[0]: 0x00000028 v[1]: 0x00000080 v[2]: 0x00000008 v[3]: 0x00000000
+vsha1su0q_u32[   8] p2 v[0]: 0x00000108 v[1]: 0x00000000 v[2]: 0x000000a0 v[3]: 0x00000200
+vsha1su0q_u32[   8] res v[0]: 0x0000014e v[1]: 0x00000008 v[2]: 0x000000c8 v[3]: 0x00000288
+vsha1h_u32[   9] p0: 0xabbab988
+vsha1h_u32[   9] res: 0x2aeeae62
+vsha1pq_u32[   4] p0 v[0]: 0xabbab988 v[1]: 0x391ef0c4 v[2]: 0x92c4d1f8 v[3]: 0x6ddeeb09
+vsha1pq_u32[   4] p1: 0x58ba8f56
+vsha1pq_u32[   4] p2 v[0]: 0x6ed9ebc9 v[1]: 0x6ed9ec21 v[2]: 0x6ed9eba9 v[3]: 0x6ed9eba1
+vsha1pq_u32[   4] res v[0]: 0x9bdbdd71 v[1]: 0x62273351 v[2]: 0xec805e22 v[3]: 0x413c1d9a
+vsha1su1q_u32[   8] p0 v[0]: 0x0000014e v[1]: 0x00000008 v[2]: 0x000000c8 v[3]: 0x00000288
+vsha1su1q_u32[   8] p1 v[0]: 0x00000064 v[1]: 0x00000000 v[2]: 0x00000408 v[3]: 0x00000088
+vsha1su1q_u32[   8] res v[0]: 0x0000029c v[1]: 0x00000800 v[2]: 0x00000080 v[3]: 0x00000028
+vsha1su0q_u32[   9] p0 v[0]: 0x00000028 v[1]: 0x00000080 v[2]: 0x00000008 v[3]: 0x00000000
+vsha1su0q_u32[   9] p1 v[0]: 0x00000108 v[1]: 0x00000000 v[2]: 0x000000a0 v[3]: 0x00000200
+vsha1su0q_u32[   9] p2 v[0]: 0x00000064 v[1]: 0x00000000 v[2]: 0x00000408 v[3]: 0x00000088
+vsha1su0q_u32[   9] res v[0]: 0x00000044 v[1]: 0x00000080 v[2]: 0x00000508 v[3]: 0x00000088
+vsha1h_u32[  10] p0: 0x9bdbdd71
+vsha1h_u32[  10] res: 0x66f6f75c
+vsha1mq_u32[   0] p0 v[0]: 0x9bdbdd71 v[1]: 0x62273351 v[2]: 0xec805e22 v[3]: 0x413c1d9a
+vsha1mq_u32[   0] p1: 0x2aeeae62
+vsha1mq_u32[   0] p2 v[0]: 0x8f1bbde4 v[1]: 0x8f1bbcdc v[2]: 0x8f1bbd7c v[3]: 0x8f1bbedc
+vsha1mq_u32[   0] res v[0]: 0xfa950aba v[1]: 0x95642485 v[2]: 0x178a3a16 v[3]: 0xe56a8e62
+vsha1su1q_u32[   9] p0 v[0]: 0x00000044 v[1]: 0x00000080 v[2]: 0x00000508 v[3]: 0x00000088
+vsha1su1q_u32[   9] p1 v[0]: 0x0000029c v[1]: 0x00000800 v[2]: 0x00000080 v[3]: 0x00000028
+vsha1su1q_u32[   9] res v[0]: 0x00001088 v[1]: 0x00000000 v[2]: 0x00000a40 v[3]: 0x00002000
+vsha1su0q_u32[  10] p0 v[0]: 0x00000108 v[1]: 0x00000000 v[2]: 0x000000a0 v[3]: 0x00000200
+vsha1su0q_u32[  10] p1 v[0]: 0x00000064 v[1]: 0x00000000 v[2]: 0x00000408 v[3]: 0x00000088
+vsha1su0q_u32[  10] p2 v[0]: 0x0000029c v[1]: 0x00000800 v[2]: 0x00000080 v[3]: 0x00000028
+vsha1su0q_u32[  10] res v[0]: 0x00000334 v[1]: 0x00000a00 v[2]: 0x00000044 v[3]: 0x00000228
+vsha1h_u32[  11] p0: 0xfa950aba
+vsha1h_u32[  11] res: 0xbea542ae
+vsha1mq_u32[   1] p0 v[0]: 0xfa950aba v[1]: 0x95642485 v[2]: 0x178a3a16 v[3]: 0xe56a8e62
+vsha1mq_u32[   1] p1: 0x66f6f75c
+vsha1mq_u32[   1] p2 v[0]: 0x8f1bbd40 v[1]: 0x8f1bbcdc v[2]: 0x8f1bc0e4 v[3]: 0x8f1bbd64
+vsha1mq_u32[   1] res v[0]: 0xe6d39f43 v[1]: 0xa195ba90 v[2]: 0xebf9a56a v[3]: 0x77878e80
+vsha1su1q_u32[  10] p0 v[0]: 0x00000334 v[1]: 0x00000a00 v[2]: 0x00000044 v[3]: 0x00000228
+vsha1su1q_u32[  10] p1 v[0]: 0x00001088 v[1]: 0x00000000 v[2]: 0x00000a40 v[3]: 0x00002000
+vsha1su1q_u32[  10] res v[0]: 0x00000668 v[1]: 0x00000080 v[2]: 0x00004088 v[3]: 0x00000880
+vsha1su0q_u32[  11] p0 v[0]: 0x00000064 v[1]: 0x00000000 v[2]: 0x00000408 v[3]: 0x00000088
+vsha1su0q_u32[  11] p1 v[0]: 0x0000029c v[1]: 0x00000800 v[2]: 0x00000080 v[3]: 0x00000028
+vsha1su0q_u32[  11] p2 v[0]: 0x00001088 v[1]: 0x00000000 v[2]: 0x00000a40 v[3]: 0x00002000
+vsha1su0q_u32[  11] res v[0]: 0x000014e4 v[1]: 0x00000088 v[2]: 0x00000cd4 v[3]: 0x00002888
+vsha1h_u32[  12] p0: 0xe6d39f43
+vsha1h_u32[  12] res: 0xf9b4e7d0
+vsha1mq_u32[   2] p0 v[0]: 0xe6d39f43 v[1]: 0xa195ba90 v[2]: 0xebf9a56a v[3]: 0x77878e80
+vsha1mq_u32[   2] p1: 0xbea542ae
+vsha1mq_u32[   2] p2 v[0]: 0x8f1bbf78 v[1]: 0x8f1bc4dc v[2]: 0x8f1bbd5c v[3]: 0x8f1bbd04
+vsha1mq_u32[   2] res v[0]: 0xe2581ce0 v[1]: 0x01ff3253 v[2]: 0xdaba09bf v[3]: 0x82f2a648
+vsha1su1q_u32[  11] p0 v[0]: 0x000014e4 v[1]: 0x00000088 v[2]: 0x00000cd4 v[3]: 0x00002888
+vsha1su1q_u32[  11] p1 v[0]: 0x00000668 v[1]: 0x00000080 v[2]: 0x00004088 v[3]: 0x00000880
+vsha1su1q_u32[  11] res v[0]: 0x000028c8 v[1]: 0x00008000 v[2]: 0x000008a8 v[3]: 0x00000080
+vsha1su0q_u32[  12] p0 v[0]: 0x0000029c v[1]: 0x00000800 v[2]: 0x00000080 v[3]: 0x00000028
+vsha1su0q_u32[  12] p1 v[0]: 0x00001088 v[1]: 0x00000000 v[2]: 0x00000a40 v[3]: 0x00002000
+vsha1su0q_u32[  12] p2 v[0]: 0x00000668 v[1]: 0x00000080 v[2]: 0x00004088 v[3]: 0x00000880
+vsha1su0q_u32[  12] res v[0]: 0x00000474 v[1]: 0x000008a8 v[2]: 0x00005080 v[3]: 0x000008a8
+vsha1h_u32[  13] p0: 0xe2581ce0
+vsha1h_u32[  13] res: 0x38960738
+vsha1mq_u32[   3] p0 v[0]: 0xe2581ce0 v[1]: 0x01ff3253 v[2]: 0xdaba09bf v[3]: 0x82f2a648
+vsha1mq_u32[   3] p1: 0xf9b4e7d0
+vsha1mq_u32[   3] p2 v[0]: 0x8f1bcd64 v[1]: 0x8f1bbcdc v[2]: 0x8f1bc71c v[3]: 0x8f1bdcdc
+vsha1mq_u32[   3] res v[0]: 0xbe4a4bea v[1]: 0x8590c0e8 v[2]: 0xab95b950 v[3]: 0xd5b39cea
+vsha1su1q_u32[  12] p0 v[0]: 0x00000474 v[1]: 0x000008a8 v[2]: 0x00005080 v[3]: 0x000008a8
+vsha1su1q_u32[  12] p1 v[0]: 0x000028c8 v[1]: 0x00008000 v[2]: 0x000008a8 v[3]: 0x00000080
+vsha1su1q_u32[  12] res v[0]: 0x000108e8 v[1]: 0x00000000 v[2]: 0x0000a000 v[3]: 0x00020080
+vsha1su0q_u32[  13] p0 v[0]: 0x00001088 v[1]: 0x00000000 v[2]: 0x00000a40 v[3]: 0x00002000
+vsha1su0q_u32[  13] p1 v[0]: 0x00000668 v[1]: 0x00000080 v[2]: 0x00004088 v[3]: 0x00000880
+vsha1su0q_u32[  13] p2 v[0]: 0x000028c8 v[1]: 0x00008000 v[2]: 0x000008a8 v[3]: 0x00000080
+vsha1su0q_u32[  13] res v[0]: 0x00003200 v[1]: 0x0000a000 v[2]: 0x00000480 v[3]: 0x00002000
+vsha1h_u32[  14] p0: 0xbe4a4bea
+vsha1h_u32[  14] res: 0xaf9292fa
+vsha1mq_u32[   4] p0 v[0]: 0xbe4a4bea v[1]: 0x8590c0e8 v[2]: 0xab95b950 v[3]: 0xd5b39cea
+vsha1mq_u32[   4] p1: 0x38960738
+vsha1mq_u32[   4] p2 v[0]: 0x8f1bc344 v[1]: 0x8f1bbd5c v[2]: 0x8f1bfd64 v[3]: 0x8f1bc55c
+vsha1mq_u32[   4] res v[0]: 0x9b9d2913 v[1]: 0x982bcbca v[2]: 0xb86beac8 v[3]: 0xc5a3382e
+vsha1su1q_u32[  13] p0 v[0]: 0x00003200 v[1]: 0x0000a000 v[2]: 0x00000480 v[3]: 0x00002000
+vsha1su1q_u32[  13] p1 v[0]: 0x000108e8 v[1]: 0x00000000 v[2]: 0x0000a000 v[3]: 0x00020080
+vsha1su1q_u32[  13] res v[0]: 0x00006400 v[1]: 0x00000000 v[2]: 0x00040800 v[3]: 0x00008800
+vsha1su0q_u32[  14] p0 v[0]: 0x00000668 v[1]: 0x00000080 v[2]: 0x00004088 v[3]: 0x00000880
+vsha1su0q_u32[  14] p1 v[0]: 0x000028c8 v[1]: 0x00008000 v[2]: 0x000008a8 v[3]: 0x00000080
+vsha1su0q_u32[  14] p2 v[0]: 0x000108e8 v[1]: 0x00000000 v[2]: 0x0000a000 v[3]: 0x00020080
+vsha1su0q_u32[  14] res v[0]: 0x00014e08 v[1]: 0x00000800 v[2]: 0x0000c840 v[3]: 0x00028800
+vsha1h_u32[  15] p0: 0x9b9d2913
+vsha1h_u32[  15] res: 0xe6e74a44
+vsha1pq_u32[   5] p0 v[0]: 0x9b9d2913 v[1]: 0x982bcbca v[2]: 0xb86beac8 v[3]: 0xc5a3382e
+vsha1pq_u32[   5] p1: 0xaf9292fa
+vsha1pq_u32[   5] p2 v[0]: 0xca62ea9e v[1]: 0xca6341d6 v[2]: 0xca62ca7e v[3]: 0xca62c256
+vsha1pq_u32[   5] res v[0]: 0xbb0f226f v[1]: 0xcd98fbb7 v[2]: 0xe16e7489 v[3]: 0xf4df6e4d
+vsha1su1q_u32[  14] p0 v[0]: 0x00014e08 v[1]: 0x00000800 v[2]: 0x0000c840 v[3]: 0x00028800
+vsha1su1q_u32[  14] p1 v[0]: 0x00006400 v[1]: 0x00000000 v[2]: 0x00040800 v[3]: 0x00008800
+vsha1su1q_u32[  14] res v[0]: 0x00029c10 v[1]: 0x00080000 v[2]: 0x00008080 v[3]: 0x00002820
+vsha1su0q_u32[  15] p0 v[0]: 0x000028c8 v[1]: 0x00008000 v[2]: 0x000008a8 v[3]: 0x00000080
+vsha1su0q_u32[  15] p1 v[0]: 0x000108e8 v[1]: 0x00000000 v[2]: 0x0000a000 v[3]: 0x00020080
+vsha1su0q_u32[  15] p2 v[0]: 0x00006400 v[1]: 0x00000000 v[2]: 0x00040800 v[3]: 0x00008800
+vsha1su0q_u32[  15] res v[0]: 0x00004460 v[1]: 0x00008080 v[2]: 0x00050840 v[3]: 0x00008880
+vsha1h_u32[  16] p0: 0xbb0f226f
+vsha1h_u32[  16] res: 0xeec3c89b
+vsha1pq_u32[   6] p0 v[0]: 0xbb0f226f v[1]: 0xcd98fbb7 v[2]: 0xe16e7489 v[3]: 0xf4df6e4d
+vsha1pq_u32[   6] p1: 0xe6e74a44
+vsha1pq_u32[   6] p2 v[0]: 0xca63cabe v[1]: 0xca62c1d6 v[2]: 0xca6361d6 v[3]: 0xca64c256
+vsha1pq_u32[   6] res v[0]: 0xe79afbf0 v[1]: 0x111341f3 v[2]: 0xf4dc8972 v[3]: 0x3ad6511b
+vsha1su1q_u32[  15] p0 v[0]: 0x00004460 v[1]: 0x00008080 v[2]: 0x00050840 v[3]: 0x00008880
+vsha1su1q_u32[  15] p1 v[0]: 0x00029c10 v[1]: 0x00080000 v[2]: 0x00008080 v[3]: 0x00002820
+vsha1su1q_u32[  15] res v[0]: 0x001088c0 v[1]: 0x00000000 v[2]: 0x000a40c0 v[3]: 0x00200080
+vsha1h_u32[  17] p0: 0xe79afbf0
+vsha1h_u32[  17] res: 0x39e6befc
+vsha1pq_u32[   7] p0 v[0]: 0xe79afbf0 v[1]: 0x111341f3 v[2]: 0xf4dc8972 v[3]: 0x3ad6511b
+vsha1pq_u32[   7] p1: 0xeec3c89b
+vsha1pq_u32[   7] p2 v[0]: 0xca6325d6 v[1]: 0xca62c1d6 v[2]: 0xca66c9d6 v[3]: 0xca6349d6
+vsha1pq_u32[   7] res v[0]: 0xb47ddf0e v[1]: 0x3cd517f9 v[2]: 0x140f1eb8 v[3]: 0xe2e80189
+vsha1h_u32[  18] p0: 0xb47ddf0e
+vsha1h_u32[  18] res: 0xad1f77c3
+vsha1pq_u32[   8] p0 v[0]: 0xb47ddf0e v[1]: 0x3cd517f9 v[2]: 0x140f1eb8 v[3]: 0xe2e80189
+vsha1pq_u32[   8] p1: 0x39e6befc
+vsha1pq_u32[   8] p2 v[0]: 0xca655de6 v[1]: 0xca6ac1d6 v[2]: 0xca634256 v[3]: 0xca62e9f6
+vsha1pq_u32[   8] res v[0]: 0xb0149467 v[1]: 0x15e98d17 v[2]: 0x98f6cdec v[3]: 0x178e81e0
+vsha1h_u32[  19] p0: 0xb0149467
+vsha1h_u32[  19] res: 0xec052519
+vsha1pq_u32[   9] p0 v[0]: 0xb0149467 v[1]: 0x15e98d17 v[2]: 0x98f6cdec v[3]: 0x178e81e0
+vsha1pq_u32[   9] p1: 0xad1f77c3
+vsha1pq_u32[   9] p2 v[0]: 0xca734a96 v[1]: 0xca62c1d6 v[2]: 0xca6d0296 v[3]: 0xca82c256
+vsha1pq_u32[   9] res v[0]: 0x72f480ed v[1]: 0x6e9d9f84 v[2]: 0x999ae2f1 v[3]: 0x852dc41a

@@ -1,0 +1,124 @@
+vsha1h_u32[   0] p0: 0x67452301
+vsha1h_u32[   0] res: 0x59d148c0
+vsha1cq_u32[   0] p0 v[0]: 0x67452301 v[1]: 0xefcdab89 v[2]: 0x98badcfe v[3]: 0x10325476
+vsha1cq_u32[   0] p1: 0x00e40000
+vsha1cq_u32[   0] p2 v[0]: 0x87adddb0 v[1]: 0x00000001 v[2]: 0xe25b7190 v[3]: 0x00000001
+vsha1cq_u32[   0] res v[0]: 0xb3b578c1 v[1]: 0x411f8e37 v[2]: 0x92946bad v[3]: 0x827c46b6
+vsha1su0q_u32[   0] p0 v[0]: 0x6efbc2c0 v[1]: 0x00000001 v[2]: 0x87addd90 v[3]: 0x866a8001
+vsha1su0q_u32[   0] p1 v[0]: 0x01274600 v[1]: 0x00000001 v[2]: 0x01275bf0 v[3]: 0x00000001
+vsha1su0q_u32[   0] p2 v[0]: 0xffffc10c v[1]: 0x0000000f v[2]: 0x01274d10 v[3]: 0x00000001
+vsha1su0q_u32[   0] res v[0]: 0x16a9de5c v[1]: 0x866a800f v[2]: 0x87add680 v[3]: 0x866a8001
+vsha1h_u32[   1] p0: 0xb3b578c1
+vsha1h_u32[   1] res: 0x6ced5e30
+vsha1cq_u32[   1] p0 v[0]: 0xb3b578c1 v[1]: 0x411f8e37 v[2]: 0x92946bad v[3]: 0x827c46b6
+vsha1cq_u32[   1] p1: 0x59d148c0
+vsha1cq_u32[   1] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1cq_u32[   1] res v[0]: 0x9799409f v[1]: 0xc2d30c2a v[2]: 0x921ea272 v[3]: 0xcc6bf1be
+vsha1h_u32[   2] p0: 0x9799409f
+vsha1h_u32[   2] res: 0xe5e65027
+vsha1cq_u32[   2] p0 v[0]: 0x9799409f v[1]: 0xc2d30c2a v[2]: 0x921ea272 v[3]: 0xcc6bf1be
+vsha1cq_u32[   2] p1: 0x6ced5e30
+vsha1cq_u32[   2] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1cq_u32[   2] res v[0]: 0x6b9102d2 v[1]: 0x0bb0bea0 v[2]: 0xdc47b420 v[3]: 0x574a8421
+vsha1h_u32[   3] p0: 0x6b9102d2
+vsha1h_u32[   3] res: 0x9ae440b4
+vsha1cq_u32[   3] p0 v[0]: 0x6b9102d2 v[1]: 0x0bb0bea0 v[2]: 0xdc47b420 v[3]: 0x574a8421
+vsha1cq_u32[   3] p1: 0xe5e65027
+vsha1cq_u32[   3] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1cq_u32[   3] res v[0]: 0x3f157550 v[1]: 0xa33b2965 v[2]: 0x13e81e5d v[3]: 0x64c31e7d
+vsha1h_u32[   4] p0: 0x3f157550
+vsha1h_u32[   4] res: 0x0fc55d54
+vsha1cq_u32[   4] p0 v[0]: 0x3f157550 v[1]: 0xa33b2965 v[2]: 0x13e81e5d v[3]: 0x64c31e7d
+vsha1cq_u32[   4] p1: 0x9ae440b4
+vsha1cq_u32[   4] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1cq_u32[   4] res v[0]: 0x7c99a2c5 v[1]: 0xb4b95c7a v[2]: 0x21c8034c v[3]: 0x4d152d71
+vsha1h_u32[   5] p0: 0x7c99a2c5
+vsha1h_u32[   5] res: 0x5f2668b1
+vsha1pq_u32[   0] p0 v[0]: 0x7c99a2c5 v[1]: 0xb4b95c7a v[2]: 0x21c8034c v[3]: 0x4d152d71
+vsha1pq_u32[   0] p1: 0x0fc55d54
+vsha1pq_u32[   0] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1pq_u32[   0] res v[0]: 0x27e13451 v[1]: 0x218ca9e1 v[2]: 0x202f6655 v[3]: 0x968650ea
+vsha1h_u32[   6] p0: 0x27e13451
+vsha1h_u32[   6] res: 0x49f84d14
+vsha1pq_u32[   1] p0 v[0]: 0x27e13451 v[1]: 0x218ca9e1 v[2]: 0x202f6655 v[3]: 0x968650ea
+vsha1pq_u32[   1] p1: 0x5f2668b1
+vsha1pq_u32[   1] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1pq_u32[   1] res v[0]: 0x5dbf85e0 v[1]: 0xc3ba1ce1 v[2]: 0x9fa56448 v[3]: 0x18530fb8
+vsha1h_u32[   7] p0: 0x5dbf85e0
+vsha1h_u32[   7] res: 0x176fe178
+vsha1pq_u32[   2] p0 v[0]: 0x5dbf85e0 v[1]: 0xc3ba1ce1 v[2]: 0x9fa56448 v[3]: 0x18530fb8
+vsha1pq_u32[   2] p1: 0x49f84d14
+vsha1pq_u32[   2] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1pq_u32[   2] res v[0]: 0xb6852fb2 v[1]: 0x4e746bc5 v[2]: 0x5a56ba13 v[3]: 0x093c26e4
+vsha1h_u32[   8] p0: 0xb6852fb2
+vsha1h_u32[   8] res: 0xada14bec
+vsha1pq_u32[   3] p0 v[0]: 0xb6852fb2 v[1]: 0x4e746bc5 v[2]: 0x5a56ba13 v[3]: 0x093c26e4
+vsha1pq_u32[   3] p1: 0x176fe178
+vsha1pq_u32[   3] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1pq_u32[   3] res v[0]: 0x6dafc297 v[1]: 0x7b0d0fcb v[2]: 0xae4d05e4 v[3]: 0x5d039eeb
+vsha1h_u32[   9] p0: 0x6dafc297
+vsha1h_u32[   9] res: 0xdb6bf0a5
+vsha1pq_u32[   4] p0 v[0]: 0x6dafc297 v[1]: 0x7b0d0fcb v[2]: 0xae4d05e4 v[3]: 0x5d039eeb
+vsha1pq_u32[   4] p1: 0xada14bec
+vsha1pq_u32[   4] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1pq_u32[   4] res v[0]: 0xaf73311a v[1]: 0x635e6867 v[2]: 0xb34bc0c9 v[3]: 0x72a613bf
+vsha1h_u32[  10] p0: 0xaf73311a
+vsha1h_u32[  10] res: 0xabdccc46
+vsha1mq_u32[   0] p0 v[0]: 0xaf73311a v[1]: 0x635e6867 v[2]: 0xb34bc0c9 v[3]: 0x72a613bf
+vsha1mq_u32[   0] p1: 0xdb6bf0a5
+vsha1mq_u32[   0] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1mq_u32[   0] res v[0]: 0x2709ec6a v[1]: 0x51a3cd33 v[2]: 0x4704f097 v[3]: 0xaafe8065
+vsha1h_u32[  11] p0: 0x2709ec6a
+vsha1h_u32[  11] res: 0x89c27b1a
+vsha1mq_u32[   1] p0 v[0]: 0x2709ec6a v[1]: 0x51a3cd33 v[2]: 0x4704f097 v[3]: 0xaafe8065
+vsha1mq_u32[   1] p1: 0xabdccc46
+vsha1mq_u32[   1] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1mq_u32[   1] res v[0]: 0x84372bfc v[1]: 0x463000db v[2]: 0x7863853a v[3]: 0x6bdf0d48
+vsha1h_u32[  12] p0: 0x84372bfc
+vsha1h_u32[  12] res: 0x210dcaff
+vsha1mq_u32[   2] p0 v[0]: 0x84372bfc v[1]: 0x463000db v[2]: 0x7863853a v[3]: 0x6bdf0d48
+vsha1mq_u32[   2] p1: 0x89c27b1a
+vsha1mq_u32[   2] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1mq_u32[   2] res v[0]: 0xbe4e1a56 v[1]: 0xf8a3551f v[2]: 0xfa5d641c v[3]: 0x7a7d2b2c
+vsha1h_u32[  13] p0: 0xbe4e1a56
+vsha1h_u32[  13] res: 0xaf938695
+vsha1mq_u32[   3] p0 v[0]: 0xbe4e1a56 v[1]: 0xf8a3551f v[2]: 0xfa5d641c v[3]: 0x7a7d2b2c
+vsha1mq_u32[   3] p1: 0x210dcaff
+vsha1mq_u32[   3] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1mq_u32[   3] res v[0]: 0xb5c1d928 v[1]: 0x67f035f2 v[2]: 0xfe7f1276 v[3]: 0xb1026594
+vsha1h_u32[  14] p0: 0xb5c1d928
+vsha1h_u32[  14] res: 0x2d70764a
+vsha1mq_u32[   4] p0 v[0]: 0xb5c1d928 v[1]: 0x67f035f2 v[2]: 0xfe7f1276 v[3]: 0xb1026594
+vsha1mq_u32[   4] p1: 0xaf938695
+vsha1mq_u32[   4] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1mq_u32[   4] res v[0]: 0xd5d5c4dd v[1]: 0x215eeca9 v[2]: 0x684acd26 v[3]: 0xb386a393
+vsha1h_u32[  15] p0: 0xd5d5c4dd
+vsha1h_u32[  15] res: 0x75757137
+vsha1pq_u32[   5] p0 v[0]: 0xd5d5c4dd v[1]: 0x215eeca9 v[2]: 0x684acd26 v[3]: 0xb386a393
+vsha1pq_u32[   5] p1: 0x2d70764a
+vsha1pq_u32[   5] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1pq_u32[   5] res v[0]: 0x0e65a7a9 v[1]: 0xa948027e v[2]: 0x7609519f v[3]: 0x305dabe0
+vsha1h_u32[  16] p0: 0x0e65a7a9
+vsha1h_u32[  16] res: 0x439969ea
+vsha1pq_u32[   6] p0 v[0]: 0x0e65a7a9 v[1]: 0xa948027e v[2]: 0x7609519f v[3]: 0x305dabe0
+vsha1pq_u32[   6] p1: 0x75757137
+vsha1pq_u32[   6] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1pq_u32[   6] res v[0]: 0x158c7ea3 v[1]: 0xe2f2ce71 v[2]: 0x5d65fbc3 v[3]: 0xa80842c1
+vsha1h_u32[  17] p0: 0x158c7ea3
+vsha1h_u32[  17] res: 0xc5631fa8
+vsha1pq_u32[   7] p0 v[0]: 0x158c7ea3 v[1]: 0xe2f2ce71 v[2]: 0x5d65fbc3 v[3]: 0xa80842c1
+vsha1pq_u32[   7] p1: 0x439969ea
+vsha1pq_u32[   7] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1pq_u32[   7] res v[0]: 0xc6d734d1 v[1]: 0x0eb63057 v[2]: 0xd235e76e v[3]: 0xfae0f447
+vsha1h_u32[  18] p0: 0xc6d734d1
+vsha1h_u32[  18] res: 0x71b5cd34
+vsha1pq_u32[   8] p0 v[0]: 0xc6d734d1 v[1]: 0x0eb63057 v[2]: 0xd235e76e v[3]: 0xfae0f447
+vsha1pq_u32[   8] p1: 0xc5631fa8
+vsha1pq_u32[   8] p2 v[0]: 0x6ed9acad v[1]: 0x6ed9ebb0 v[2]: 0x700138b1 v[3]: 0x6ed9eba2
+vsha1pq_u32[   8] res v[0]: 0x2858ef48 v[1]: 0x05460c47 v[2]: 0xfc76e041 v[3]: 0xcd61a282
+vsha1h_u32[  19] p0: 0x2858ef48
+vsha1h_u32[  19] res: 0x0a163bd2
+vsha1pq_u32[   9] p0 v[0]: 0x2858ef48 v[1]: 0x05460c47 v[2]: 0xfc76e041 v[3]: 0xcd61a282
+vsha1pq_u32[   9] p1: 0x71b5cd34
+vsha1pq_u32[   9] p2 v[0]: 0xdebb1b60 v[1]: 0x00000001 v[2]: 0x40000000 v[3]: 0x00000000
+vsha1pq_u32[   9] res v[0]: 0x30f4dbf5 v[1]: 0x5dc4c2ba v[2]: 0x37b94c93 v[3]: 0x63f80807
