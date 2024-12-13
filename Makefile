@@ -34,6 +34,11 @@ C_CXX_FLAGS += -Wno-unsafe-buffer-usage
 C_CXX_FLAGS += -mcpu=apple-m1
 CFLAGS := $(C_CXX_FLAGS) -std=gnu2x  -Wno-declaration-after-statement -Wno-pre-c2x-compat
 CXXFLAGS := $(C_CXX_FLAGS) -std=gnu++2b -fforce-emit-vtables -Wno-c++98-compat-pedantic -Wno-c++20-compat-pedantic -I 3rdparty/cifra
+LDFLAGS := -lfmt
+ifeq ($(shell uname -s),Darwin)
+CXXFLAGS += -isystem /opt/homebrew/opt/fmt/include
+LDFLAGS += -L/opt/homebrew/opt/fmt/lib
+endif
 DBG_FLAGS := -fno-omit-frame-pointer -g3 -gfull -glldb -gcolumn-info -gdwarf-aranges -ggnu-pubnames
 VERBOSE_FLAGS := -v -Wl,-v
 NOOPT_FLAGS := -O0
@@ -108,16 +113,16 @@ sha1-arm-ubsan.o: sha1-arm.cpp
 	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(UBSAN_FLAGS)
 
 sha1-arm: sha1-arm.o teeny-sha1.o sha1-cifra.o sha1-wrappers.o
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(SMOL_FLAGS) $(NOOUTLINE_FLAGS)
 
 sha1-arm-O0: sha1-arm-O0.o teeny-sha1-O0.o sha1-cifra-O0.o sha1-wrappers-O0.o
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(NOOPT_FLAGS) $(DBG_FLAGS)
 
 sha1-arm-asan: sha1-arm-asan.o teeny-sha1-asan.o sha1-cifra-asan.o sha1-wrappers-asan.o
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(ASAN_FLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(ASAN_FLAGS)
 
 sha1-arm-ubsan: sha1-arm-ubsan.o teeny-sha1-ubsan.o sha1-cifra-ubsan.o sha1-wrappers-ubsan.o
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(UBSAN_FLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(UBSAN_FLAGS)
 
 run-asan: sha1-arm-asan
 	ASAN_OPTIONS=print_stacktrace=1 ./$^
