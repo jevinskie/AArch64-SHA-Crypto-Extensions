@@ -18,7 +18,8 @@ namespace {
 constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU, 0xCA62C1D6U};
 } // namespace
 
-[[gnu::noinline]] static void sha1_arm_unrolled_compress(uint32_t *__restrict state, const uint8_t *__restrict blocks,
+[[gnu::noinline]] static void sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state,
+                                                         const uint8_t *__restrict _Nonnull blocks,
                                                          const size_t num_blocks) {
     uint32x4_t abcd = vld1q_u32(state);
     uint32_t e0     = state[4];
@@ -183,7 +184,8 @@ constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU, 0x
     state[4] = e0;
 }
 
-static void pad_and_finalize(const uint8_t *__restrict _Nullable data, size_t len, uint32_t *__restrict state) {
+static void pad_and_finalize(const uint8_t *__restrict _Nullable data, size_t len,
+                             uint32_t *__restrict _Nonnull state) {
     alignas(64) uint8_t buffer[64] = {};
     assert(len <= sizeof(buffer));
     std::memcpy(buffer, data, len);
@@ -204,7 +206,7 @@ static void pad_and_finalize(const uint8_t *__restrict _Nullable data, size_t le
     sha1_arm_unrolled_compress(state, buffer, 1);
 }
 
-static void process(const uint8_t *__restrict _Nonnull data, size_t len, uint32_t *__restrict state) {
+static void process(const uint8_t *__restrict _Nullable data, size_t len, uint32_t *__restrict _Nonnull state) {
     const size_t block_total_sz = len - (len % 64);
     const size_t remainder_sz   = len - block_total_sz;
     for (size_t i = 0; i < block_total_sz; i += 64) {
@@ -213,7 +215,7 @@ static void process(const uint8_t *__restrict _Nonnull data, size_t len, uint32_
     pad_and_finalize(&data[block_total_sz], remainder_sz, state);
 }
 
-void sha1_arm_unrolled(const uint8_t *buf, const size_t sz, uint8_t hash[20]) {
+void sha1_arm_unrolled(const uint8_t *_Nullable buf, const size_t sz, uint8_t *__restrict _Nonnull hash) {
     uint32_t state[5];
     process(buf, sz, state);
     static_assert(sizeof(state) == 20);
