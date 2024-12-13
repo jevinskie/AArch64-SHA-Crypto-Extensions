@@ -440,12 +440,16 @@ public:
         MCA_END();
     }
 
-    static void digest_to_hex_simple(const uint8_t *__restrict _Nonnull digest, char *__restrict _Nonnull hex_str) {
+    [[gnu::noinline]] static void digest_to_hex_simple(const uint8_t *__restrict _Nonnull digest,
+                                                       char *__restrict _Nonnull hex_str) {
+        MCA_BEGIN("digest_to_hex_simple");
+#pragma nounroll
         for (size_t i = 0; i < SHA1_OUTPUT_SIZE; ++i, hex_str += 2) {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             byte_to_ascii_hex(digest[i], reinterpret_cast<std::array<char, 2> &>(*hex_str));
         }
         *hex_str = '\0';
+        MCA_END();
     }
 
 private:
@@ -636,7 +640,7 @@ private:
         return hash_output;
     }
 
-    static uint8_t nibble_to_ascii_hex(const uint8_t chr) {
+    [[gnu::always_inline]] static constexpr uint8_t nibble_to_ascii_hex(const uint8_t chr) {
         if (chr <= 9) {
             return chr + '0';
         }
@@ -646,7 +650,7 @@ private:
         __builtin_unreachable();
     }
 
-    static void byte_to_ascii_hex(uint8_t n, std::array<char, 2> &hex) {
+    [[gnu::always_inline]] static constexpr void byte_to_ascii_hex(const uint8_t n, std::array<char, 2> &hex) {
         hex[0] = static_cast<char>(nibble_to_ascii_hex(n >> 4U));
         hex[1] = static_cast<char>(nibble_to_ascii_hex(n & 0xFU));
     }
