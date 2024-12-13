@@ -671,10 +671,10 @@ private:
         vst1q_u8(hash_output.bytes(), abcd_bytes);
 
         // Convert state.e to bytes and store it
-        hash_output.bytes()[16] = (state.e >> 24U) & 0xFFU;
-        hash_output[17]         = (state.e >> 16U) & 0xFFU;
-        hash_output[18]         = (state.e >> 8U) & 0xFFU;
-        hash_output[19]         = state.e & 0xFFU;
+        hash_output[16] = (state.e >> 24U) & 0xFFU;
+        hash_output[17] = (state.e >> 16U) & 0xFFU;
+        hash_output[18] = (state.e >> 8U) & 0xFFU;
+        hash_output[19] = state.e & 0xFFU;
 
         return hash_output;
     }

@@ -1,4 +1,5 @@
 #include "sha1-arm-unrolled.h"
+#include <__bit/byteswap.h>
 
 #undef NDEBUG
 #include <cassert>
@@ -16,6 +17,19 @@
 // MIT license
 
 namespace {
+// ubsan implicit conversion workaround
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+template <uint32_t p2>
+[[gnu::always_inline]] uint32x4_t my_vsetq_lane_u32(const uint32_t p0, const uint32x4_t p1) noexcept {
+    const uint32_t s0    = p0;
+    const uint32x4_t s1  = p1;
+    const uint32x4_t ret = (uint32x4_t)__builtin_neon_vsetq_lane_i32((int)s0, (int32x4_t)s1, p2);
+    return ret;
+}
+#pragma GCC diagnostic pop
+
 constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU, 0xCA62C1D6U};
 } // namespace
 
@@ -224,8 +238,11 @@ static void process(const uint8_t *__restrict _Nullable data, size_t len, uint32
 }
 
 void sha1_arm_unrolled(const uint8_t *_Nullable buf, const size_t sz, uint8_t *__restrict _Nonnull hash) {
-    uint32_t state[5];
+    uint32_t state[5] = {0x67452301u, 0xEFCDAB89u, 0x98BADCFEu, 0x10325476u, 0xC3D2E1F0u};
     process(buf, sz, state);
     static_assert(sizeof(state) == 20);
+    for (size_t i = 0; i < 5; ++i) {
+        state[i] = std::byteswap(state[i]);
+    }
     std::memcpy(hash, state, sizeof(state));
 }
