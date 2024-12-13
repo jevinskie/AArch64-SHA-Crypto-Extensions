@@ -12,6 +12,8 @@
 #include <cstring>
 #include <type_traits>
 
+#include "sha1-wrappers.h"
+
 #if 0
 #define USE_TEENY
 #endif
@@ -95,53 +97,6 @@ struct alignas(digest_align_val) SHA1Digest {
 #pragma GCC diagnostic pop
 
 namespace {
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-const char impl_name[] = "sha1-arm.cpp";
-
-using SHA1StateScalar = std::array<uint8_t, 20>;
-using SHA1BlockScalar = std::array<uint8_t, 64>;
-
-extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
-                                                  const SHA1StateScalar &state);
-extern "C" [[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
-                                                  const SHA1BlockScalar &block);
-
-extern "C" [[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]);
-extern "C" [[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]);
-extern "C" [[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]);
-
-// Helper function to determine the size of the string literal
-template <typename T, std::size_t N>
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-consteval std::array<T, N - 1> cstrlit_to_std_array(const char (&str)[N]) {
-    std::array<T, N - 1> arr = {};
-    auto sit                 = std::begin(str);
-    for (auto it = arr.begin(), ite = arr.end(); it != ite; ++it, ++sit) {
-        *it = static_cast<uint8_t>(*sit);
-    }
-    return arr;
-}
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-template"
-template <typename T, typename F> constexpr T to_from_cast(const F &val) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    return reinterpret_cast<T>(static_cast<F>(val));
-}
-
-template <typename T, typename F> constexpr T to_from_cast(const F *_Nonnull val) { // NOLINT(misc-include-cleaner)
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    return reinterpret_cast<T>(static_cast<F *>(val));
-}
-
-template <typename T, typename F>
-constexpr T to_from_cast(std::remove_pointer_t<F> *_Nonnull val) { // NOLINT(misc-include-cleaner)
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    return reinterpret_cast<T>(static_cast<std::remove_pointer_t<F> *>(val));
-}
-#pragma GCC diagnostic pop
-
 // ubsan implicit conversion workaround
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -154,7 +109,6 @@ template <uint32_t p2>
     return ret;
 }
 #pragma GCC diagnostic pop
-
 } // namespace
 
 #pragma GCC diagnostic push
@@ -205,10 +159,68 @@ private:
     std::array<uint32_t, 16> words;
 };
 
+using SHA1StateScalar = std::array<uint8_t, 20>;
+using SHA1BlockScalar = std::array<uint8_t, 64>;
+
+void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i, const SHA1State &state);
+void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i, const SHA1StateScalar &state);
+extern "C" [[gnu::noinline]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
+                                                  const uint8_t *const _Nonnull state);
+
+void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i, const SHA1BlockScalar &block);
+void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i, const SHA1Block &block);
+extern "C" [[gnu::noinline]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
+                                                  const uint8_t *const _Nonnull block);
+
+[[gnu::noinline, gnu::used]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v);
+extern "C" [[gnu::noinline]] void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32_t (&v)[4]);
+
+[[gnu::noinline, gnu::used]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8x16_t v);
+extern "C" [[gnu::noinline]] void dump_uint8x16_t(const char *const _Nonnull prefix, const uint8_t (&v)[16]);
+
+[[gnu::noinline, gnu::used]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8x16x2_t v);
+extern "C" [[gnu::noinline]] void dump_uint8x16x2_t(const char *const _Nonnull prefix, const uint8_t (&v)[32]);
+
 namespace {
 
-extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *const _Nonnull name, const int line,
-                                                                const size_t i, const SHA1BlockScalar &block) {
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+const char impl_name[] = "sha1-arm.cpp";
+
+// Helper function to determine the size of the string literal
+template <typename T, std::size_t N>
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+consteval std::array<T, N - 1> cstrlit_to_std_array(const char (&str)[N]) {
+    std::array<T, N - 1> arr = {};
+    auto sit                 = std::begin(str);
+    for (auto it = arr.begin(), ite = arr.end(); it != ite; ++it, ++sit) {
+        *it = static_cast<uint8_t>(*sit);
+    }
+    return arr;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-template"
+template <typename T, typename F> constexpr T to_from_cast(const F &val) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return reinterpret_cast<T>(static_cast<F>(val));
+}
+
+template <typename T, typename F> constexpr T to_from_cast(const F *_Nonnull val) { // NOLINT(misc-include-cleaner)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return reinterpret_cast<T>(static_cast<F *>(val));
+}
+
+template <typename T, typename F>
+constexpr T to_from_cast(std::remove_pointer_t<F> *_Nonnull val) { // NOLINT(misc-include-cleaner)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return reinterpret_cast<T>(static_cast<std::remove_pointer_t<F> *>(val));
+}
+#pragma GCC diagnostic pop
+
+} // namespace
+
+[[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *const _Nonnull name, const int line, const size_t i,
+                                                     const SHA1BlockScalar &block) {
 #ifdef DO_DUMP
     printf(ANSI_BOLD_RED_FG "block[%10zu]" ANSI_RESET
                             " %10s:%03d %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n",
@@ -236,8 +248,22 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *cons
 #endif
 }
 
-extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *const _Nonnull name, const int line,
-                                                                const size_t i, const SHA1StateScalar &state) {
+extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_block(const char *const _Nonnull name, const int line,
+                                                                const size_t i, const uint8_t *const _Nonnull block) {
+#ifdef DO_DUMP
+    SHA1BlockScalar scalar_block{};
+    std::memcpy(scalar_block.data(), block, sizeof(scalar_block));
+    dump_sha1_block(name, line, i, scalar_block);
+#else
+    (void)name;
+    (void)line;
+    (void)i;
+    (void)state;
+#endif
+}
+
+[[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *const _Nonnull name, const int line, const size_t i,
+                                                     const SHA1StateScalar &state) {
 #ifdef DO_DUMP
     printf(ANSI_BOLD_GREEN_FG "state[%10zu]" ANSI_RESET " %10s:%03d %08x%08x%08x%08x%08x\n", i, name, line, state[0],
            state[1], state[2], state[3], state[4]);
@@ -255,6 +281,20 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *cons
     SHA1StateScalar scalar_state{};
     std::memcpy(scalar_state.data(), &state.abcd, sizeof(state.abcd));
     std::memcpy(scalar_state.data() + sizeof(state.abcd), &state.e, sizeof(state.e));
+    dump_sha1_state(name, line, i, scalar_state);
+#else
+    (void)name;
+    (void)line;
+    (void)i;
+    (void)state;
+#endif
+}
+
+extern "C" [[gnu::noinline, maybe_unused]] void dump_sha1_state(const char *const _Nonnull name, const int line,
+                                                                const size_t i, const uint8_t *const _Nonnull state) {
+#ifdef DO_DUMP
+    SHA1StateScalar scalar_state{};
+    std::memcpy(scalar_state.data(), state, sizeof(scalar_state));
     dump_sha1_state(name, line, i, scalar_state);
 #else
     (void)name;
@@ -350,8 +390,6 @@ extern "C" [[gnu::noinline, maybe_unused]] void dump_uint8x16x2_t(const char *co
     (void)v;
 #endif
 }
-
-} // namespace
 
 static size_t block_cnt;
 static size_t state_cnt;
