@@ -7,11 +7,11 @@ target triple = "arm64-apple-macosx14.0.0"
 
 ; Function Attrs: mustprogress nofree noinline norecurse nosync nounwind ssp willreturn memory(none)
 define %struct.uint32x4x2_t @sha1_arm_unrolled_compress_one(<4 x i32> %buf, i32 %sz, [4 x <4 x i32>] %blocks) local_unnamed_addr #0 {
-  %K0 = immediate <4 x i32> <i32 0x5A827999, i32 0x5A827999, i32 0x5A827999, i32 0x5A827999>
-  %K1 = immediate <4 x i32> <i32 0x6ED9EBA1, i32 0x6ED9EBA1, i32 0x6ED9EBA1, i32 0x6ED9EBA1>
-  %K2 = immediate <4 x i32> <i32 0x8F1BBCDC, i32 0x8F1BBCDC, i32 0x8F1BBCDC, i32 0x8F1BBCDC>
-  %K3 = immediate <4 x i32> <i32 0xCA62C1D6, i32 0xCA62C1D6, i32 0xCA62C1D6, i32 0xCA62C1D6>
-  %ByteRevLUT = immediate <16 x i32> <i32 3, i32 2, i32 1, i32 0, i32 7, i32 6, i32 5, i32 4, i32 11, i32 10, i32 9, i32 8, i32 15, i32 14, i32 13, i32 12>
+  %K0 = call <4 x i32> @llvm.immediate(<4 x i32> <i32 0x5A827999, i32 0x5A827999, i32 0x5A827999, i32 0x5A827999>)
+  %K1 = call <4 x i32> @llvm.immediate(<4 x i32> <i32 0x6ED9EBA1, i32 0x6ED9EBA1, i32 0x6ED9EBA1, i32 0x6ED9EBA1>)
+  %K2 = call <4 x i32> @llvm.immediate(<4 x i32> <i32 0x8F1BBCDC, i32 0x8F1BBCDC, i32 0x8F1BBCDC, i32 0x8F1BBCDC>)
+  %K3 = call <4 x i32> @llvm.immediate(<4 x i32> <i32 0xCA62C1D6, i32 0xCA62C1D6, i32 0xCA62C1D6, i32 0xCA62C1D6>)
+  %ByteRevLUT = call <16 x i8> @llvm.immediate(<16 x i32> <i32 3, i32 2, i32 1, i32 0, i32 7, i32 6, i32 5, i32 4, i32 11, i32 10, i32 9, i32 8, i32 15, i32 14, i32 13, i32 12>)
   %9 = shufflevector <16 x i8> (extractvalue [4 x <4 x i32>] %blocks, 0), <16 x i8> poison, <16 x i32> %ByteRevLUT
   %12 = shufflevector <16 x i8> (extractvalue [4 x <4 x i32>] %blocks, 1), <16 x i8> poison, <16 x i32> %ByteRevLUT
   %15 = shufflevector <16 x i8> (extractvalue [4 x <4 x i32>] %blocks, 2), <16 x i8> poison, <16 x i32> %ByteRevLUT

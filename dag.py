@@ -49,15 +49,10 @@ def rename(lines: list[str]) -> list[str]:
         else:
             new_line_defs[i] = od
     sorted_renames: list[tuple[str, str]] = sorted(
-        [t for t in zip(line_defs, new_line_defs) if t[0] != t[1]],
-        key=lambda x: int(x[0]),
-        reverse=True,
+        [t for t in zip(line_defs, new_line_defs) if t[0] != t[1]], key=lambda x: int(x[0])
     )
-    # print(f"sorted: {sorted_renames}")
-    # name_map: OrderedDict[str, str] = OrderedDict(sorted_renames)
-    # print(f"name_map: {name_map}")
     for i, line in enumerate(lines):
-        name_map: OrderedDict[str, str] = OrderedDict(sorted_renames[:i])
+        name_map: OrderedDict[str, str] = OrderedDict(reversed(sorted_renames[:i]))
         if line[0] == "%":
             ls = line.split()
             new_name = new_line_defs[i]
