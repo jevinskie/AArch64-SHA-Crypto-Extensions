@@ -20,8 +20,22 @@ def rename(lines: list[str]) -> list[str]:
             names.add(name)
         o.append(line)
     assert all(map(lambda o: o is not None, line_defs))
-    lds = "\n".join(line_defs)
-    print(f"line_defs:\n{lds}")
+    new_line_defs: list[list | None] = [None] * (len(lines) - 1)
+    n = 0
+    for i in range(len(new_line_defs)):
+        od = line_defs[i]
+        assert od is not None
+        if str.isdigit(od):
+            new_line_defs[i] = str(n)
+            n += 1
+        else:
+            new_line_defs[i] = od
+    for i, line in enumerate(lines):
+        if line[0] == "%":
+            ls = line.split()
+            new_name = new_line_defs[i]
+            new_line = f"%{new_name}" + " ".join(ls[1:]) + "\n"
+        o.append(new_line)
     return o
 
 
