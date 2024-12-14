@@ -2,9 +2,28 @@
 
 import argparse
 import graphlib
+import re
 import typing
+from collections import OrderedDict
 
 import networkx
+
+
+def substitute_val(s: str, old: str, new: str) -> str:
+    if not str.isdigit(old):
+        return s
+    pattern = rf"%{old}(?!\d)"
+    return re.sub(pattern, f"%{new}", s)
+
+
+def substitute_vals(s: str, name_map: OrderedDict[str, str]) -> str:
+    for on, nn in reversed(name_map.items()):
+        if on == "136":
+            print(f"on: {on} nn: {nn}")
+            s2 = substitute_val(s, on, nn)
+            print(f"s2: '{s2}' s: '{s}'")
+        s = substitute_val(s, on, nn)
+    return s
 
 
 def rename(lines: list[str]) -> list[str]:
@@ -18,7 +37,6 @@ def rename(lines: list[str]) -> list[str]:
             line_defs[i] = name
             print(f"name: {name}")
             names.add(name)
-        o.append(line)
     assert all(map(lambda o: o is not None, line_defs))
     new_line_defs: list[list | None] = [None] * (len(lines) - 1)
     n = 0
@@ -30,12 +48,26 @@ def rename(lines: list[str]) -> list[str]:
             n += 1
         else:
             new_line_defs[i] = od
+    sorted_renames: list[tuple[str, str]] = sorted(
+        [t for t in zip(line_defs, new_line_defs) if t[0] != t[1]],
+        key=lambda x: int(x[0]),
+        reverse=True,
+    )
+    # print(f"sorted: {sorted_renames}")
+    # name_map: OrderedDict[str, str] = OrderedDict(sorted_renames)
+    # print(f"name_map: {name_map}")
     for i, line in enumerate(lines):
+        name_map: OrderedDict[str, str] = OrderedDict(sorted_renames[:i])
         if line[0] == "%":
             ls = line.split()
             new_name = new_line_defs[i]
-            new_line = f"%{new_name}" + " ".join(ls[1:]) + "\n"
-        o.append(new_line)
+            new_line = " ".join(ls[1:])
+            new_line = substitute_vals(new_line, name_map)
+            new_line = f"%{new_name} {new_line}\n"
+            o.append(new_line)
+        else:
+            new_line = substitute_vals(line, name_map)
+            o.append(new_line)
     return o
 
 
@@ -58,8 +90,16 @@ def parse(ifd: typing.TextIO, ofd: typing.TextIO) -> None:
     for i in range(len(func_lines)):
         assert func_lines[i].startswith("  ")
         func_lines[i] = func_lines[i][2:]
+    print(f"len1 func_lines: {len(func_lines)}")
     func_lines = rename(func_lines)
-    print("".join(func_lines))
+    print(f"len2 func_lines: {len(func_lines)}")
+    sl = lines[: func_start_line + 1]
+    print(f"sl[-1]: '{sl[-1]}'")
+    el = lines[func_end_line:]
+    print(f"el[0]: '{el[0]}'")
+    print("".join(lines[: func_start_line + 1]), end="", file=ofd)
+    print("".join(["  " + v for v in func_lines]), end="", file=ofd)
+    print("".join(lines[func_end_line:]), end="", file=ofd)
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
