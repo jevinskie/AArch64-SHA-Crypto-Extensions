@@ -9,15 +9,19 @@ import networkx
 
 def rename(lines: list[str]) -> list[str]:
     o: list[str] = []
-    names: set[str] = {}
-    for line in lines:
+    names: set[str] = set()
+    line_defs: list[str | None] = [None] * (len(lines) - 1)
+    for i, line in enumerate(lines):
         assert line[0] == "%" or line.startswith("ret ")
         if line[0] == "%":
             name = line.split()[0][1:]
+            line_defs[i] = name
             print(f"name: {name}")
             names.add(name)
-
         o.append(line)
+    assert all(map(lambda o: o is not None, line_defs))
+    lds = "\n".join(line_defs)
+    print(f"line_defs:\n{lds}")
     return o
 
 
