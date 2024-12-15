@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
-import graphlib
 import re
 import typing
 from collections import OrderedDict
 
-import networkx
+import matplotlib as mpl
+import networkx as nx
+
+mpl
+# mpl.use("svg")
 
 identifier_pattern = r"[%][_a-zA-Z0-9][a-zA-Z$._0-9]*"
 
@@ -31,6 +34,7 @@ def get_line_defs(lines: list[str]) -> list[str]:
         if line[0] == "%":
             name = line.split()[0][1:]
             line_defs[i] = name
+    line_defs[-1] = "res"
     return line_defs
 
 
@@ -42,7 +46,7 @@ def get_line_use_helper(pline: str) -> list[str]:
     for m in matches:
         if m.startswith("%struct."):
             continue
-        r.append(m)
+        r.append(m[1:])
     return r
 
 
@@ -58,11 +62,52 @@ def get_line_uses(lines: list[str]) -> list[list[str]]:
     return u
 
 
-def get_def_use(lines: list[str]) -> None:
+def get_operation(line: str) -> str:
+    if line.startswith("ret "):
+        return "ret"
+    assert line.startswith("%")
+    ls = line.split()
+    assert ls[1] == "="
+    if ls[2] == "call":
+        op = next(filter(lambda s: s[0] == "@", ls))[1:].split("(")[0]
+        assert op.startswith("llvm.")
+        op = op.split(".")[-1]
+        if op == "immediate":
+            op = "imm"
+        return op
+    else:
+        op = ls[2]
+        if op == "shufflevector":
+            op = "shuf"
+        elif op == "insertelement":
+            op = "inselm"
+        elif op == "insertvalue":
+            op = "insval"
+        return op
+
+
+def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO | None) -> None:
     d = get_line_defs(lines)
     u = get_line_uses(lines)
     print(f"uses: {u}")
     print(f"defs: {d}")
+    sz = len(lines)
+    ops: list[str] = [get_operation(line) for line in lines]
+    print(f"ops: {ops}")
+    G = nx.DiGraph()
+    for i in range(sz):
+        ld = d[i]
+        for lu in u[i]:
+            G.add_edge(lu, ld)
+    assert G.is_directed()
+    print(f"G: {G}")
+    print(f"G.nodes(): {G.nodes()}")
+    print(f"G.edges(): {G.edges()}")
+    # pos = nx.spring_layout(G)
+    # nodes = nx.draw_networkx_nodes(G, pos)
+    # edges = nx.draw_networkx_edges(G, pos)
+    if dfd is not None:
+        nx.nx_agraph.write_dot(G, dfd)
 
 
 def rename(lines: list[str]) -> list[str]:
@@ -96,7 +141,9 @@ def rename(lines: list[str]) -> list[str]:
     return o
 
 
-def parse(ifd: typing.TextIO, ofd: typing.TextIO) -> None:
+def parse(
+    ifd: typing.TextIO, ofd: typing.TextIO, gfd: typing.TextIO | None, dfd: typing.TextIO | None
+) -> None:
     lines = ifd.readlines()
     func_start_line: int | None = None
     func_end_line: int | None = None
@@ -115,7 +162,7 @@ def parse(ifd: typing.TextIO, ofd: typing.TextIO) -> None:
         assert func_lines[i].startswith("  ")
         func_lines[i] = func_lines[i][2:]
     func_lines = rename(func_lines)
-    get_def_use(func_lines)
+    get_def_use(func_lines, gfd, dfd)
     print("".join(lines[: func_start_line + 1]), end="", file=ofd)
     print("".join(["  " + v for v in func_lines]), end="", file=ofd)
     print("".join(lines[func_end_line:]), end="", file=ofd)
@@ -139,16 +186,29 @@ def get_arg_parser() -> argparse.ArgumentParser:
         required=True,
         help="output file.",
     )
+    parser.add_argument(
+        "-g",
+        "--graph",
+        dest="graph_svg_file",
+        type=argparse.FileType("w"),
+        help="output graph SVG file.",
+    )
+    parser.add_argument(
+        "-d",
+        "--dot",
+        dest="graph_dot_file",
+        type=argparse.FileType("wb"),
+        help="output graph dot file.",
+    )
     return parser
 
 
 def main(args: argparse.Namespace):
     ifd = args.in_file
     ofd = args.out_file
-    parse(ifd, ofd)
-    networkx
-    graphlib
-    pass
+    gfd = args.graph_svg_file
+    dfd = args.graph_dot_file
+    parse(ifd, ofd, gfd, dfd)
 
 
 if __name__ == "__main__":
