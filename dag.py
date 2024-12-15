@@ -89,12 +89,7 @@ def get_operation(line: str) -> str:
 def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO | None) -> None:
     d = get_line_defs(lines)
     u = get_line_uses(lines)
-    print(f"uses: {u}")
-    print(f"defs: {d}")
     sz = len(lines)
-    ops: list[str] = [get_operation(line) for line in lines]
-    print(f"ops: {ops}")
-    print(f"set(ops): {set(ops)}")
     G = nx.DiGraph()
     for i in range(sz):
         ld = d[i]
@@ -102,11 +97,8 @@ def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO 
             G.add_edge(lu, ld)
     assert G.is_directed()
     print(f"G: {G}")
-    print(f"G.nodes(): {G.nodes()}")
-    print(f"G.edges(): {G.edges()}")
-    # pos = nx.spring_layout(G)
-    # nodes = nx.draw_networkx_nodes(G, pos)
-    # edges = nx.draw_networkx_edges(G, pos)
+    for i, batch in enumerate(nx.topological_generations(G)):
+        print(f"i: {i} batch: {sorted(batch)}")
     if dfd is not None:
         nx.nx_agraph.write_dot(G, dfd)
 
@@ -142,9 +134,6 @@ def rename(lines: list[str]) -> list[str]:
     sorted_renames: list[tuple[str, str]] = sorted(
         [t for t in zip(line_defs, new_line_defs) if t[0] != t[1]], key=lambda x: int(x[0])
     )
-    print(f"line_defs: {line_defs}")
-    print(f"new_line_defs: {new_line_defs}")
-    print(f"sorted_renames: {sorted_renames}")
     o: list[str] = []
     for i, line in enumerate(lines):
         name_map: OrderedDict[str, str] = OrderedDict(reversed(sorted_renames[:i]))
