@@ -94,6 +94,7 @@ def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO 
     sz = len(lines)
     ops: list[str] = [get_operation(line) for line in lines]
     print(f"ops: {ops}")
+    print(f"set(ops): {set(ops)}")
     G = nx.DiGraph()
     for i in range(sz):
         ld = d[i]
@@ -111,7 +112,20 @@ def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO 
 
 
 def rename(lines: list[str]) -> list[str]:
-    o: list[str] = []
+    op_cnt: dict[str, int] = {
+        "add": 0,
+        "imm": 0,
+        "inselm": 0,
+        "insval": 0,
+        "ret": 0,
+        "sha1c": 0,
+        "sha1h": 0,
+        "sha1m": 0,
+        "sha1p": 0,
+        "sha1su0": 0,
+        "sha1su1": 0,
+        "shuf": 0,
+    }
     line_defs = get_line_defs(lines)
     new_line_defs: list[list | None] = [None] * (len(lines) - 1)
     n = 0
@@ -119,13 +133,19 @@ def rename(lines: list[str]) -> list[str]:
         od = line_defs[i]
         assert od is not None
         if str.isdigit(od):
-            new_line_defs[i] = str(n)
+            op = get_operation(lines[i])
+            new_line_defs[i] = f"{op}_{op_cnt[op]}"
+            op_cnt[op] += 1
             n += 1
         else:
             new_line_defs[i] = od
     sorted_renames: list[tuple[str, str]] = sorted(
         [t for t in zip(line_defs, new_line_defs) if t[0] != t[1]], key=lambda x: int(x[0])
     )
+    print(f"line_defs: {line_defs}")
+    print(f"new_line_defs: {new_line_defs}")
+    print(f"sorted_renames: {sorted_renames}")
+    o: list[str] = []
     for i, line in enumerate(lines):
         name_map: OrderedDict[str, str] = OrderedDict(reversed(sorted_renames[:i]))
         if line[0] == "%":
@@ -138,6 +158,7 @@ def rename(lines: list[str]) -> list[str]:
         else:
             new_line = substitute_num_vals(line, name_map)
             o.append(new_line)
+    assert len(lines) == len(o)
     return o
 
 
