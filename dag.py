@@ -97,8 +97,12 @@ def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO 
             G.add_edge(lu, ld)
     assert G.is_directed()
     print(f"G: {G}")
+    batches: list[list[str]] = []
     for i, batch in enumerate(nx.topological_generations(G)):
-        print(f"i: {i} batch: {sorted(batch)}")
+        batch = sorted(batch)
+        print(f"i: {i} batch: {batch}")
+        batches.append(batch)
+    print(f"batches: {batches}")
     if dfd is not None:
         nx.nx_agraph.write_dot(G, dfd)
 
