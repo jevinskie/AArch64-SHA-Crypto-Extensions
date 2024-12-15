@@ -25,7 +25,7 @@ def substitute_num_vals(s: str, name_map: OrderedDict[str, str]) -> str:
 
 
 def get_line_defs(lines: list[str]) -> list[str]:
-    line_defs: list[str | None] = [None] * (len(lines) - 1)
+    line_defs: list[str | None] = [None] * (len(lines))
     for i, line in enumerate(lines):
         assert line[0] == "%" or line.startswith("ret ")
         if line[0] == "%":
@@ -36,13 +36,13 @@ def get_line_defs(lines: list[str]) -> list[str]:
 
 def get_line_use_helper(pline: str) -> list[str]:
     r: list[str] = []
-    print(f"pline: {pline}")
     matches = re.findall(identifier_pattern, pline)
-    print(f"matches: {matches}")
     if matches is None:
         return r
     for m in matches:
-        print(f"m: {m}")
+        if m.startswith("%struct."):
+            continue
+        r.append(m)
     return r
 
 
@@ -59,7 +59,10 @@ def get_line_uses(lines: list[str]) -> list[list[str]]:
 
 
 def get_def_use(lines: list[str]) -> None:
-    get_line_uses(lines)
+    d = get_line_defs(lines)
+    u = get_line_uses(lines)
+    print(f"uses: {u}")
+    print(f"defs: {d}")
 
 
 def rename(lines: list[str]) -> list[str]:
