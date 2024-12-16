@@ -1,5 +1,4 @@
 #include "sha1-arm-unrolled.h"
-#include <__bit/byteswap.h>
 
 #undef NDEBUG
 #include <cassert>
@@ -263,11 +262,16 @@ void sha1_arm_unrolled(const uint8_t *_Nullable buf, const size_t sz, uint8_t *_
     std::memcpy(hash, state, sizeof(state));
 }
 
-extern "C" uint32x4x2_t sha1_arm_unrolled_compress_one(const uint32x4_t abcd_p, const uint32_t e_p,
-                                                       const uint32x4x4_t blocks_p);
+struct CoolSHA1Digest {
+    uint32x4_t abcd;
+    uint32_t e;
+};
 
-extern "C" uint32x4x2_t sha1_arm_unrolled_compress_one(const uint32x4_t abcd_p, const uint32_t e_p,
-                                                       const uint32x4x4_t blocks_p)
+extern "C" CoolSHA1Digest sha1_arm_unrolled_compress_one(const uint32x4_t abcd_p, const uint32_t e_p,
+                                                         const uint32x4x4_t blocks_p);
+
+extern "C" CoolSHA1Digest sha1_arm_unrolled_compress_one(const uint32x4_t abcd_p, const uint32_t e_p,
+                                                         const uint32x4x4_t blocks_p)
 #if defined(__clang__)
     __attribute__((no_sanitize("unsigned-integer-overflow"), noinline))
 #endif
@@ -447,5 +451,5 @@ extern "C" uint32x4x2_t sha1_arm_unrolled_compress_one(const uint32x4_t abcd_p, 
     abcd = vaddq_u32(abcd_cpy, abcd);
     e0 += e0_cpy;
 
-    return {{abcd, {e0, 0, 0, 0}}};
+    return {abcd, e0};
 }
