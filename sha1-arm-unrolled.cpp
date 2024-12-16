@@ -1,4 +1,5 @@
 #include "sha1-arm-unrolled.h"
+#include <_types/_uint32_t.h>
 
 #undef NDEBUG
 #include <cassert>
@@ -9,6 +10,14 @@
 #include <cstring>
 #include <fmt/format.h>
 
+#define ANSI_BOLD_RED_FG    "\x1b[38;5;196m"
+#define ANSI_BOLD_GREEN_FG  "\x1b[38;5;34m"
+#define ANSI_BOLD_BLUE_FG   "\x1b[38;5;81m"
+#define ANSI_BOLD_ORANGE_FG "\x1b[38;5;208m"
+#define ANSI_BOLD_VIOLET_FG "\x1b[38;5;207m"
+#define ASNI_BOLD_PINK_FG   "\x1b[38;5;223m"
+#define ANSI_RESET          "\x1b[1;0m"
+
 #ifdef DO_PRINT_ROUNDS
 #define PRND(n) fmt::print("r: {}\n", (n))
 #else
@@ -16,6 +25,7 @@
 #endif
 
 // #include "sha1-wrappers.h"
+extern void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v);
 
 // https://github.com/RustCrypto/hashes/blob/master/sha1/src/compress/aarch64.rs
 // Apache License, Version 2.0
@@ -452,4 +462,90 @@ extern "C" CoolSHA1Digest sha1_arm_unrolled_compress_one(const uint32x4_t abcd_p
     e0 += e0_cpy;
 
     return {abcd, e0};
+}
+
+extern "C" CoolSHA1Digest sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_t e_p,
+                                                                    const uint32x4x4_t blocks_p,
+                                                                    const uint16_t *_Nonnull microcode_p,
+                                                                    const size_t microcode_sz_p);
+
+extern "C" CoolSHA1Digest
+sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_t e_p, const uint32x4x4_t blocks_p,
+                                          const uint16_t *_Nonnull microcode_p, const size_t microcode_sz_p)
+#if defined(__clang__)
+    __attribute__((no_sanitize("unsigned-integer-overflow"), noinline))
+#endif
+{
+
+    constexpr uint8_t microcode[] = {0};
+    uint32x4_t pres{}, pop0{}, pop2{};
+    uint32_t pop1{};
+    uint32x4_t su0res{}, su0op0{}, su0op1{}, su0op2{};
+    uint32x4_t su1res{}, su1op0{}, su1op1{};
+    uint32x4_t cres{}, cop0{}, cop2{};
+    uint32_t cop1{};
+    uint32x4_t mres{}, mop0{}, mop2{};
+    uint32_t mop1{};
+    uint32_t hres{}, hop0{};
+    uint32x4_t ares{}, aop0{}, aop1{};
+
+    // microcoded loop
+    // for (size_t i = 0; i < std::size(microcode); ++i) {
+    for (size_t i = 0; i < microcode_sz_p; ++i) {
+        // const uint16_t c = microcode[i];
+        const uint16_t c = microcode_p[i];
+        if (c & (1 << 0)) {
+            pres = vsha1pq_u32(pop0, pop1, pop2);
+        }
+        if (c & (1 << 1)) {
+            su0res = vsha1su0q_u32(su0op0, su0op1, su0op2);
+        }
+        if (c & (1 << 2)) {
+            su1res = vsha1su1q_u32(su1op0, su1op1);
+        }
+        if (c & (1 << 3)) {
+            cres = vsha1cq_u32(cop0, cop1, cop2);
+        }
+        if (c & (1 << 4)) {
+            mres = vsha1mq_u32(mop0, mop1, mop2);
+        }
+        if (c & (1 << 5)) {
+            hres = vsha1h_u32(hop0);
+        }
+        if (c & (1 << 6)) {
+            ares = vaddq_u32(aop0, aop1);
+        }
+        if (c & (1 << 3)) {
+            hop0 = cres[0];
+        }
+        if (c & (1 << 7)) {
+            pop0 += rand() & 0xff;
+            pop1 += rand() & 0xff;
+            pop2 += rand() & 0xff;
+            su0op0 += rand() & 0xff;
+            su0op1 += rand() & 0xff;
+            su0op2 += rand() & 0xff;
+            su1op0 += rand() & 0xff;
+            su1op1 += rand() & 0xff;
+            cop0 += rand() & 0xff;
+            cop1 += rand() & 0xff;
+            cop2 += rand() & 0xff;
+            mop0 += rand() & 0xff;
+            mop1 += rand() & 0xff;
+            mop2 += rand() & 0xff;
+            hop0 += rand() & 0xff;
+            aop0 += rand() & 0xff;
+            aop1 += rand() & 0xff;
+        }
+    }
+    dump_uint32x4_t(ANSI_BOLD_RED_FG "pres" ANSI_RESET "  ", pres);
+    dump_uint32x4_t(ANSI_BOLD_ORANGE_FG "su0res" ANSI_RESET, su0res);
+    dump_uint32x4_t(ANSI_BOLD_VIOLET_FG "su1res" ANSI_RESET, su1res);
+    dump_uint32x4_t(ASNI_BOLD_PINK_FG "cres" ANSI_RESET "  ", cres);
+    dump_uint32x4_t(ANSI_BOLD_BLUE_FG "mres" ANSI_RESET "  ", mres);
+    fmt::print(ANSI_BOLD_GREEN_FG "hres" ANSI_RESET "  {:#010x}", hres);
+    dump_uint32x4_t(ANSI_BOLD_RED_FG "ares" ANSI_RESET "  ", ares);
+    dump_uint32x4_t(ANSI_BOLD_RED_FG "pres" ANSI_RESET "  ", pres);
+
+    return {};
 }
