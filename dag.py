@@ -97,15 +97,18 @@ def get_def_use(
     G = nx.DiGraph()
     GE = nx.DiGraph()
     GES = nx.DiGraph()
+    GEE = nx.DiGraph()
     for i in range(sz):
         ld = d[i]
         for j, lu in enumerate(u[i]):
             G.add_edge(lu, ld)
             GE.add_edge(lu, ld, label=f"op{j}")
             GES.add_edge(lu.split("_")[0], ld.split("_")[0], label=f"op{j}")
+            GEE.add_edge(lu, ld, opnum=j)
     assert G.is_directed()
     assert GE.is_directed()
-    assert GE.is_directed()
+    assert GES.is_directed()
+    assert GEE.is_directed()
     print(f"G: {G}")
     print(f"G.nodes(): {G.nodes()}")
     print(f"G.edges(): {G.edges()}")
@@ -115,6 +118,10 @@ def get_def_use(
     print(f"GES: {GES}")
     print(f"GES.nodes(): {GES.nodes()}")
     print(f"GES.edges(): {GES.edges()}")
+    print(f"GEE: {GEE}")
+    print(f"GEE.nodes(): {GEE.nodes()}")
+    print(f"GEE.edges(): {GEE.edges()}")
+    print(f"nx.to_dict_of_dicts(GEE): {nx.to_dict_of_dicts(GEE)}")
     batches: list[list[str]] = []
     for i, batch in enumerate(nx.topological_generations(G)):
         batch = sorted(batch)
