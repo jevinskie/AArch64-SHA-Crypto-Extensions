@@ -39,7 +39,7 @@ def term_color_hsv(h: float, s: float, v: float) -> str:
     return f"\x1b[38;2;{r};{g};{b}m"
 
 
-def num_color(n: int, m: int) -> str:
+def op_hsv(n: int, m: int) -> tuple[float, float, float]:
     assert n < len(palette)
     h, s, v = colorsys.rgb_to_hsv(*palette[n])
     scale = m / 3
@@ -47,7 +47,19 @@ def num_color(n: int, m: int) -> str:
     s -= dim_val
     if n in (1, 2):
         v -= dim_val
-    return term_color_hsv(h, s, v)
+    return h, s, v
+
+
+def op_rgb(n: int, m: int) -> tuple[int, int, int]:
+    r, g, b = colorsys.hsv_to_rgb(*op_hsv(n, m))
+    r *= 255
+    g *= 255
+    b *= 255
+    return r, g, b
+
+
+def op_color(n: int, m: int) -> str:
+    return term_color_hsv(*op_hsv(n, m))
 
 
 @attrs.define(auto_attribs=True)
@@ -202,6 +214,7 @@ class InstrABC(abc.ABC):
 @attrs.define(auto_attribs=True)
 class Instr(InstrABC):
     cycle: int | None
+    enum: typing.ClassVar[int]
 
 
 @attrs.define(auto_attribs=True)
@@ -271,36 +284,43 @@ class Ru128Iu128u128(Instr):
 @attrs.define(auto_attribs=True)
 class Sha1H(Ru32Iu32):
     name = "sha1h"
+    enum = 0
 
 
 @attrs.define(auto_attribs=True)
 class Sha1C(Ru128Iu128u32u128):
     name = "sha1c"
+    enum = 1
 
 
 @attrs.define(auto_attribs=True)
 class Sha1M(Ru128Iu128u32u128):
     name = "sha1m"
+    enum = 2
 
 
 @attrs.define(auto_attribs=True)
 class Sha1P(Ru128Iu128u32u128):
     name = "sha1p"
+    enum = 3
 
 
 @attrs.define(auto_attribs=True)
 class Sha1SU0(Ru128Iu128u128u128):
     name = "sha1su0"
+    enum = 4
 
 
 @attrs.define(auto_attribs=True)
 class Sha1SU1(Ru128Iu128u128):
     name = "sha1su1"
+    enum = 5
 
 
 @attrs.define(auto_attribs=True)
 class Add(Ru128Iu128u128):
     name = "add"
+    enum = 6
 
 
 def test_sha1():
@@ -323,7 +343,7 @@ def main(args: argparse.Namespace):
     test_sha1()
     for i in range(7):
         for j in range(3):
-            print(f"{num_color(i, j)}i: {i} j: {j} color{cf.reset}")
+            print(f"{op_color(i, j)}i: {i} j: {j} color{cf.reset}")
 
 
 if __name__ == "__main__":
