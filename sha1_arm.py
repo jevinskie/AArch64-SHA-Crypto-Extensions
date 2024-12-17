@@ -2,10 +2,52 @@
 
 import abc
 import argparse
+import colorsys
 import typing
 
 import attrs
-from rich import print
+import colorful as cf
+from rich import print as rprint
+
+cf.use_true_colors()
+cf.update_palette(
+    {
+        "slateblue": "#6A5ACD",
+        "palegreen": "#98FB98",
+        "fuschia": "#FF00FF",
+        "lawngreen": "#7CFC00",
+    }
+)
+
+
+def rgb_unpack(s: str) -> tuple[float, float, float]:
+    r = int(s[1:3], 16) / 255
+    g = int(s[3:5], 16) / 255
+    b = int(s[5:7], 16) / 255
+    return r, g, b
+
+
+palette = [
+    rgb_unpack(c)
+    for c in ("#0433ff", "#00fdff", "#00f900", "#ff40ff", "#ff9300", "#942192", "#ff2600")
+]
+
+
+def term_color_hsv(h: float, s: float, v: float) -> str:
+    r, g, b = colorsys.hsv_to_rgb(h, s, v)
+    r, g, b = int(round(r * 255)), int(round(g * 255)), int(round(b * 255))
+    return f"\x1b[38;2;{r};{g};{b}m"
+
+
+def num_color(n: int, m: int) -> str:
+    assert n < len(palette)
+    h, s, v = colorsys.rgb_to_hsv(*palette[n])
+    scale = m / 3
+    dim_val = scale / 1.5
+    s -= dim_val
+    if n in (1, 2):
+        v -= dim_val
+    return term_color_hsv(h, s, v)
 
 
 @attrs.define(auto_attribs=True)
@@ -103,7 +145,7 @@ class SHA1State:
 
 def f_is_ty(t: type) -> typing.Callable[object, [bool]]:
     def is_ty(obj: object, attr: attrs.Attribute, val: object) -> bool:
-        print(f"obj: {obj} attr: {attr} val: {val} t: {t}")
+        rprint(f"obj: {obj} attr: {attr} val: {val} t: {t}")
         assert attr.type is t
         assert isinstance(val, t)
         return isinstance(val, t)
@@ -113,7 +155,7 @@ def f_is_ty(t: type) -> typing.Callable[object, [bool]]:
 
 def f_is_tys(ts: list[type]) -> typing.Callable[list[object], [bool]]:
     def is_tys(objs: list[object], attr: attrs.Attribute, val: object) -> bool:
-        print(f"objs: {objs} attr: {attr} val: {val} ts: {ts}")
+        rprint(f"objs: {objs} attr: {attr} val: {val} ts: {ts}")
         assert attr.type is ts
         return all([type(o) is t for o, t in zip(objs, ts)])
 
@@ -263,11 +305,11 @@ class Add(Ru128Iu128u128):
 
 def test_sha1():
     s = SHA1State.make_zeroed()
-    print(f"s: {s}")
-    print(f"s.abcd: {s.abcd}")
-    print(f"s.e: {s.e}")
+    rprint(f"s: {s}")
+    rprint(f"s.abcd: {s.abcd}")
+    rprint(f"s.e: {s.e}")
     s.abcd = 0xDEADBEEF_BAADC0DE
-    print(f"s.abcd: {hex(s.abcd)}")
+    rprint(f"s.abcd: {hex(s.abcd)}")
     pass
 
 
@@ -277,8 +319,11 @@ def get_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(args: argparse.Namespace):
-    print(f"args: {args}")
+    rprint(f"args: {args}")
     test_sha1()
+    for i in range(7):
+        for j in range(3):
+            print(f"{num_color(i, j)}i: {i} j: {j} color{cf.reset}")
 
 
 if __name__ == "__main__":
