@@ -155,8 +155,7 @@ class U128Input(Instr):
 
 
 @attrs.define(auto_attribs=True)
-class Sha1H(Instr):
-    name = "sha1h"
+class Ru32Iu32(Instr):
     consumes_ty: typing.ClassVar = (U32Value,)
     produces_ty: typing.ClassVar = U32Value
     produces: U32Value
@@ -164,8 +163,7 @@ class Sha1H(Instr):
 
 
 @attrs.define(auto_attribs=True)
-class Sha1C(Instr):
-    name = "sha1c"
+class Ru128Iu128u32u128(Instr):
     consumes_ty: typing.ClassVar = (U128Value, U32Value, U128Value)
     produces_ty: typing.ClassVar = U128Value
     produces: U128Value
@@ -175,30 +173,7 @@ class Sha1C(Instr):
 
 
 @attrs.define(auto_attribs=True)
-class Sha1M(Instr):
-    name = "sha1m"
-    consumes_ty: tuple[U128, U32, U128]
-    produces_ty: U128
-    produces: U128Value
-    consumes: tuple[OptU128Value, OptU32Value, OptU128Value] = attrs.field(
-        default=(None, None, None)
-    )
-
-
-@attrs.define(auto_attribs=True)
-class Sha1P(Instr):
-    name = "sha1p"
-    consumes_ty: typing.ClassVar = (U128Value, U32Value, U128Value)
-    produces_ty: typing.ClassVar = U128Value
-    produces: U128Value
-    consumes: tuple[OptU128Value, OptU32Value, OptU128Value] = attrs.field(
-        default=(None, None, None)
-    )
-
-
-@attrs.define(auto_attribs=True)
-class Sha1SU0(Instr):
-    name = "sha1su0"
+class Ru128Iu128u128u128(Instr):
     consumes_ty: typing.ClassVar = (U128Value, U128Value, U128Value)
     produces_ty: typing.ClassVar = U128Value
     produces: U128Value
@@ -208,21 +183,46 @@ class Sha1SU0(Instr):
 
 
 @attrs.define(auto_attribs=True)
-class Sha1SU1(Instr):
-    name = "sha1su1"
+class Ru128Iu128u128(Instr):
     consumes_ty: typing.ClassVar = (U128Value, U128Value)
     produces_ty: typing.ClassVar = U128Value
     produces: U128Value
-    consumes: tuple[OptU128Value, OptU128Value] = attrs.field(default=(None, None))
+    consumes: tuple[OptU128Value, OptU128Value] = attrs.field(default=(None, None, None))
 
 
 @attrs.define(auto_attribs=True)
-class Add(Instr):
+class Sha1H(Ru32Iu32):
+    name = "sha1h"
+
+
+@attrs.define(auto_attribs=True)
+class Sha1C(Ru128Iu128u32u128):
+    name = "sha1c"
+
+
+@attrs.define(auto_attribs=True)
+class Sha1M(Ru128Iu128u32u128):
+    name = "sha1m"
+
+
+@attrs.define(auto_attribs=True)
+class Sha1P(Ru128Iu128u32u128):
+    name = "sha1p"
+
+
+@attrs.define(auto_attribs=True)
+class Sha1SU0(Ru128Iu128u128u128):
+    name = "sha1su0"
+
+
+@attrs.define(auto_attribs=True)
+class Sha1SU1(Ru128Iu128u128):
+    name = "sha1su1"
+
+
+@attrs.define(auto_attribs=True)
+class Add(Ru128Iu128u128):
     name = "add"
-    consumes_ty: typing.ClassVar = (U128Value, U128Value)
-    produces_ty: typing.ClassVar = U128Value
-    produces: U128Value
-    consumes: tuple[OptU128Value, OptU128Value] = attrs.field(default=(None, None))
 
 
 def sha1h() -> int:
