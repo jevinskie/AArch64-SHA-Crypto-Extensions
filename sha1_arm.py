@@ -102,17 +102,29 @@ class SHA1State:
 
 
 def f_is_ty(t: type) -> typing.Callable[object, [bool]]:
-    def is_ty(o: object) -> bool:
-        return type(o) is t
+    def is_ty(obj: object, attr: attrs.Attribute, val: object) -> bool:
+        print(f"obj: {obj} attr: {attr} val: {val} t: {t}")
+        assert attr.type is t
+        assert isinstance(val, t)
+        return isinstance(val, t)
 
     return is_ty
 
 
 def f_is_tys(ts: list[type]) -> typing.Callable[list[object], [bool]]:
-    def is_tys(os: list[object]) -> bool:
-        return all([type(o) is t for o, t in zip(os, ts)])
+    def is_tys(objs: list[object], attr: attrs.Attribute, val: object) -> bool:
+        print(f"objs: {objs} attr: {attr} val: {val} ts: {ts}")
+        assert attr.type is ts
+        return all([type(o) is t for o, t in zip(objs, ts)])
 
     return is_tys
+
+
+# def opt_instance_of(t: type | list[type]) -> typing.Callable[object | list[object], [bool]]:
+#     def f(o: object | list[object], attr: attrs.Attribute, val: object) -> bool:
+#         if val is None:
+#             return True
+#         return attrs.validators.instance_of(t)
 
 
 @attrs.define(auto_attribs=True)
@@ -168,7 +180,7 @@ class U128Input(Instr):
     produces_ty: typing.ClassVar = U128Value
     produces: U128Value = attrs.field(validator=f_is_ty(U128Value))
     consumes: tuple = attrs.field(
-        default=tuple(), validator=lambda o: type(o) is tuple and o == tuple()
+        default=tuple(), validator=lambda o: isinstance(o, tuple) and o == tuple()
     )
 
 
@@ -176,17 +188,20 @@ class U128Input(Instr):
 class Ru32Iu32(Instr):
     consumes_ty: typing.ClassVar = (U32Value,)
     produces_ty: typing.ClassVar = U32Value
-    produces: U32Value = attrs.field(validator=f_is_ty(U32Value))
-    consumes: tuple[OptU32Value] = attrs.field(default=(None,))
+    produces: U32Value = attrs.field(validator=attrs.validators.instance_of(U32Value))
+    consumes: tuple[OptU32Value] = attrs.field(
+        default=(None,), validator=attrs.validators.instance_of(U32Value)
+    )
 
 
 @attrs.define(auto_attribs=True)
 class Ru128Iu128u32u128(Instr):
     consumes_ty: typing.ClassVar = (U128Value, U32Value, U128Value)
     produces_ty: typing.ClassVar = U128Value
-    produces: U128Value = attrs.field(validator=f_is_ty(U128Value))
+    produces: U128Value = attrs.field(validator=attrs.validators.instance_of(U128Value))
     consumes: tuple[OptU128Value, OptU32Value, OptU128Value] = attrs.field(
-        default=(None, None, None), validator=f_is_tys((U128Value, U32Value, U128Value))
+        default=(None, None, None),
+        validator=attrs.validators.instance_of((U128Value, U32Value, U128Value)),
     )
 
 
@@ -194,9 +209,10 @@ class Ru128Iu128u32u128(Instr):
 class Ru128Iu128u128u128(Instr):
     consumes_ty: typing.ClassVar = (U128Value, U128Value, U128Value)
     produces_ty: typing.ClassVar = U128Value
-    produces: U128Value = attrs.field(validator=f_is_ty(U128Value))
+    produces: U128Value = attrs.field(validator=attrs.validators.instance_of(U128Value))
     consumes: tuple[OptU128Value, OptU128Value, OptU128Value] = attrs.field(
-        default=(None, None, None), validator=f_is_tys((U128Value, OptU128Value, U128Value))
+        default=(None, None, None),
+        validator=attrs.validators.instance_of((U128Value, OptU128Value, U128Value)),
     )
 
 
@@ -204,9 +220,9 @@ class Ru128Iu128u128u128(Instr):
 class Ru128Iu128u128(Instr):
     consumes_ty: typing.ClassVar = (U128Value, U128Value)
     produces_ty: typing.ClassVar = U128Value
-    produces: U128Value = attrs.field(validator=f_is_ty(U128Value))
+    produces: U128Value = attrs.field(validator=attrs.validators.instance_of(U128Value))
     consumes: tuple[OptU128Value, OptU128Value] = attrs.field(
-        default=(None, None, None), validator=f_is_tys((U128Value, U128Value))
+        default=(None, None, None), validator=attrs.validators.instance_of((U128Value, U128Value))
     )
 
 
