@@ -325,6 +325,11 @@ run-ubsan: sha1-arm-ubsan
 %-demangled.ll: %.ll
 	c++filt -t < $^ | c++filt -n -t | c++filt -t > $@
 
+%.dot.png: %.dot
+	dot -o$@ -Tpng $^
+
+%.dot.pdf: %.dot
+	dot -o$@ -Tpdf $^
 
 compile_commands.json:
 	bear -- $(MAKE) -B -f $(MAKEFILE_LIST) RUNNING_BEAR=1

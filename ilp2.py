@@ -32,9 +32,9 @@ for i in instructions:
 
 # Solve
 print(problem)
-# solver = pulp.HiGHS_CMD(msg=True, warmStart=True)
+solver = pulp.HiGHS_CMD(msg=True, warmStart=True)
 # solver = pulp.GLPK_CMD(msg=True)
-solver = pulp.PULP_CBC_CMD(msg=True, warmStart=True)
+# solver = pulp.PULP_CBC_CMD(msg=True, warmStart=True)
 # solver = pulp.COIN_CMD(msg=True, warmStart=True)
 problem.solve(solver)
 print(problem)

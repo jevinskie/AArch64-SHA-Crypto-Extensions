@@ -5,11 +5,8 @@ import re
 import typing
 from collections import OrderedDict
 
-import matplotlib as mpl
 import networkx as nx
-
-mpl
-# mpl.use("svg")
+from rich import print
 
 identifier_pattern = r"[%][_a-zA-Z0-9][a-zA-Z$._0-9]*"
 
@@ -86,17 +83,36 @@ def get_operation(line: str) -> str:
         return op
 
 
-def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO | None) -> None:
+def get_def_use(
+    lines: list[str],
+    gfd: typing.TextIO | None,
+    dfd: typing.TextIO | None,
+    Dfd: typing.TextIO | None,
+) -> None:
     d = get_line_defs(lines)
     u = get_line_uses(lines)
     sz = len(lines)
     G = nx.DiGraph()
+    GE = nx.DiGraph()
+    GES = nx.DiGraph()
     for i in range(sz):
         ld = d[i]
-        for lu in u[i]:
+        for j, lu in enumerate(u[i]):
             G.add_edge(lu, ld)
+            GE.add_edge(lu, ld, label=f"op{j}")
+            GES.add_edge(lu.split("_")[0], ld.split("_")[0], label=f"op{j}")
     assert G.is_directed()
+    assert GE.is_directed()
+    assert GE.is_directed()
     print(f"G: {G}")
+    print(f"G.nodes(): {G.nodes()}")
+    print(f"G.edges(): {G.edges()}")
+    print(f"GE: {GE}")
+    print(f"GE.nodes(): {GE.nodes()}")
+    print(f"GE.edges(): {GE.edges()}")
+    print(f"GES: {GES}")
+    print(f"GES.nodes(): {GES.nodes()}")
+    print(f"GES.edges(): {GES.edges()}")
     batches: list[list[str]] = []
     for i, batch in enumerate(nx.topological_generations(G)):
         batch = sorted(batch)
@@ -105,6 +121,8 @@ def get_def_use(lines: list[str], gfd: typing.TextIO | None, dfd: typing.TextIO 
     print(f"batches: {batches}")
     if dfd is not None:
         nx.nx_agraph.write_dot(G, dfd)
+    if Dfd is not None:
+        nx.nx_agraph.write_dot(GES, Dfd)
 
 
 def rename(lines: list[str]) -> list[str]:
@@ -156,7 +174,11 @@ def rename(lines: list[str]) -> list[str]:
 
 
 def parse(
-    ifd: typing.TextIO, ofd: typing.TextIO, gfd: typing.TextIO | None, dfd: typing.TextIO | None
+    ifd: typing.TextIO,
+    ofd: typing.TextIO,
+    gfd: typing.TextIO | None,
+    dfd: typing.TextIO | None,
+    Dfd: typing.TextIO | None,
 ) -> None:
     lines = ifd.readlines()
     func_start_line: int | None = None
@@ -176,7 +198,7 @@ def parse(
         assert func_lines[i].startswith("  ")
         func_lines[i] = func_lines[i][2:]
     func_lines = rename(func_lines)
-    get_def_use(func_lines, gfd, dfd)
+    get_def_use(func_lines, gfd, dfd, Dfd)
     print("".join(lines[: func_start_line + 1]), end="", file=ofd)
     print("".join(["  " + v for v in func_lines]), end="", file=ofd)
     print("".join(lines[func_end_line:]), end="", file=ofd)
@@ -214,6 +236,13 @@ def get_arg_parser() -> argparse.ArgumentParser:
         type=argparse.FileType("wb"),
         help="output graph dot file.",
     )
+    parser.add_argument(
+        "-D",
+        "--deps",
+        dest="deps_dot_file",
+        type=argparse.FileType("wb"),
+        help="output deps graph dot file.",
+    )
     return parser
 
 
@@ -222,7 +251,8 @@ def main(args: argparse.Namespace):
     ofd = args.out_file
     gfd = args.graph_svg_file
     dfd = args.graph_dot_file
-    parse(ifd, ofd, gfd, dfd)
+    Dfd = args.deps_dot_file
+    parse(ifd, ofd, gfd, dfd, Dfd)
 
 
 if __name__ == "__main__":
