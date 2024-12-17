@@ -6,6 +6,7 @@ import typing
 from collections import OrderedDict
 
 import networkx as nx
+import xlsxwriter
 from rich import print
 
 identifier_pattern = r"[%][_a-zA-Z0-9][a-zA-Z$._0-9]*"
@@ -86,8 +87,9 @@ def get_operation(line: str) -> str:
 def get_def_use(
     lines: list[str],
     gfd: typing.TextIO | None,
-    dfd: typing.TextIO | None,
-    Dfd: typing.TextIO | None,
+    dfd: typing.BinaryIO | None,
+    Dfd: typing.BinaryIO | None,
+    sfd: str | None,
 ) -> None:
     d = get_line_defs(lines)
     u = get_line_uses(lines)
@@ -122,7 +124,22 @@ def get_def_use(
     if dfd is not None:
         nx.nx_agraph.write_dot(G, dfd)
     if Dfd is not None:
-        nx.nx_agraph.write_dot(GES, Dfd)
+        nx.nx_agraph.write_dot(GE, Dfd)
+    if sfd is not None:
+        workbook = xlsxwriter.Workbook(sfd)
+        worksheet = workbook.add_worksheet()
+        # Widen the first column to make the text clearer.
+        worksheet.set_column("A:A", 20)
+        # Add a bold format to use to highlight cells.
+        bold = workbook.add_format({"bold": True})
+        # Write some simple text.
+        worksheet.write("A1", "Hello")
+        # Text with formatting.
+        worksheet.write("A2", "World", bold)
+        # Write some numbers, with row/column notation.
+        worksheet.write(2, 0, 123)
+        worksheet.write(3, 0, 123.456)
+        workbook.close()
 
 
 def rename(lines: list[str]) -> list[str]:
@@ -177,8 +194,9 @@ def parse(
     ifd: typing.TextIO,
     ofd: typing.TextIO,
     gfd: typing.TextIO | None,
-    dfd: typing.TextIO | None,
-    Dfd: typing.TextIO | None,
+    dfd: typing.BinaryIO | None,
+    Dfd: typing.BinaryIO | None,
+    sfd: str | None,
 ) -> None:
     lines = ifd.readlines()
     func_start_line: int | None = None
@@ -198,7 +216,7 @@ def parse(
         assert func_lines[i].startswith("  ")
         func_lines[i] = func_lines[i][2:]
     func_lines = rename(func_lines)
-    get_def_use(func_lines, gfd, dfd, Dfd)
+    get_def_use(func_lines, gfd, dfd, Dfd, sfd)
     print("".join(lines[: func_start_line + 1]), end="", file=ofd)
     print("".join(["  " + v for v in func_lines]), end="", file=ofd)
     print("".join(lines[func_end_line:]), end="", file=ofd)
@@ -243,6 +261,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
         type=argparse.FileType("wb"),
         help="output deps graph dot file.",
     )
+    parser.add_argument("-s", "--schedule", dest="schedule_xlsx_file", help="output schedule file.")
     return parser
 
 
@@ -252,7 +271,8 @@ def main(args: argparse.Namespace):
     gfd = args.graph_svg_file
     dfd = args.graph_dot_file
     Dfd = args.deps_dot_file
-    parse(ifd, ofd, gfd, dfd, Dfd)
+    sfd = args.schedule_xlsx_file
+    parse(ifd, ofd, gfd, dfd, Dfd, sfd)
 
 
 if __name__ == "__main__":
