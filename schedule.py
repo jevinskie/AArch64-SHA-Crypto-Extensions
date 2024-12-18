@@ -3,7 +3,9 @@
 import enum
 
 import networkx as nx
-from rich import print
+from rich import print as rprint
+
+from sha1_arm import cf, op_color
 
 batches = [
     ["sha1h_0", "shuf_0", "shuf_1", "shuf_2", "shuf_3"],
@@ -32,9 +34,9 @@ batches = [
 ]
 
 batch_sizes = [len(b) for b in batches]
-# print(f"batch_sizes: {batch_sizes}")
+# rprint(f"batch_sizes: {batch_sizes}")
 # num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches], 1)
-# print(f"num_schedules: {num_schedules}")
+# rprint(f"num_schedules: {num_schedules}")
 
 batches_norm = [
     ["sha1h", "shuf", "shuf", "shuf", "shuf"],
@@ -63,9 +65,9 @@ batches_norm = [
 ]
 
 batch_sizes = [len(b) for b in batches_norm]
-# print(f"batch_sizes: {batch_sizes}")
+# rprint(f"batch_sizes: {batch_sizes}")
 # num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches_norm], 1)
-# print(f"num_schedules: {num_schedules}")
+# rprint(f"num_schedules: {num_schedules}")
 
 g_dod_orig = {
     "blocks": {
@@ -539,9 +541,9 @@ g_dod = {
 
 GO = nx.DiGraph(g_dod_orig)
 G = nx.DiGraph(g_dod)
-print(f"G: {G}")
-print(f"G.adjacency(): {list(G.adjacency())}")
-print(f"G.predecessors('res'): {list(G.predecessors('res'))}")
+# rprint(f"G: {G}")
+# rprint(f"G.adjacency(): {list(G.adjacency())}")
+# rprint(f"G.predecessors('res'): {list(G.predecessors('res'))}")
 
 for n in list(G.nodes()):
     if n in (
@@ -565,9 +567,9 @@ for n in list(G.nodes()):
         G.remove_node(n)
         # pass
 
-for i in nx.edge_bfs(G):
-    # inspect(i, all=True)
-    print(f"i: {i} i.opnum: {G[i[1]]}")
+# for i in nx.edge_bfs(G):
+#     # inspect(i, all=True)
+#     rprint(f"i: {i} i.opnum: {G[i[1]]}")
 
 batches: list[list[str]] = []
 node2batch: dict[str, int] = {}
@@ -582,10 +584,10 @@ for i, batch in enumerate(batches):
     trace.append([])
     for j, instr in enumerate(batch):
         ops = []
-        print(f"i: {i} j: {j} instr: {instr}")
-        print(f"G.in_edges(instr): {G.in_edges(instr)}")
+        # rprint(f"i: {i} j: {j} instr: {instr}")
+        # rprint(f"G.in_edges(instr): {G.in_edges(instr)}")
         for op in G.in_edges(instr):
-            print(f"op: {G.edges[op]}")
+            # rprint(f"op: {G.edges[op]}")
             edges = G.edges[op]
             opnum = edges["opnum"]
             if opnum >= 0:
@@ -596,7 +598,7 @@ for i, batch in enumerate(batches):
     trace[i] = tuple(sorted(trace[i]))
 trace = tuple(trace)
 
-print(f"trace:\n{trace}")
+# rprint(f"trace:\n{trace}")
 
 
 class Instr(enum.IntEnum):
@@ -606,8 +608,8 @@ class Instr(enum.IntEnum):
     SHA1M = 3
     SHA1SU0 = 4
     SHA1SU1 = 5
-    ADD_A = 6
-    ADD_B = 7
+    ADDX = 6
+    ADDY = 7
 
 
 clut = {
@@ -617,31 +619,37 @@ clut = {
     "sha1m": 3,
     "sha1su0": 4,
     "sha1su1": 5,
-    "add_a": 6,
-    "add_b": 7,
+    "addX": 6,
+    "addY": 7,
 }
 
 
 for i, batch in enumerate(trace):
-    print(f"batch[{i:2}]:")
-    # print(f"batch[{i:2}]: {[x[0] for x in batch]}")
+    # rprint(f"batch[{i:2}]:")
+    # rprint(f"batch[{i:2}]: {[x[0] for x in batch]}")
+    batch_inputs = []
     for j, instr in enumerate(batch):
-        print(f"batch[{i:2}]: instr[{j}]: {instr}")
+        # rprint(f"batch[{i:2}]: instr[{j}]: {instr}")
         si = instr[0].split("_")
         name = si[0]
-        if len(si) > 1:
-            pass
-        if name == "add_":
-            pass
+        preds = instr[1]
+        for k, p in enumerate(preds):
+            p = p.split("_")[0]
+            batch_inputs.append((name, k, p, op_color(clut[p], k)))
+    # batch_inputs = sorted(batch_inputs, key=lambda v: (v[0], v[1]))
+    # rprint(f"batch_inputs[{i:2}]: {batch_inputs}")
+    rprint(f"batch[{i:2}]: ", end=None)
+    print(" ".join([f"{b[3]}{b[0]}{cf.reset}" for b in batch_inputs]))
+
 
 for i, batch in enumerate(nx.topological_generations(G)):
     batch = sorted(batch)
-    print(f"i: {i} batch: {batch}")
+    rprint(f"i: {i} batch: {batch}")
 
-for i, batch in enumerate(nx.topological_generations(GO)):
-    batch = sorted(batch)
-    print(f"i: {i} batch: {batch}")
+# for i, batch in enumerate(nx.topological_generations(GO)):
+#     batch = sorted(batch)
+#     rprint(f"i: {i} batch: {batch}")
 
-# print(f"node2batch: {node2batch}")
+# rprint(f"node2batch: {node2batch}")
 
-print("done")
+rprint("done")

@@ -29,7 +29,16 @@ def rgb_unpack(s: str) -> tuple[float, float, float]:
 
 palette = [
     rgb_unpack(c)
-    for c in ("#0433ff", "#00fdff", "#00f900", "#ff40ff", "#ff9300", "#942192", "#ff2600")
+    for c in (
+        "#0433ff",
+        "#00fdff",
+        "#00f900",
+        "#ff40ff",
+        "#ff9300",
+        "#942192",
+        "#ff2600",
+        "#c6ff4c",
+    )
 ]
 
 
@@ -41,11 +50,12 @@ def term_color_hsv(h: float, s: float, v: float) -> str:
 
 def op_hsv(n: int, m: int) -> tuple[float, float, float]:
     assert n < len(palette)
+    assert m < 3
     h, s, v = colorsys.rgb_to_hsv(*palette[n])
     scale = m / 3
     dim_val = scale / 1.5
     s -= dim_val
-    if n in (1, 2):
+    if n in (1, 2, 7):
         v -= dim_val
     return h, s, v
 
@@ -341,7 +351,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
 def main(args: argparse.Namespace):
     rprint(f"args: {args}")
     test_sha1()
-    for i in range(7):
+    for i in range(len(palette)):
         for j in range(3):
             print(f"{op_color(i, j)}i: {i} j: {j} color{cf.reset}")
 
