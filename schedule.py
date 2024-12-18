@@ -372,13 +372,13 @@ g_dod = {
     "addX_5": {"sha1p_0": {"opnum": 2}},
     "K1": {
         "addX_5": {"opnum": 1},
-        "addY_6": {"opnum": 1},
+        "addX_6": {"opnum": 1},
         "addX_7": {"opnum": 1},
         "addX_8": {"opnum": 1},
         "addX_9": {"opnum": 1},
     },
     "sha1su1_2": {
-        "addY_6": {"opnum": 0},
+        "addX_6": {"opnum": 0},
         "sha1su1_3": {"opnum": 1},
         "sha1su0_4": {"opnum": 2},
         "sha1su0_5": {"opnum": 1},
@@ -387,7 +387,7 @@ g_dod = {
     "sha1su0_3": {"sha1su1_3": {"opnum": 0}},
     "sha1h_4": {"sha1p_0": {"opnum": 1}},
     "sha1c_4": {"sha1h_5": {"opnum": 0}, "sha1p_0": {"opnum": 0}},
-    "addY_6": {"sha1p_1": {"opnum": 2}},
+    "addX_6": {"sha1p_1": {"opnum": 2}},
     "sha1su1_3": {
         "addX_7": {"opnum": 0},
         "sha1su1_4": {"opnum": 1},
@@ -434,13 +434,13 @@ g_dod = {
     "addX_10": {"sha1m_0": {"opnum": 2}},
     "K2": {
         "addX_10": {"opnum": 1},
-        "addY_11": {"opnum": 1},
+        "addX_11": {"opnum": 1},
         "addX_12": {"opnum": 1},
         "addX_13": {"opnum": 1},
         "addX_14": {"opnum": 1},
     },
     "sha1su1_7": {
-        "addY_11": {"opnum": 0},
+        "addX_11": {"opnum": 0},
         "sha1su1_8": {"opnum": 1},
         "sha1su0_9": {"opnum": 2},
         "sha1su0_10": {"opnum": 1},
@@ -449,7 +449,7 @@ g_dod = {
     "sha1su0_8": {"sha1su1_8": {"opnum": 0}},
     "sha1h_9": {"sha1m_0": {"opnum": 1}},
     "sha1p_4": {"sha1h_10": {"opnum": 0}, "sha1m_0": {"opnum": 0}},
-    "addY_11": {"sha1m_1": {"opnum": 2}},
+    "addX_11": {"sha1m_1": {"opnum": 2}},
     "sha1su1_8": {
         "addX_12": {"opnum": 0},
         "sha1su1_9": {"opnum": 1},
@@ -496,13 +496,13 @@ g_dod = {
     "addX_15": {"sha1p_5": {"opnum": 2}},
     "K3": {
         "addX_15": {"opnum": 1},
-        "addY_16": {"opnum": 1},
+        "addX_16": {"opnum": 1},
         "addX_17": {"opnum": 1},
         "addX_18": {"opnum": 1},
         "addX_19": {"opnum": 1},
     },
     "sha1su1_12": {
-        "addY_16": {"opnum": 0},
+        "addX_16": {"opnum": 0},
         "sha1su1_13": {"opnum": 1},
         "sha1su0_14": {"opnum": 2},
         "sha1su0_15": {"opnum": 1},
@@ -510,7 +510,7 @@ g_dod = {
     "sha1su0_13": {"sha1su1_13": {"opnum": 0}},
     "sha1h_14": {"sha1p_5": {"opnum": 1}},
     "sha1m_4": {"sha1h_15": {"opnum": 0}, "sha1p_5": {"opnum": 0}},
-    "addY_16": {"sha1p_6": {"opnum": 2}},
+    "addX_16": {"sha1p_6": {"opnum": 2}},
     "sha1su1_13": {"addX_17": {"opnum": 0}, "sha1su1_14": {"opnum": 1}, "sha1su0_15": {"opnum": 2}},
     "sha1su0_14": {"sha1su1_14": {"opnum": 0}},
     "sha1h_15": {"sha1p_6": {"opnum": 1}},
@@ -563,9 +563,11 @@ for i, batch in enumerate(batches):
         print(f"i: {i} j: {j} instr: {instr}")
         print(f"G.in_edges(instr): {G.in_edges(instr)}")
         for op in G.in_edges(instr):
-            print()
             print(f"op: {G.edges[op]}")
-            ops.append((op[0], G.edges[op]["opnum"]))
+            edges = G.edges[op]
+            opnum = edges["opnum"]
+            if opnum >= 0:
+                ops.append((op[0], opnum))
         ops = sorted(ops, key=lambda o: o[1])
         ops = tuple(o[0] for o in ops)
         trace[i].append((instr, ops))
@@ -599,16 +601,20 @@ clut = {
 
 
 for i, batch in enumerate(trace):
-    # print(f"batch[{i:2}]:")
-    print(f"batch[{i:2}]: {[x[0] for x in batch]}")
+    print(f"batch[{i:2}]:")
+    # print(f"batch[{i:2}]: {[x[0] for x in batch]}")
     for j, instr in enumerate(batch):
-        # print(f"batch[{i:2}]: instr[{j}]: {instr[0]}")
+        print(f"batch[{i:2}]: instr[{j}]: {instr}")
         si = instr[0].split("_")
         name = si[0]
         if len(si) > 1:
             pass
         if name == "add_":
             pass
+
+for i, batch in enumerate(nx.topological_generations(G)):
+    batch = sorted(batch)
+    print(f"i: {i} batch: {batch}")
 
 for i, batch in enumerate(nx.topological_generations(GO)):
     batch = sorted(batch)
