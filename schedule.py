@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import functools
-import math
-import operator
+
+import networkx as nx
+from rich import print
 
 batches = [
     ["sha1h_0", "shuf_0", "shuf_1", "shuf_2", "shuf_3"],
@@ -32,7 +32,7 @@ batches = [
 
 batch_sizes = [len(b) for b in batches]
 # print(f"batch_sizes: {batch_sizes}")
-num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches], 1)
+# num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches], 1)
 # print(f"num_schedules: {num_schedules}")
 
 batches_norm = [
@@ -63,10 +63,10 @@ batches_norm = [
 
 batch_sizes = [len(b) for b in batches_norm]
 # print(f"batch_sizes: {batch_sizes}")
-num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches_norm], 1)
+# num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches_norm], 1)
 # print(f"num_schedules: {num_schedules}")
 
-d_dod = {
+g_dod = {
     "blocks": {
         "shuf_0": {"opnum": 0},
         "shuf_1": {"opnum": 0},
@@ -300,3 +300,14 @@ d_dod = {
     "insval_1": {"res": {"opnum": 0}},
     "res": {},
 }
+
+G = nx.DiGraph(g_dod)
+print(f"G: {G}")
+print(f"G.adjacency(): {list(G.adjacency())}")
+print(f"G.predecessors('res'): {list(G.predecessors('res'))}")
+
+for i in nx.edge_bfs(G):
+    # inspect(i, all=True)
+    print(f"i: {i} i.opnum: {G[i[1]]}")
+
+print("done")
