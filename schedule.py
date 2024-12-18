@@ -344,7 +344,7 @@ g_dod = {
     "sha1c_0": {"sha1h_1": {"opnum": 0}, "sha1c_1": {"opnum": 0}},
     "sz": {"sha1c_0": {"opnum": 1}, "addY_21": {"opnum": 1}},
     "addX_2": {"sha1c_2": {"opnum": 2}},
-    "sha1su0_0": {"sha1su1_0": {"opnum": 0}},
+    "sha1su0_0": {"sha1su1_0": {"opnum": 0}, "sha1su0_1": {"opnum": -1}},
     "sha1h_1": {"sha1c_2": {"opnum": 1}},
     "sha1c_1": {"sha1h_2": {"opnum": 0}, "sha1c_2": {"opnum": 0}},
     "addY_3": {"sha1c_3": {"opnum": 2}},
@@ -542,6 +542,28 @@ G = nx.DiGraph(g_dod)
 print(f"G: {G}")
 print(f"G.adjacency(): {list(G.adjacency())}")
 print(f"G.predecessors('res'): {list(G.predecessors('res'))}")
+
+for n in list(G.nodes()):
+    if n in (
+        "ByteRevLUT",
+        "K0",
+        "K1",
+        "K2",
+        "K3",
+        "blocks",
+        "buf",
+        "sz",
+        "shuf_0",
+        "shuf_1",
+        "shuf_2",
+        "shuf_3",
+        "inselm_0",
+        "insval_0",
+        "insval_1",
+        "res",
+    ):
+        G.remove_node(n)
+        # pass
 
 for i in nx.edge_bfs(G):
     # inspect(i, all=True)
