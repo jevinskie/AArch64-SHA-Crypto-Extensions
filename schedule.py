@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+import collections
 import enum
 
 import networkx as nx
+from ortools.sat.python import cp_model
 from rich import print as rprint
+from rich.pretty import pprint
 
 from sha1_arm import cf, op_color
 
@@ -624,6 +627,10 @@ clut = {
 }
 
 
+port_usage = {f"{i}_p{p}": collections.defaultdict(int) for p in range(3) for i in clut.keys()}
+
+rprint(f"port_usage:\n{port_usage}")
+
 for i, batch in enumerate(trace):
     # rprint(f"batch[{i:2}]:")
     # rprint(f"batch[{i:2}]: {[x[0] for x in batch]}")
@@ -634,13 +641,23 @@ for i, batch in enumerate(trace):
         name = si[0]
         preds = instr[1]
         for k, p in enumerate(preds):
-            p = p.split("_")[0]
-            batch_inputs.append((name, k, p, op_color(clut[p], k)))
+            pname = p.split("_")[0]
+            batch_inputs.append((name, k, pname, op_color(clut[pname], k)))
+            rprint(f"i: {i} j: {j} k: {k} name: {name} p: {p} pname: {pname}")
+            port_usage[f"{name}_p{k}"][pname] += 1
     # batch_inputs = sorted(batch_inputs, key=lambda v: (v[0], v[1]))
     # rprint(f"batch_inputs[{i:2}]: {batch_inputs}")
     rprint(f"batch[{i:2}]: ", end=None)
     print(" ".join([f"{b[3]}{b[0]}{cf.reset}" for b in batch_inputs]))
 
+for k in list(port_usage.keys()):
+    if len(port_usage[k]) == 0:
+        del port_usage[k]
+    else:
+        port_usage[k] = dict(port_usage[k])
+
+rprint("port_usage:")
+pprint(port_usage)
 
 for i, batch in enumerate(nx.topological_generations(G)):
     batch = sorted(batch)
@@ -651,5 +668,120 @@ for i, batch in enumerate(nx.topological_generations(G)):
 #     rprint(f"i: {i} batch: {batch}")
 
 # rprint(f"node2batch: {node2batch}")
+
+"""Minimal jobshop problem."""
+# Data.
+jobs_data = [  # task = (machine_id, ).
+    [0, 1, 2],  # Job0
+    [0, 2, 1],  # Job1
+    [1, 2],  # Job2
+]
+
+machines_count = 1 + max(task for job in jobs_data for task in job)
+all_machines = range(machines_count)
+# Computes horizon dynamically as the sum of all durations.
+horizon = sum(len(job) for job in jobs_data)
+
+# Create the model.
+model = cp_model.CpModel()
+
+# Named tuple to store information about created variables.
+task_type = collections.namedtuple("task_type", "start end interval")
+# Named tuple to manipulate solution information.
+assigned_task_type = collections.namedtuple("assigned_task_type", "start job index duration")
+
+# Creates job intervals and add to the corresponding machine lists.
+all_tasks = {}
+machine_to_intervals = collections.defaultdict(list)
+
+for job_id, job in enumerate(jobs_data):
+    for task_id, task in enumerate(job):
+        duration = 1
+        machine = task
+        suffix = f"_{job_id}_{task_id}"
+        start_var = model.new_int_var(0, horizon, "start" + suffix)
+        end_var = model.new_int_var(0, horizon, "end" + suffix)
+        interval_var = model.new_interval_var(start_var, duration, end_var, "interval" + suffix)
+        all_tasks[job_id, task_id] = task_type(start=start_var, end=end_var, interval=interval_var)
+        machine_to_intervals[machine].append(interval_var)
+
+# Create and add disjunctive constraints.
+for machine in all_machines:
+    model.add_no_overlap(machine_to_intervals[machine])
+
+# Precedences inside a job.
+for job_id, job in enumerate(jobs_data):
+    for task_id in range(len(job) - 1):
+        model.add(all_tasks[job_id, task_id + 1].start >= all_tasks[job_id, task_id].end)
+
+# Makespan objective.
+obj_var = model.new_int_var(0, horizon, "makespan")
+model.add_max_equality(
+    obj_var,
+    [all_tasks[job_id, len(job) - 1].end for job_id, job in enumerate(jobs_data)],
+)
+rprint(f"model: {model}")
+model.minimize(obj_var)
+rprint(f"min(model): {model}")
+
+# Creates the solver and solve.
+solver = cp_model.CpSolver()
+rprint(f"solver: {solver}")
+status = solver.solve(model)
+rprint(f"status: {status}")
+rprint(f"solver2: {solver}")
+
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+    print("Solution:")
+    # Create one list of assigned tasks per machine.
+    assigned_jobs = collections.defaultdict(list)
+    for job_id, job in enumerate(jobs_data):
+        for task_id, task in enumerate(job):
+            machine = task
+            assigned_jobs[machine].append(
+                assigned_task_type(
+                    start=solver.value(all_tasks[job_id, task_id].start),
+                    job=job_id,
+                    index=task_id,
+                    duration=1,
+                )
+            )
+
+    # Create per machine output lines.
+    output = ""
+    for machine in all_machines:
+        # Sort by starting time.
+        assigned_jobs[machine].sort()
+        sol_line_tasks = "Machine " + str(machine) + ": "
+        sol_line = "           "
+
+        for assigned_task in assigned_jobs[machine]:
+            name = f"job_{assigned_task.job}_task_{assigned_task.index}"
+            # add spaces to output to align columns.
+            sol_line_tasks += f"{name:15}"
+
+            start = assigned_task.start
+            duration = assigned_task.duration
+            sol_tmp = f"[{start},{start + duration}]"
+            # add spaces to output to align columns.
+            sol_line += f"{sol_tmp:15}"
+
+        sol_line += "\n"
+        sol_line_tasks += "\n"
+        output += sol_line_tasks
+        output += sol_line
+
+    # Finally print the solution found.
+    print(f"Optimal Schedule Length: {solver.objective_value}")
+    print(output)
+else:
+    print("No solution found.")
+
+    # Statistics.
+    print("\nStatistics")
+    print(f"  - conflicts: {solver.num_conflicts}")
+    print(f"  - branches : {solver.num_branches}")
+    print(f"  - wall time: {solver.wall_time}s")
+
 
 rprint("done")

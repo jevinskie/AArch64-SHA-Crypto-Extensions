@@ -487,7 +487,8 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
     uint32x4_t mres{}, mop0{}, mop2{};
     uint32_t mop1{};
     uint32_t hres{}, hop0{};
-    uint32x4_t ares{}, aop0{}, aop1{};
+    uint32x4_t aXres{}, aXop0{}, aXop1{}, aYres{}, aYop0{}, aYop1{};
+    uint32x4_t aXYres{};
 
     // microcoded loop
     // for (size_t i = 0; i < std::size(microcode); ++i) {
@@ -495,30 +496,30 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
         // const uint16_t c = microcode[i];
         const uint16_t c = microcode_p[i];
         if (c & (1 << 0)) {
-            pres = vsha1pq_u32(pop0, pop1, pop2);
+            pres = vsha1pq_u32(pop0, hres, aXres);
         }
         if (c & (1 << 1)) {
-            su0res = vsha1su0q_u32(su0op0, su0op1, su0op2);
+            su0res = vsha1su0q_u32(su0op0, su1res, su1res);
         }
         if (c & (1 << 2)) {
-            su1res = vsha1su1q_u32(su1op0, su1op1);
+            su1res = vsha1su1q_u32(su1op0, su1res);
         }
         if (c & (1 << 3)) {
-            cres = vsha1cq_u32(cop0, cop1, cop2);
+            cres = vsha1cq_u32(cop0, hres, aXYres);
         }
         if (c & (1 << 4)) {
-            mres = vsha1mq_u32(mop0, mop1, mop2);
+            mres = vsha1mq_u32(mop0, hres, aXres);
         }
         if (c & (1 << 5)) {
             hres = vsha1h_u32(hop0);
         }
         if (c & (1 << 6)) {
-            ares = vaddq_u32(aop0, aop1);
-        }
-        if (c & (1 << 3)) {
-            hop0 = cres[0];
+            aXres = vaddq_u32(aXop0, aXop1);
         }
         if (c & (1 << 7)) {
+            aYres = vaddq_u32(aYop0, aYop1);
+        }
+        if (c & (1 << 8)) {
             pop0 += rand() & 0xff;
             pop1 += rand() & 0xff;
             pop2 += rand() & 0xff;
@@ -534,8 +535,10 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
             mop1 += rand() & 0xff;
             mop2 += rand() & 0xff;
             hop0 += rand() & 0xff;
-            aop0 += rand() & 0xff;
-            aop1 += rand() & 0xff;
+            aXop0 += rand() & 0xff;
+            aXop1 += rand() & 0xff;
+            aYop0 += rand() & 0xff;
+            aYop1 += rand() & 0xff;
         }
     }
     dump_uint32x4_t(ANSI_BOLD_RED_FG "pres" ANSI_RESET "  ", pres);
@@ -544,7 +547,8 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
     dump_uint32x4_t(ASNI_BOLD_PINK_FG "cres" ANSI_RESET "  ", cres);
     dump_uint32x4_t(ANSI_BOLD_BLUE_FG "mres" ANSI_RESET "  ", mres);
     fmt::print(ANSI_BOLD_GREEN_FG "hres" ANSI_RESET "  {:#010x}", hres);
-    dump_uint32x4_t(ANSI_BOLD_RED_FG "ares" ANSI_RESET "  ", ares);
+    dump_uint32x4_t(ANSI_BOLD_RED_FG "aXres" ANSI_RESET "  ", aXres);
+    dump_uint32x4_t(ANSI_BOLD_RED_FG "aYres" ANSI_RESET "  ", aYres);
     dump_uint32x4_t(ANSI_BOLD_RED_FG "pres" ANSI_RESET "  ", pres);
 
     return {};

@@ -59,11 +59,16 @@ def main() -> None:
         obj_var,
         [all_tasks[job_id, len(job) - 1].end for job_id, job in enumerate(jobs_data)],
     )
+    print(f"model: {model}")
     model.minimize(obj_var)
+    print(f"min(model): {model}")
 
     # Creates the solver and solve.
     solver = cp_model.CpSolver()
+    print(f"solver: {solver}")
     status = solver.solve(model)
+    print(f"status: {status}")
+    print(f"solver2: {solver}")
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         print("Solution:")
