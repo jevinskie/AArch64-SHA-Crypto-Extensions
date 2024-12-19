@@ -496,19 +496,19 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
         // const uint16_t c = microcode[i];
         const uint16_t c = microcode_p[i];
         if (c & (1 << 0)) {
-            pres = vsha1pq_u32(pop0, hres, aXres);
+            pres = vsha1pq_u32(pop0, pop1, pop2);
         }
         if (c & (1 << 1)) {
-            su0res = vsha1su0q_u32(su0op0, su1res, su1res);
+            su0res = vsha1su0q_u32(su0op0, su0op1, su0op2);
         }
         if (c & (1 << 2)) {
-            su1res = vsha1su1q_u32(su1op0, su1res);
+            su1res = vsha1su1q_u32(su1op0, su1op1);
         }
         if (c & (1 << 3)) {
-            cres = vsha1cq_u32(cop0, hres, aXYres);
+            cres = vsha1cq_u32(cop0, cop1, cop2);
         }
         if (c & (1 << 4)) {
-            mres = vsha1mq_u32(mop0, hres, aXres);
+            mres = vsha1mq_u32(mop0, mop1, mop2);
         }
         if (c & (1 << 5)) {
             hres = vsha1h_u32(hop0);

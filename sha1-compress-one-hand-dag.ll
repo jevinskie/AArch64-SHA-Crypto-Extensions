@@ -11,7 +11,8 @@ define %struct.uint32x4x2_t @sha1_arm_unrolled_compress_one(<4 x i32> %buf, i32 
   %K1 = call <4 x i32> @llvm.immediate(<4 x i32> <i32 0x6ED9EBA1, i32 0x6ED9EBA1, i32 0x6ED9EBA1, i32 0x6ED9EBA1>)
   %K2 = call <4 x i32> @llvm.immediate(<4 x i32> <i32 0x8F1BBCDC, i32 0x8F1BBCDC, i32 0x8F1BBCDC, i32 0x8F1BBCDC>)
   %K3 = call <4 x i32> @llvm.immediate(<4 x i32> <i32 0xCA62C1D6, i32 0xCA62C1D6, i32 0xCA62C1D6, i32 0xCA62C1D6>)
-  %ByteRevLUT = call <16 x i8> @llvm.immediate(<16 x i32> <i32 3, i32 2, i32 1, i32 0, i32 7, i32 6, i32 5, i32 4, i32 11, i32 10, i32 9, i32 8, i32 15, i32 14, i32 13, i32 12>)
+  %ByteRevLUT = call <16 x i8> @llvm.immediate(<16 x i32> <i32 3, i32 2, i32 1, i32 0, i32 7, i32 6, i32 5, i32 4, i32 11, i32 10, i32 9, i32 8, i32 15, i32 14, i32 13, i32
+12>)
   %shuf_0 = shufflevector <16 x i8> (extractvalue [4 x <4 x i32>] %blocks, 0), <16 x i8> poison, <16 x i32> %ByteRevLUT
   %shuf_1 = shufflevector <16 x i8> (extractvalue [4 x <4 x i32>] %blocks, 1), <16 x i8> poison, <16 x i32> %ByteRevLUT
   %shuf_2 = shufflevector <16 x i8> (extractvalue [4 x <4 x i32>] %blocks, 2), <16 x i8> poison, <16 x i32> %ByteRevLUT
@@ -134,10 +135,10 @@ declare <4 x i32> @llvm.aarch64.crypto.sha1p(<4 x i32>, i32, <4 x i32>) #1
 ; Function Attrs: nocallback nofree nosync nounwind willreturn memory(none)
 declare <4 x i32> @llvm.aarch64.crypto.sha1m(<4 x i32>, i32, <4 x i32>) #1
 
-attributes #0 = { mustprogress nofree noinline norecurse nosync nounwind ssp willreturn memory(none) "frame-pointer"="non-leaf" "no-trapping-math"="true" "stack-protector-buffer-size"="8"
-"target-cpu"="apple-a14"
-"target-features"="+aes,+altnzcv,+ccdp,+ccidx,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc,+rdm,+sb,+sha2,+sha
-3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8a,+zcm,+zcz" }
+attributes #0 = { mustprogress nofree noinline norecurse nosync nounwind ssp willreturn memory(none) "frame-pointer"="non-leaf" "no-trapping-math"="true"
+"stack-protector-buffer-size"="8" "target-cpu"="apple-a14"
+"target-features"="+aes,+altnzcv,+ccdp,+ccidx,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc
+,+rdm,+sb,+sha2,+sha3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8a,+zcm,+zcz" }
 attributes #1 = { nocallback nofree nosync nounwind willreturn memory(none) }
 
 !llvm.linker.options = !{}

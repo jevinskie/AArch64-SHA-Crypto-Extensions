@@ -8,6 +8,7 @@ from collections import OrderedDict
 import networkx as nx
 import xlsxwriter
 from rich import print
+from rich.pretty import pprint
 
 identifier_pattern = r"[%][_a-zA-Z0-9][a-zA-Z$._0-9]*"
 
@@ -90,7 +91,7 @@ def get_def_use(
     dfd: typing.BinaryIO | None,
     Dfd: typing.BinaryIO | None,
     sfd: str | None,
-) -> None:
+) -> tuple[list[str], list[list[str]]]:
     d = get_line_defs(lines)
     u = get_line_uses(lines)
     sz = len(lines)
@@ -147,6 +148,7 @@ def get_def_use(
         worksheet.write(2, 0, 123)
         worksheet.write(3, 0, 123.456)
         workbook.close()
+    return d, u
 
 
 def rename(lines: list[str]) -> list[str]:
@@ -197,6 +199,34 @@ def rename(lines: list[str]) -> list[str]:
     return o
 
 
+def parse_def_use(lines: list[str], defs: list[str], uses: list[list[str]]) -> None:
+    assert len(defs) == len(uses)
+    assert len(lines) == len(defs)
+    sz = len(lines)
+    live_outs: list[set[str]] = []
+    live_ins: list[set[str]] = []
+    for _ in range(sz):
+        live_outs.append(set({}))
+        live_ins.append(set({}))
+    print(f"live_outs: {live_outs}")
+    print(f"live_ins: {live_ins}")
+    def_uses = tuple(zip(defs, uses))
+    print(f"def_uses: {def_uses}")
+    live_out: set[str] = set()
+    live_in: set[str] = set()
+    for i, line in enumerate(reversed(lines)):
+        d = defs[i]
+        us = uses[i]
+        live_out = set(live_in)
+        live_in = live_in.difference({d}).union(set(us))
+        # print(f"i[{i:2}]: live_in: {live_in}")
+        live_outs[i] = live_out
+        live_ins[i] = live_in
+    print(f"live_outs: {live_outs} len(live_outs): {len(live_outs)}")
+    print(f"live_ins: {live_ins}")
+    pprint(live_outs)
+
+
 def parse(
     ifd: typing.TextIO,
     ofd: typing.TextIO,
@@ -223,7 +253,8 @@ def parse(
         assert func_lines[i].startswith("  ")
         func_lines[i] = func_lines[i][2:]
     func_lines = rename(func_lines)
-    get_def_use(func_lines, gfd, dfd, Dfd, sfd)
+    defs, uses = get_def_use(func_lines, gfd, dfd, Dfd, sfd)
+    parse_def_use(func_lines, defs, uses)
     print("".join(lines[: func_start_line + 1]), end="", file=ofd)
     print("".join(["  " + v for v in func_lines]), end="", file=ofd)
     print("".join(lines[func_end_line:]), end="", file=ofd)

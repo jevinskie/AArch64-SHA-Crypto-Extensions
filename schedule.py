@@ -720,19 +720,25 @@ model.add_max_equality(
     obj_var,
     [all_tasks[job_id, len(job) - 1].end for job_id, job in enumerate(jobs_data)],
 )
-rprint(f"model: {model}")
+# rprint(f"model: {model}")
 model.minimize(obj_var)
-rprint(f"min(model): {model}")
+# rprint(f"min(model): {model}")
 
 # Creates the solver and solve.
 solver = cp_model.CpSolver()
-rprint(f"solver: {solver}")
+# rprint(f"solver: {solver}")
 status = solver.solve(model)
-rprint(f"status: {status}")
-rprint(f"solver2: {solver}")
+# rprint(f"status: {status}")
+# rprint(f"solver2: {solver}")
 
 if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-    print("Solution:")
+    strstat = None
+    if status == cp_model.OPTIMAL:
+        strstat = "OPTIMAL"
+    elif status == cp_model.FEASIBLE:
+        strstat = "FEASIBLE"
+    print(f"Solution: {strstat}")
+
     # Create one list of assigned tasks per machine.
     assigned_jobs = collections.defaultdict(list)
     for job_id, job in enumerate(jobs_data):

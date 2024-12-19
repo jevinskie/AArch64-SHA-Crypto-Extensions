@@ -71,7 +71,12 @@ def main() -> None:
     print(f"solver2: {solver}")
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print("Solution:")
+        strstat = None
+        if status == cp_model.OPTIMAL:
+            strstat = "OPTIMAL"
+        elif status == cp_model.FEASIBLE:
+            strstat = "FEASIBLE"
+        print(f"Solution: {strstat}")
         # Create one list of assigned tasks per machine.
         assigned_jobs = collections.defaultdict(list)
         for job_id, job in enumerate(jobs_data):
