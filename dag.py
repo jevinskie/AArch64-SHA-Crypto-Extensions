@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import re
 import typing
 from collections import OrderedDict
 
 import networkx as nx
 import xlsxwriter
-from rich import print
+from rich import print as rprint
 from rich.pretty import pprint
 
 identifier_pattern = r"[%][_a-zA-Z0-9][a-zA-Z$._0-9]*"
@@ -88,6 +89,9 @@ def get_operation(line: str) -> str:
 def get_def_use(
     lines: list[str],
     gfd: typing.TextIO | None,
+    Gfd: typing.TextIO | None,
+    ffd: typing.TextIO | None,
+    Ffd: typing.TextIO | None,
     dfd: typing.BinaryIO | None,
     Dfd: typing.BinaryIO | None,
     sfd: str | None,
@@ -110,25 +114,37 @@ def get_def_use(
     assert GE.is_directed()
     assert GES.is_directed()
     assert GEE.is_directed()
-    print(f"G: {G}")
-    print(f"G.nodes(): {G.nodes()}")
-    print(f"G.edges(): {G.edges()}")
-    print(f"GE: {GE}")
-    print(f"GE.nodes(): {GE.nodes()}")
-    print(f"GE.edges(): {GE.edges()}")
-    print(f"GES: {GES}")
-    print(f"GES.nodes(): {GES.nodes()}")
-    print(f"GES.edges(): {GES.edges()}")
-    print(f"GEE: {GEE}")
-    print(f"GEE.nodes(): {GEE.nodes()}")
-    print(f"GEE.edges(): {GEE.edges()}")
-    print(f"nx.to_dict_of_dicts(GEE): {nx.to_dict_of_dicts(GEE)}")
+    rprint(f"G: {G}")
+    rprint(f"G.nodes(): {G.nodes()}")
+    rprint(f"G.edges(): {G.edges()}")
+    rprint(f"GE: {GE}")
+    rprint(f"GE.nodes(): {GE.nodes()}")
+    rprint(f"GE.edges(): {GE.edges()}")
+    rprint(f"GES: {GES}")
+    rprint(f"GES.nodes(): {GES.nodes()}")
+    rprint(f"GES.edges(): {GES.edges()}")
+    rprint(f"GEE: {GEE}")
+    rprint(f"GEE.nodes(): {GEE.nodes()}")
+    rprint(f"GEE.edges(): {GEE.edges()}")
+    rprint(f"nx.to_dict_of_dicts(GEE): {nx.to_dict_of_dicts(GEE)}")
     batches: list[list[str]] = []
     for i, batch in enumerate(nx.topological_generations(G)):
         batch = sorted(batch)
-        print(f"i: {i} batch: {batch}")
+        rprint(f"i: {i} batch: {batch}")
         batches.append(batch)
-    print(f"batches: {batches}")
+    rprint(f"batches: {batches}")
+    if gfd is not None:
+        rprint(f"gfd: {gfd} GE: {GE}")
+        json.dump(nx.to_dict_of_dicts(GE), gfd, indent=4)
+    if Gfd is not None:
+        rprint(f"Gfd: {Gfd} GES: {GES}")
+        json.dump(nx.to_dict_of_dicts(GES), Gfd, indent=4)
+    if ffd is not None:
+        rprint(f"ffd: {ffd} GEE: {GEE}")
+        json.dump(nx.to_dict_of_dicts(GEE), ffd, indent=4)
+    if Ffd is not None:
+        rprint(f"Ffd: {Ffd} G: {G}")
+        json.dump(nx.to_dict_of_dicts(G), Ffd, indent=4)
     if dfd is not None:
         nx.nx_agraph.write_dot(G, dfd)
     if Dfd is not None:
@@ -231,11 +247,11 @@ def parse_def_use(
     for _ in range(sz):
         live_outs.append(set({}))
         live_ins.append(set({}))
-    print(f"live_outs: {live_outs}")
-    print(f"live_ins: {live_ins}")
+    rprint(f"live_outs: {live_outs}")
+    rprint(f"live_ins: {live_ins}")
     def_uses = tuple(zip(defs, uses))
-    print(f"def_uses: {def_uses}")
-    print("block 0:", file=rfd)
+    rprint(f"def_uses: {def_uses}")
+    rprint("block 0:", file=rfd)
     live_out: set[str] = set()
     live_in: set[str] = set()
     for i, line in enumerate(reversed(lines)):
@@ -243,18 +259,18 @@ def parse_def_use(
         us = uses[i]
         live_out = set(live_in)
         live_in = live_in.difference({d}).union(set(us))
-        # print(f"i[{i:2}]: live_in: {live_in}")
+        # rprint(f"i[{i:2}]: live_in: {live_in}")
         lse = line.split("=")
         lse_sz = len(lse)
         assert lse_sz in (1, 2)
         if len(lse) != 1:
             del lse[0]
         inst = lse[0].split()[0]
-        print(f"    {d} = {inst} {' '.join(us)}", file=rfd)
+        rprint(f"    {d} = {inst} {' '.join(us)}", file=rfd)
         live_outs[i] = live_out
         live_ins[i] = live_in
-    print(f"live_outs: {live_outs} len(live_outs): {len(live_outs)}")
-    print(f"live_ins: {live_ins}")
+    rprint(f"live_outs: {live_outs} len(live_outs): {len(live_outs)}")
+    rprint(f"live_ins: {live_ins}")
     pprint(live_outs)
 
 
@@ -262,6 +278,9 @@ def parse(
     ifd: typing.TextIO,
     ofd: typing.TextIO,
     gfd: typing.TextIO | None,
+    Gfd: typing.TextIO | None,
+    ffd: typing.TextIO | None,
+    Ffd: typing.TextIO | None,
     dfd: typing.BinaryIO | None,
     Dfd: typing.BinaryIO | None,
     sfd: str | None,
@@ -274,7 +293,7 @@ def parse(
         if "@sha1_arm_unrolled_compress_one" in lines[i]:
             func_start_line = i
             continue
-        if lines[i] == "}\n":
+        if func_start_line is not None and lines[i] == "}\n":
             func_end_line = i
             break
     assert func_start_line is not None
@@ -285,7 +304,7 @@ def parse(
         assert func_lines[i].startswith("  ")
         func_lines[i] = func_lines[i][2:]
     func_lines = rename(func_lines)
-    defs, uses = get_def_use(func_lines, gfd, dfd, Dfd, sfd)
+    defs, uses = get_def_use(func_lines, gfd, Gfd, ffd, Ffd, dfd, Dfd, sfd)
     parse_def_use(func_lines, defs, uses, rfd)
     print("".join(lines[: func_start_line + 1]), end="", file=ofd)
     print("".join(["  " + v for v in func_lines]), end="", file=ofd)
@@ -313,9 +332,30 @@ def get_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-g",
         "--graph",
-        dest="graph_svg_file",
+        dest="graph_json_file",
         type=argparse.FileType("w"),
-        help="output graph SVG file.",
+        help="output NetworkX graph json file.",
+    )
+    parser.add_argument(
+        "-G",
+        "--graph-simple",
+        dest="graph_simple_json_file",
+        type=argparse.FileType("w"),
+        help="output simple NetworkX graph json file.",
+    )
+    parser.add_argument(
+        "-f",
+        "--graph-flow",
+        dest="graph_flow_json_file",
+        type=argparse.FileType("w"),
+        help="output flow NetworkX graph json file.",
+    )
+    parser.add_argument(
+        "-F",
+        "--graph-fungal",
+        dest="graph_fungal_json_file",
+        type=argparse.FileType("w"),
+        help="output fungal NetworkX graph json file.",
     )
     parser.add_argument(
         "-d",
@@ -345,12 +385,15 @@ def get_arg_parser() -> argparse.ArgumentParser:
 def main(args: argparse.Namespace):
     ifd = args.in_file
     ofd = args.out_file
-    gfd = args.graph_svg_file
+    gfd = args.graph_json_file
+    Gfd = args.graph_simple_json_file
+    ffd = args.graph_flow_json_file
+    Ffd = args.graph_fungal_json_file
     dfd = args.graph_dot_file
     Dfd = args.deps_dot_file
     sfd = args.schedule_xlsx_file
     rfd = args.regalloc2_file
-    parse(ifd, ofd, gfd, dfd, Dfd, sfd, rfd)
+    parse(ifd, ofd, gfd, Gfd, ffd, Ffd, dfd, Dfd, sfd, rfd)
 
 
 if __name__ == "__main__":
