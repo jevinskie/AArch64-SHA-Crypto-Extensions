@@ -195,11 +195,27 @@ def rename(lines: list[str]) -> list[str]:
         else:
             new_line = substitute_num_vals(line, name_map)
             o.append(new_line)
+    for i, line in enumerate(list(o)):
+        line = line.replace("@llvm.aarch64.crypto.", "")
+        line = line.replace("call <4 x i32> @llvm.immediate(", "immediate ")
+        line = line.replace("call <16 x i8> @llvm.immediate(", "immediate ")
+        if "immediate " in line:
+            line = line[:-2] + "\n"
+        line = line.replace("add <4 x i32>", "vadd <4 x i32>")
+        line = line.replace("call i32 sha1", "CALLsha1")
+        line = line.replace("call <4 x i32> sha1", "CALLsha1")
+        if "CALLsha1" in line:
+            line = line.replace("CALLsha1", "sha1")
+            line = line.replace("(", " ", 1)
+            line = line[:-2] + "\n"
+        o[i] = line
     assert len(lines) == len(o)
     return o
 
 
-def parse_def_use(lines: list[str], defs: list[str], uses: list[list[str]]) -> None:
+def parse_def_use(
+    lines: list[str], defs: list[str], uses: list[list[str]], rfd: typing.TextIO | None
+) -> None:
     assert len(defs) == len(uses)
     assert len(lines) == len(defs)
     sz = len(lines)
@@ -212,6 +228,7 @@ def parse_def_use(lines: list[str], defs: list[str], uses: list[list[str]]) -> N
     print(f"live_ins: {live_ins}")
     def_uses = tuple(zip(defs, uses))
     print(f"def_uses: {def_uses}")
+    print("block 0:", file=rfd)
     live_out: set[str] = set()
     live_in: set[str] = set()
     for i, line in enumerate(reversed(lines)):
@@ -220,6 +237,13 @@ def parse_def_use(lines: list[str], defs: list[str], uses: list[list[str]]) -> N
         live_out = set(live_in)
         live_in = live_in.difference({d}).union(set(us))
         # print(f"i[{i:2}]: live_in: {live_in}")
+        lse = line.split("=")
+        lse_sz = len(lse)
+        assert lse_sz in (1, 2)
+        if len(lse) != 1:
+            del lse[0]
+        inst = lse[0].split()[0]
+        print(f"    {d} = {inst} {' '.join(us)}", file=rfd)
         live_outs[i] = live_out
         live_ins[i] = live_in
     print(f"live_outs: {live_outs} len(live_outs): {len(live_outs)}")
@@ -234,6 +258,7 @@ def parse(
     dfd: typing.BinaryIO | None,
     Dfd: typing.BinaryIO | None,
     sfd: str | None,
+    rfd: typing.TextIO | None,
 ) -> None:
     lines = ifd.readlines()
     func_start_line: int | None = None
@@ -254,7 +279,7 @@ def parse(
         func_lines[i] = func_lines[i][2:]
     func_lines = rename(func_lines)
     defs, uses = get_def_use(func_lines, gfd, dfd, Dfd, sfd)
-    parse_def_use(func_lines, defs, uses)
+    parse_def_use(func_lines, defs, uses, rfd)
     print("".join(lines[: func_start_line + 1]), end="", file=ofd)
     print("".join(["  " + v for v in func_lines]), end="", file=ofd)
     print("".join(lines[func_end_line:]), end="", file=ofd)
@@ -300,6 +325,13 @@ def get_arg_parser() -> argparse.ArgumentParser:
         help="output deps graph dot file.",
     )
     parser.add_argument("-s", "--schedule", dest="schedule_xlsx_file", help="output schedule file.")
+    parser.add_argument(
+        "-r",
+        "--regalloc",
+        dest="regalloc2_file",
+        type=argparse.FileType("w"),
+        help="output regalloc2-test file.",
+    )
     return parser
 
 
@@ -310,7 +342,8 @@ def main(args: argparse.Namespace):
     dfd = args.graph_dot_file
     Dfd = args.deps_dot_file
     sfd = args.schedule_xlsx_file
-    parse(ifd, ofd, gfd, dfd, Dfd, sfd)
+    rfd = args.regalloc2_file
+    parse(ifd, ofd, gfd, dfd, Dfd, sfd, rfd)
 
 
 if __name__ == "__main__":
