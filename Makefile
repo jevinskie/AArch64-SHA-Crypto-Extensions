@@ -48,7 +48,8 @@ TARGETS := sha1-arm sha1-arm-O0 sha1-arm-asan sha1-arm-ubsan \
 	sha1-arm-unrolled-O3-no-inline.asm sha1-arm-unrolled-O3-no-inline-demangled.asm sha1-arm-unrolled-O3-no-inline.ll sha1-arm-unrolled-O3-no-inline-demangled.ll \
 	sha1-arm-unrolled-O3-no-unroll.asm sha1-arm-unrolled-O3-no-unroll-demangled.asm sha1-arm-unrolled-O3-no-unroll.ll sha1-arm-unrolled-O3-no-unroll-demangled.ll \
 	sha1-arm-unrolled-O3-no-inline-no-unroll.asm sha1-arm-unrolled-O3-no-inline-no-unroll-demangled.asm sha1-arm-unrolled-O3-no-inline-no-unroll.ll sha1-arm-unrolled-O3-no-inline-no-unroll-demangled.ll \
-	sha1-compress-one.ll sha1-compress-one-microcoded.ll
+	sha1-compress-one.ll sha1-compress-one-microcoded.ll \
+	sha1-compress-one-hand-dag.dot.pdf sha1-compress-one-hand-dag.dot.png sha1-compress-one-hand-dag-deps.dot.pdf sha1-compress-one-hand-dag-deps.dot.png sha1-compress-one-hand-dag-ops.dot.png sha1-compress-one-hand-dag-ops.dot.pdf
 
 C_CXX_FLAGS := -Wall -Wextra -Wpedantic -Weverything -Warray-bounds -Wno-poison-system-directories -Wno-documentation-unknown-command -Wno-gnu-statement-expression-from-macro-expansion -Wno-gnu-line-marker
 C_CXX_FLAGS += -Wno-nullability-extension

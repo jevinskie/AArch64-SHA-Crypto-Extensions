@@ -151,6 +151,25 @@ def get_def_use(
     return d, u
 
 
+def rename_instrs(lines: list[str]) -> list[str]:
+    o: list[str] = []
+    for line in lines:
+        line = line.replace("@llvm.aarch64.crypto.", "")
+        line = line.replace("call <4 x i32> @llvm.immediate(", "immediate ")
+        line = line.replace("call <16 x i8> @llvm.immediate(", "immediate ")
+        if "immediate " in line:
+            line = line[:-2] + "\n"
+        line = line.replace("add <4 x i32>", "vadd <4 x i32>")
+        line = line.replace("call i32 sha1", "CALLsha1")
+        line = line.replace("call <4 x i32> sha1", "CALLsha1")
+        if "CALLsha1" in line:
+            line = line.replace("CALLsha1", "sha1")
+            line = line.replace("(", " ", 1)
+            line = line[:-2] + "\n"
+        o.append(line)
+    return o
+
+
 def rename(lines: list[str]) -> list[str]:
     op_cnt: dict[str, int] = {
         "add": 0,
@@ -165,7 +184,9 @@ def rename(lines: list[str]) -> list[str]:
         "sha1su0": 0,
         "sha1su1": 0,
         "shuf": 0,
+        "vadd": 0,
     }
+    lines = rename_instrs(lines)
     line_defs = get_line_defs(lines)
     new_line_defs: list[list | None] = [None] * (len(lines) - 1)
     n = 0
@@ -195,20 +216,6 @@ def rename(lines: list[str]) -> list[str]:
         else:
             new_line = substitute_num_vals(line, name_map)
             o.append(new_line)
-    for i, line in enumerate(list(o)):
-        line = line.replace("@llvm.aarch64.crypto.", "")
-        line = line.replace("call <4 x i32> @llvm.immediate(", "immediate ")
-        line = line.replace("call <16 x i8> @llvm.immediate(", "immediate ")
-        if "immediate " in line:
-            line = line[:-2] + "\n"
-        line = line.replace("add <4 x i32>", "vadd <4 x i32>")
-        line = line.replace("call i32 sha1", "CALLsha1")
-        line = line.replace("call <4 x i32> sha1", "CALLsha1")
-        if "CALLsha1" in line:
-            line = line.replace("CALLsha1", "sha1")
-            line = line.replace("(", " ", 1)
-            line = line[:-2] + "\n"
-        o[i] = line
     assert len(lines) == len(o)
     return o
 
