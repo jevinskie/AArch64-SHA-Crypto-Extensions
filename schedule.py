@@ -2,6 +2,7 @@
 
 import collections
 import enum
+import json
 
 import networkx as nx
 from ortools.sat.python import cp_model
@@ -306,6 +307,8 @@ g_dod_orig = {
     "insval_1": {"res": {"opnum": 0}},
     "res": {},
 }
+# json.dump(g_dod_orig, open("g_dod_orig.json", "w"), indent=4)
+g_dod_orig = json.load(open("g_dod_orig.json"))
 
 g_dod = {
     "blocks": {
@@ -541,9 +544,14 @@ g_dod = {
     "insval_1": {"res": {"opnum": 0}},
     "res": {},
 }
+# json.dump(g_dod, open("g_dod.json", "w"), indent=4)
+g_dod = json.load(open("g_dod.json"))
 
-GO = nx.DiGraph(g_dod_orig)
-G = nx.DiGraph(g_dod)
+sha1comp_dod = json.load(open("sha1-compress-one-hand-graph-f.json"))
+
+# GO = nx.DiGraph(g_dod_orig)
+# G = nx.DiGraph(g_dod)
+G = nx.DiGraph(sha1comp_dod)
 # rprint(f"G: {G}")
 # rprint(f"G.adjacency(): {list(G.adjacency())}")
 # rprint(f"G.predecessors('res'): {list(G.predecessors('res'))}")
@@ -611,8 +619,14 @@ class Instr(enum.IntEnum):
     SHA1M = 3
     SHA1SU0 = 4
     SHA1SU1 = 5
+    ADD = 6
     ADDX = 6
     ADDY = 7
+    VADDX = 6
+    VADDY = 7
+    VADDXY = 6
+    ABCD = 6
+    E = 6
 
 
 clut = {
@@ -622,8 +636,12 @@ clut = {
     "sha1m": 3,
     "sha1su0": 4,
     "sha1su1": 5,
-    "addX": 6,
-    "addY": 7,
+    "vaddX": 6,
+    "vaddY": 7,
+    "vaddXY": 6,
+    "add": 6,
+    "abcd": 6,
+    "e": 6,
 }
 
 

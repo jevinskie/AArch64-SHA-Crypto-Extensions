@@ -74,6 +74,8 @@ def get_operation(line: str) -> str:
         op = op.split(".")[-1]
         if op == "immediate":
             op = "imm"
+        if op == "argload":
+            op = "ald"
         return op
     else:
         op = ls[2]
@@ -104,12 +106,31 @@ def get_def_use(
     GES = nx.DiGraph()
     GEE = nx.DiGraph()
     for i in range(sz):
+        op = get_operation(lines[i])
         ld = d[i]
+        rprint(f"op: {op} ld: {ld}")
         for j, lu in enumerate(u[i]):
             G.add_edge(lu, ld)
             GE.add_edge(lu, ld, label=f"op{j}")
             GES.add_edge(lu.split("_")[0], ld.split("_")[0], label=f"op{j}")
             GEE.add_edge(lu, ld, opnum=j)
+            # print(f"ld: {ld}")
+            # keep stuff in lanes (X/Y) for topological sort
+            if ld == "addX_1":
+                print("FFFFA")
+                GEE.add_edge("addX_0", ld, opnum=-1)
+            if ld == "vaddX_1":
+                print("FFFVA")
+                GEE.add_edge("vaddX_0", ld, opnum=-1)
+            if ld == "addY_1":
+                print("FFFFB")
+                GEE.add_edge("addY_0", ld, opnum=-1)
+            if ld == "vaddY_1":
+                print("FFFVB")
+                GEE.add_edge("vaddY_0", ld, opnum=-1)
+            if ld == "sha1su0_1":
+                print("FFFFC")
+                GEE.add_edge("sha1su0_0", ld, opnum=-1)
     assert G.is_directed()
     assert GE.is_directed()
     assert GES.is_directed()
@@ -171,11 +192,19 @@ def rename_instrs(lines: list[str]) -> list[str]:
     o: list[str] = []
     for line in lines:
         line = line.replace("@llvm.aarch64.crypto.", "")
-        line = line.replace("call <4 x i32> @llvm.immediate(", "immediate ")
-        line = line.replace("call <16 x i8> @llvm.immediate(", "immediate ")
-        if "immediate " in line:
+        if "@llvm.immediate" in line:
             line = line[:-2] + "\n"
+            line = line.replace("call <4 x i32> @llvm.immediate(", "immediate ")
+            line = line.replace("call <16 x i8> @llvm.immediate(", "immediate ")
+        if "@llvm.argload" in line:
+            line = line[:-2] + "\n"
+            line = line.replace("call <4 x i32> @llvm.argload(", "argload ")
+            line = line.replace("call i32 @llvm.argload(", "argload ")
+            line = line.replace("call [4 x <4 x i32>] @llvm.argload(", "argload ")
         line = line.replace("add <4 x i32>", "vadd <4 x i32>")
+        line = line.replace("addX <4 x i32>", "vaddX <4 x i32>")
+        line = line.replace("addY <4 x i32>", "vaddY <4 x i32>")
+        line = line.replace("addXY <4 x i32>", "vaddXY <4 x i32>")
         line = line.replace("call i32 sha1", "CALLsha1")
         line = line.replace("call <4 x i32> sha1", "CALLsha1")
         if "CALLsha1" in line:
@@ -189,6 +218,10 @@ def rename_instrs(lines: list[str]) -> list[str]:
 def rename(lines: list[str]) -> list[str]:
     op_cnt: dict[str, int] = {
         "add": 0,
+        "addX": 0,
+        "addY": 0,
+        "addXY": 0,
+        "ald": 0,
         "imm": 0,
         "inselm": 0,
         "insval": 0,
@@ -201,6 +234,9 @@ def rename(lines: list[str]) -> list[str]:
         "sha1su1": 0,
         "shuf": 0,
         "vadd": 0,
+        "vaddX": 0,
+        "vaddY": 0,
+        "vaddXY": 0,
     }
     lines = rename_instrs(lines)
     line_defs = get_line_defs(lines)

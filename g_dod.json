@@ -1,0 +1,881 @@
+{
+    "blocks": {
+        "shuf_0": {
+            "opnum": 0
+        },
+        "shuf_1": {
+            "opnum": 0
+        },
+        "shuf_2": {
+            "opnum": 0
+        },
+        "shuf_3": {
+            "opnum": 0
+        }
+    },
+    "shuf_0": {
+        "addX_0": {
+            "opnum": 0
+        },
+        "sha1su0_0": {
+            "opnum": 0
+        }
+    },
+    "ByteRevLUT": {
+        "shuf_0": {
+            "opnum": 1
+        },
+        "shuf_1": {
+            "opnum": 1
+        },
+        "shuf_2": {
+            "opnum": 1
+        },
+        "shuf_3": {
+            "opnum": 1
+        }
+    },
+    "shuf_1": {
+        "addY_1": {
+            "opnum": 0
+        },
+        "sha1su0_0": {
+            "opnum": 1
+        },
+        "sha1su0_1": {
+            "opnum": 0
+        }
+    },
+    "shuf_2": {
+        "addX_2": {
+            "opnum": 0
+        },
+        "sha1su0_0": {
+            "opnum": 2
+        },
+        "sha1su0_1": {
+            "opnum": 1
+        },
+        "sha1su0_2": {
+            "opnum": 0
+        }
+    },
+    "shuf_3": {
+        "addY_3": {
+            "opnum": 0
+        },
+        "sha1su1_0": {
+            "opnum": 1
+        },
+        "sha1su0_1": {
+            "opnum": 2
+        },
+        "sha1su0_2": {
+            "opnum": 1
+        },
+        "sha1su0_3": {
+            "opnum": 0
+        }
+    },
+    "addX_0": {
+        "sha1c_0": {
+            "opnum": 2
+        },
+        "addX_2": {
+            "opnum": -1
+        }
+    },
+    "K0": {
+        "addX_0": {
+            "opnum": 1
+        },
+        "addY_1": {
+            "opnum": 1
+        },
+        "addX_2": {
+            "opnum": 1
+        },
+        "addY_3": {
+            "opnum": 1
+        },
+        "addX_4": {
+            "opnum": 1
+        }
+    },
+    "addY_1": {
+        "sha1c_1": {
+            "opnum": 2
+        },
+        "addY_3": {
+            "opnum": -1
+        }
+    },
+    "buf": {
+        "sha1h_0": {
+            "opnum": 0
+        },
+        "sha1c_0": {
+            "opnum": 0
+        },
+        "addX_20": {
+            "opnum": 1
+        }
+    },
+    "sha1h_0": {
+        "sha1c_1": {
+            "opnum": 1
+        }
+    },
+    "sha1c_0": {
+        "sha1h_1": {
+            "opnum": 0
+        },
+        "sha1c_1": {
+            "opnum": 0
+        }
+    },
+    "sz": {
+        "sha1c_0": {
+            "opnum": 1
+        },
+        "addY_21": {
+            "opnum": 1
+        }
+    },
+    "addX_2": {
+        "sha1c_2": {
+            "opnum": 2
+        }
+    },
+    "sha1su0_0": {
+        "sha1su1_0": {
+            "opnum": 0
+        },
+        "sha1su0_1": {
+            "opnum": -1
+        }
+    },
+    "sha1h_1": {
+        "sha1c_2": {
+            "opnum": 1
+        }
+    },
+    "sha1c_1": {
+        "sha1h_2": {
+            "opnum": 0
+        },
+        "sha1c_2": {
+            "opnum": 0
+        }
+    },
+    "addY_3": {
+        "sha1c_3": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_0": {
+        "addX_4": {
+            "opnum": 0
+        },
+        "sha1su1_1": {
+            "opnum": 1
+        },
+        "sha1su0_2": {
+            "opnum": 2
+        },
+        "sha1su0_3": {
+            "opnum": 1
+        },
+        "sha1su0_4": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_1": {
+        "sha1su1_1": {
+            "opnum": 0
+        }
+    },
+    "sha1h_2": {
+        "sha1c_3": {
+            "opnum": 1
+        }
+    },
+    "sha1c_2": {
+        "sha1h_3": {
+            "opnum": 0
+        },
+        "sha1c_3": {
+            "opnum": 0
+        }
+    },
+    "addX_4": {
+        "sha1c_4": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_1": {
+        "addX_5": {
+            "opnum": 0
+        },
+        "sha1su1_2": {
+            "opnum": 1
+        },
+        "sha1su0_3": {
+            "opnum": 2
+        },
+        "sha1su0_4": {
+            "opnum": 1
+        },
+        "sha1su0_5": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_2": {
+        "sha1su1_2": {
+            "opnum": 0
+        }
+    },
+    "sha1h_3": {
+        "sha1c_4": {
+            "opnum": 1
+        }
+    },
+    "sha1c_3": {
+        "sha1h_4": {
+            "opnum": 0
+        },
+        "sha1c_4": {
+            "opnum": 0
+        }
+    },
+    "addX_5": {
+        "sha1p_0": {
+            "opnum": 2
+        }
+    },
+    "K1": {
+        "addX_5": {
+            "opnum": 1
+        },
+        "addX_6": {
+            "opnum": 1
+        },
+        "addX_7": {
+            "opnum": 1
+        },
+        "addX_8": {
+            "opnum": 1
+        },
+        "addX_9": {
+            "opnum": 1
+        }
+    },
+    "sha1su1_2": {
+        "addX_6": {
+            "opnum": 0
+        },
+        "sha1su1_3": {
+            "opnum": 1
+        },
+        "sha1su0_4": {
+            "opnum": 2
+        },
+        "sha1su0_5": {
+            "opnum": 1
+        },
+        "sha1su0_6": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_3": {
+        "sha1su1_3": {
+            "opnum": 0
+        }
+    },
+    "sha1h_4": {
+        "sha1p_0": {
+            "opnum": 1
+        }
+    },
+    "sha1c_4": {
+        "sha1h_5": {
+            "opnum": 0
+        },
+        "sha1p_0": {
+            "opnum": 0
+        }
+    },
+    "addX_6": {
+        "sha1p_1": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_3": {
+        "addX_7": {
+            "opnum": 0
+        },
+        "sha1su1_4": {
+            "opnum": 1
+        },
+        "sha1su0_5": {
+            "opnum": 2
+        },
+        "sha1su0_6": {
+            "opnum": 1
+        },
+        "sha1su0_7": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_4": {
+        "sha1su1_4": {
+            "opnum": 0
+        }
+    },
+    "sha1h_5": {
+        "sha1p_1": {
+            "opnum": 1
+        }
+    },
+    "sha1p_0": {
+        "sha1h_6": {
+            "opnum": 0
+        },
+        "sha1p_1": {
+            "opnum": 0
+        }
+    },
+    "addX_7": {
+        "sha1p_2": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_4": {
+        "addX_8": {
+            "opnum": 0
+        },
+        "sha1su1_5": {
+            "opnum": 1
+        },
+        "sha1su0_6": {
+            "opnum": 2
+        },
+        "sha1su0_7": {
+            "opnum": 1
+        },
+        "sha1su0_8": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_5": {
+        "sha1su1_5": {
+            "opnum": 0
+        }
+    },
+    "sha1h_6": {
+        "sha1p_2": {
+            "opnum": 1
+        }
+    },
+    "sha1p_1": {
+        "sha1h_7": {
+            "opnum": 0
+        },
+        "sha1p_2": {
+            "opnum": 0
+        }
+    },
+    "addX_8": {
+        "sha1p_3": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_5": {
+        "addX_9": {
+            "opnum": 0
+        },
+        "sha1su1_6": {
+            "opnum": 1
+        },
+        "sha1su0_7": {
+            "opnum": 2
+        },
+        "sha1su0_8": {
+            "opnum": 1
+        },
+        "sha1su0_9": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_6": {
+        "sha1su1_6": {
+            "opnum": 0
+        }
+    },
+    "sha1h_7": {
+        "sha1p_3": {
+            "opnum": 1
+        }
+    },
+    "sha1p_2": {
+        "sha1h_8": {
+            "opnum": 0
+        },
+        "sha1p_3": {
+            "opnum": 0
+        }
+    },
+    "addX_9": {
+        "sha1p_4": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_6": {
+        "addX_10": {
+            "opnum": 0
+        },
+        "sha1su1_7": {
+            "opnum": 1
+        },
+        "sha1su0_8": {
+            "opnum": 2
+        },
+        "sha1su0_9": {
+            "opnum": 1
+        },
+        "sha1su0_10": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_7": {
+        "sha1su1_7": {
+            "opnum": 0
+        }
+    },
+    "sha1h_8": {
+        "sha1p_4": {
+            "opnum": 1
+        }
+    },
+    "sha1p_3": {
+        "sha1h_9": {
+            "opnum": 0
+        },
+        "sha1p_4": {
+            "opnum": 0
+        }
+    },
+    "addX_10": {
+        "sha1m_0": {
+            "opnum": 2
+        }
+    },
+    "K2": {
+        "addX_10": {
+            "opnum": 1
+        },
+        "addX_11": {
+            "opnum": 1
+        },
+        "addX_12": {
+            "opnum": 1
+        },
+        "addX_13": {
+            "opnum": 1
+        },
+        "addX_14": {
+            "opnum": 1
+        }
+    },
+    "sha1su1_7": {
+        "addX_11": {
+            "opnum": 0
+        },
+        "sha1su1_8": {
+            "opnum": 1
+        },
+        "sha1su0_9": {
+            "opnum": 2
+        },
+        "sha1su0_10": {
+            "opnum": 1
+        },
+        "sha1su0_11": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_8": {
+        "sha1su1_8": {
+            "opnum": 0
+        }
+    },
+    "sha1h_9": {
+        "sha1m_0": {
+            "opnum": 1
+        }
+    },
+    "sha1p_4": {
+        "sha1h_10": {
+            "opnum": 0
+        },
+        "sha1m_0": {
+            "opnum": 0
+        }
+    },
+    "addX_11": {
+        "sha1m_1": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_8": {
+        "addX_12": {
+            "opnum": 0
+        },
+        "sha1su1_9": {
+            "opnum": 1
+        },
+        "sha1su0_10": {
+            "opnum": 2
+        },
+        "sha1su0_11": {
+            "opnum": 1
+        },
+        "sha1su0_12": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_9": {
+        "sha1su1_9": {
+            "opnum": 0
+        }
+    },
+    "sha1h_10": {
+        "sha1m_1": {
+            "opnum": 1
+        }
+    },
+    "sha1m_0": {
+        "sha1h_11": {
+            "opnum": 0
+        },
+        "sha1m_1": {
+            "opnum": 0
+        }
+    },
+    "addX_12": {
+        "sha1m_2": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_9": {
+        "addX_13": {
+            "opnum": 0
+        },
+        "sha1su1_10": {
+            "opnum": 1
+        },
+        "sha1su0_11": {
+            "opnum": 2
+        },
+        "sha1su0_12": {
+            "opnum": 1
+        },
+        "sha1su0_13": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_10": {
+        "sha1su1_10": {
+            "opnum": 0
+        }
+    },
+    "sha1h_11": {
+        "sha1m_2": {
+            "opnum": 1
+        }
+    },
+    "sha1m_1": {
+        "sha1h_12": {
+            "opnum": 0
+        },
+        "sha1m_2": {
+            "opnum": 0
+        }
+    },
+    "addX_13": {
+        "sha1m_3": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_10": {
+        "addX_14": {
+            "opnum": 0
+        },
+        "sha1su1_11": {
+            "opnum": 1
+        },
+        "sha1su0_12": {
+            "opnum": 2
+        },
+        "sha1su0_13": {
+            "opnum": 1
+        },
+        "sha1su0_14": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_11": {
+        "sha1su1_11": {
+            "opnum": 0
+        }
+    },
+    "sha1h_12": {
+        "sha1m_3": {
+            "opnum": 1
+        }
+    },
+    "sha1m_2": {
+        "sha1h_13": {
+            "opnum": 0
+        },
+        "sha1m_3": {
+            "opnum": 0
+        }
+    },
+    "addX_14": {
+        "sha1m_4": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_11": {
+        "addX_15": {
+            "opnum": 0
+        },
+        "sha1su1_12": {
+            "opnum": 1
+        },
+        "sha1su0_13": {
+            "opnum": 2
+        },
+        "sha1su0_14": {
+            "opnum": 1
+        },
+        "sha1su0_15": {
+            "opnum": 0
+        }
+    },
+    "sha1su0_12": {
+        "sha1su1_12": {
+            "opnum": 0
+        }
+    },
+    "sha1h_13": {
+        "sha1m_4": {
+            "opnum": 1
+        }
+    },
+    "sha1m_3": {
+        "sha1h_14": {
+            "opnum": 0
+        },
+        "sha1m_4": {
+            "opnum": 0
+        }
+    },
+    "addX_15": {
+        "sha1p_5": {
+            "opnum": 2
+        }
+    },
+    "K3": {
+        "addX_15": {
+            "opnum": 1
+        },
+        "addX_16": {
+            "opnum": 1
+        },
+        "addX_17": {
+            "opnum": 1
+        },
+        "addX_18": {
+            "opnum": 1
+        },
+        "addX_19": {
+            "opnum": 1
+        }
+    },
+    "sha1su1_12": {
+        "addX_16": {
+            "opnum": 0
+        },
+        "sha1su1_13": {
+            "opnum": 1
+        },
+        "sha1su0_14": {
+            "opnum": 2
+        },
+        "sha1su0_15": {
+            "opnum": 1
+        }
+    },
+    "sha1su0_13": {
+        "sha1su1_13": {
+            "opnum": 0
+        }
+    },
+    "sha1h_14": {
+        "sha1p_5": {
+            "opnum": 1
+        }
+    },
+    "sha1m_4": {
+        "sha1h_15": {
+            "opnum": 0
+        },
+        "sha1p_5": {
+            "opnum": 0
+        }
+    },
+    "addX_16": {
+        "sha1p_6": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_13": {
+        "addX_17": {
+            "opnum": 0
+        },
+        "sha1su1_14": {
+            "opnum": 1
+        },
+        "sha1su0_15": {
+            "opnum": 2
+        }
+    },
+    "sha1su0_14": {
+        "sha1su1_14": {
+            "opnum": 0
+        }
+    },
+    "sha1h_15": {
+        "sha1p_6": {
+            "opnum": 1
+        }
+    },
+    "sha1p_5": {
+        "sha1h_16": {
+            "opnum": 0
+        },
+        "sha1p_6": {
+            "opnum": 0
+        }
+    },
+    "addX_17": {
+        "sha1p_7": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_14": {
+        "addX_18": {
+            "opnum": 0
+        },
+        "sha1su1_15": {
+            "opnum": 1
+        }
+    },
+    "sha1su0_15": {
+        "sha1su1_15": {
+            "opnum": 0
+        }
+    },
+    "sha1h_16": {
+        "sha1p_7": {
+            "opnum": 1
+        }
+    },
+    "sha1p_6": {
+        "sha1h_17": {
+            "opnum": 0
+        },
+        "sha1p_7": {
+            "opnum": 0
+        }
+    },
+    "addX_18": {
+        "sha1p_8": {
+            "opnum": 2
+        }
+    },
+    "sha1su1_15": {
+        "addX_19": {
+            "opnum": 0
+        }
+    },
+    "sha1h_17": {
+        "sha1p_8": {
+            "opnum": 1
+        }
+    },
+    "sha1p_7": {
+        "sha1h_18": {
+            "opnum": 0
+        },
+        "sha1p_8": {
+            "opnum": 0
+        }
+    },
+    "addX_19": {
+        "sha1p_9": {
+            "opnum": 2
+        }
+    },
+    "sha1h_18": {
+        "sha1p_9": {
+            "opnum": 1
+        }
+    },
+    "sha1p_8": {
+        "sha1h_19": {
+            "opnum": 0
+        },
+        "sha1p_9": {
+            "opnum": 0
+        }
+    },
+    "sha1h_19": {
+        "addY_21": {
+            "opnum": 0
+        }
+    },
+    "sha1p_9": {
+        "addX_20": {
+            "opnum": 0
+        }
+    },
+    "addX_20": {
+        "insval_0": {
+            "opnum": 0
+        }
+    },
+    "addY_21": {
+        "inselm_0": {
+            "opnum": 0
+        }
+    },
+    "inselm_0": {
+        "insval_1": {
+            "opnum": 1
+        }
+    },
+    "insval_0": {
+        "insval_1": {
+            "opnum": 0
+        }
+    },
+    "insval_1": {
+        "res": {
+            "opnum": 0
+        }
+    },
+    "res": {}
+}
