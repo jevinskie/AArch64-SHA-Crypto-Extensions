@@ -101,10 +101,10 @@ def get_def_use(
     d = get_line_defs(lines)
     u = get_line_uses(lines)
     sz = len(lines)
-    G = nx.DiGraph()
-    GE = nx.DiGraph()
-    GES = nx.DiGraph()
-    GEE = nx.DiGraph()
+    G = nx.DiGraph(outputorder="edgesfirst")
+    GE = nx.DiGraph(outputorder="edgesfirst")
+    GES = nx.DiGraph(outputorder="edgesfirst")
+    GEE = nx.DiGraph(outputorder="edgesfirst")
     for i in range(sz):
         op = get_operation(lines[i])
         ld = d[i]
@@ -112,25 +112,44 @@ def get_def_use(
         for j, lu in enumerate(u[i]):
             G.add_edge(lu, ld)
             GE.add_edge(lu, ld, label=f"op{j}")
-            GES.add_edge(lu.split("_")[0], ld.split("_")[0], label=f"op{j}")
+            simp_lus = lu.split("_")
+            simp_inst = simp_lus[0]
+            simp_lds = ld.split("_")
+            simp_op = simp_lds[0]
+            blocklist = ("abcda", "ea", "blocksa", "res", "inselm", "insval", "add")
+            if simp_inst not in blocklist and simp_op not in blocklist:
+                GES.add_edge(simp_inst, simp_op, label=f"op{j}")
             GEE.add_edge(lu, ld, opnum=j)
             # print(f"ld: {ld}")
             # keep stuff in lanes (X/Y) for topological sort
-            if ld == "addX_1":
-                print("FFFFA")
-                GEE.add_edge("addX_0", ld, opnum=-1)
-            if ld == "vaddX_1":
-                print("FFFVA")
-                GEE.add_edge("vaddX_0", ld, opnum=-1)
-            if ld == "addY_1":
-                print("FFFFB")
-                GEE.add_edge("addY_0", ld, opnum=-1)
-            if ld == "vaddY_1":
-                print("FFFVB")
-                GEE.add_edge("vaddY_0", ld, opnum=-1)
-            if ld == "sha1su0_1":
-                print("FFFFC")
-                GEE.add_edge("sha1su0_0", ld, opnum=-1)
+            for tG in (G, GE, GEE):
+                for i in range(1, 0, -1):
+                    if ld == f"vaddX_{i}":
+                        tG.add_edge(f"vaddX_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(1, 0, -1):
+                    if ld == f"vaddY_{i}":
+                        tG.add_edge(f"vaddY_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(16, 0, -1):
+                    if ld == f"vaddXY_{i}":
+                        tG.add_edge(f"vaddXY_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(15, 0, -1):
+                    if ld == f"sha1su0_{i}":
+                        tG.add_edge(f"sha1su0_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(15, 0, -1):
+                    if ld == f"sha1su1_{i}":
+                        tG.add_edge(f"sha1su0_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(19, 0, -1):
+                    if ld == f"sha1h_{i}":
+                        tG.add_edge(f"sha1h_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(9, 0, -1):
+                    if ld == f"sha1p_{i}":
+                        tG.add_edge(f"sha1p_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(4, 0, -1):
+                    if ld == f"sha1m_{i}":
+                        tG.add_edge(f"sha1m_{i-1}", ld, opnum=-1, style="invis")
+                for i in range(4, 0, -1):
+                    if ld == f"sha1c_{i}":
+                        tG.add_edge(f"sha1c_{i-1}", ld, opnum=-1, style="invis")
     assert G.is_directed()
     assert GE.is_directed()
     assert GES.is_directed()
@@ -166,10 +185,17 @@ def get_def_use(
     if Ffd is not None:
         rprint(f"Ffd: {Ffd} G: {G}")
         json.dump(nx.to_dict_of_dicts(G), Ffd, indent=4)
+    blocklist = ("blocksa", "abcda", "ea")
+    for n in list(G.nodes()):
+        if n in blocklist:
+            G.remove_node(n)
+    for n in list(GE.nodes()):
+        if n in blocklist:
+            GE.remove_node(n)
     if dfd is not None:
         nx.nx_agraph.write_dot(G, dfd)
     if Dfd is not None:
-        nx.nx_agraph.write_dot(GE, Dfd)
+        nx.nx_agraph.write_dot(GES, Dfd)
     if sfd is not None:
         workbook = xlsxwriter.Workbook(sfd)
         worksheet = workbook.add_worksheet()
