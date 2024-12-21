@@ -3,7 +3,10 @@
 import collections
 import enum
 import json
+import typing
+from collections.abc import Mapping, MutableMapping
 
+import bidict
 import networkx as nx
 from ortools.sat.python import cp_model
 from rich import print as rprint
@@ -11,67 +14,73 @@ from rich.pretty import pprint
 
 from sha1_arm import cf, op_color
 
-batches = [
-    ["sha1h_0", "shuf_0", "shuf_1", "shuf_2", "shuf_3"],
-    ["add_0", "add_1", "add_2", "add_3", "sha1su0_0", "sha1su0_1"],
-    ["sha1c_0", "sha1su1_0"],
-    ["add_4", "sha1c_1", "sha1h_1", "sha1su0_2", "sha1su1_1"],
-    ["add_5", "sha1c_2", "sha1h_2", "sha1su0_3", "sha1su1_2"],
-    ["add_6", "sha1c_3", "sha1h_3", "sha1su0_4", "sha1su1_3"],
-    ["add_7", "sha1c_4", "sha1h_4", "sha1su0_5", "sha1su1_4"],
-    ["add_8", "sha1h_5", "sha1p_0", "sha1su0_6", "sha1su1_5"],
-    ["add_9", "sha1h_6", "sha1p_1", "sha1su0_7", "sha1su1_6"],
-    ["add_10", "sha1h_7", "sha1p_2", "sha1su0_8", "sha1su1_7"],
-    ["add_11", "sha1h_8", "sha1p_3", "sha1su0_9", "sha1su1_8"],
-    ["add_12", "sha1h_9", "sha1p_4", "sha1su0_10", "sha1su1_9"],
-    ["add_13", "sha1h_10", "sha1m_0", "sha1su0_11", "sha1su1_10"],
-    ["add_14", "sha1h_11", "sha1m_1", "sha1su0_12", "sha1su1_11"],
-    ["add_15", "sha1h_12", "sha1m_2", "sha1su0_13", "sha1su1_12"],
-    ["add_16", "sha1h_13", "sha1m_3", "sha1su0_14", "sha1su1_13"],
-    ["add_17", "sha1h_14", "sha1m_4", "sha1su0_15", "sha1su1_14"],
-    ["add_18", "sha1h_15", "sha1p_5", "sha1su1_15"],
-    ["add_19", "sha1h_16", "sha1p_6"],
-    ["sha1h_17", "sha1p_7"],
-    ["sha1h_18", "sha1p_8"],
-    ["sha1h_19", "sha1p_9"],
-    ["add_20", "add_21"],
-]
 
-batch_sizes = [len(b) for b in batches]
-# rprint(f"batch_sizes: {batch_sizes}")
-# num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches], 1)
-# rprint(f"num_schedules: {num_schedules}")
+class BiDictStrInt(Mapping[str, int]):
+    def __init__(self) -> None:
+        self._mapping: bidict.bidict[str, int] = bidict.bidict()
+        self._mapping.on_dup = bidict.ON_DUP_RAISE
 
-batches_norm = [
-    ["sha1h", "shuf", "shuf", "shuf", "shuf"],
-    ["add", "add", "add", "add", "sha1su0", "sha1su0"],
-    ["sha1c", "sha1su1"],
-    ["add", "sha1c", "sha1h", "sha1su0", "sha1su1"],
-    ["add", "sha1c", "sha1h", "sha1su0", "sha1su1"],
-    ["add", "sha1c", "sha1h", "sha1su0", "sha1su1"],
-    ["add", "sha1c", "sha1h", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1p", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1p", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1p", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1p", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1p", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1m", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1m", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1m", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1m", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1m", "sha1su0", "sha1su1"],
-    ["add", "sha1h", "sha1p", "sha1su1"],
-    ["add", "sha1h", "sha1p"],
-    ["sha1h", "sha1p"],
-    ["sha1h", "sha1p"],
-    ["sha1h", "sha1p"],
-    ["add", "add"],
-]
+    @property
+    def rev(self) -> bidict.bidict[int, str]:
+        return self._mapping.inverse
 
-batch_sizes = [len(b) for b in batches_norm]
-# rprint(f"batch_sizes: {batch_sizes}")
-# num_schedules = functools.reduce(operator.mul, [math.factorial(len(b)) for b in batches_norm], 1)
-# rprint(f"num_schedules: {num_schedules}")
+    def __getitem__(self, key):
+        if key in self._mapping:
+            return self._mapping[key]
+        else:
+            val = len(self)
+            self._mapping[key] = val
+            return val
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def __repr__(self):
+        return repr(self._mapping)
+
+    def __str__(self):
+        return str(self._mapping)
+
+
+class VRegIdx(BiDictStrInt): ...
+
+
+class MutBiDictStrInt(MutableMapping[str, int]):
+    def __init__(self) -> None:
+        self._mapping: bidict.bidict[str, int] = bidict.bidict()
+        self._mapping.on_dup = bidict.ON_DUP_RAISE
+
+    @property
+    def rev(self) -> bidict.bidict[int, str]:
+        return self._mapping.inverse
+
+    def __getitem__(self, key):
+        return self._mapping[key]
+
+    def __setitem__(self, key, value):
+        self._mapping[key] = value
+
+    def __delitem__(self, key):
+        del self._mapping[key]
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def __repr__(self):
+        return repr(self._mapping)
+
+    def __str__(self):
+        return str(self._mapping)
+
+
+class BatchIdx(MutBiDictStrInt): ...
+
 
 g_dod_orig = json.load(open("g_dod_orig.json"))
 
@@ -212,9 +221,30 @@ for k in list(port_usage.keys()):
 rprint("port_usage:")
 pprint(port_usage)
 
+batches_v2: list[list[str]] = []
+batches_v2_instrs: list[list[str]] = []
+batches_v2_batchidx: dict[str, int] = {}
+batches_v2_vregidx = VRegIdx()
+all_instrs: set[str] = set()
+
 for i, batch in enumerate(nx.topological_generations(G)):
-    batch = sorted(batch)
+    batch: typing.Iterable[str] = sorted(batch)
+    binstrs: list[str] = []
+    for definition in batch:
+        batches_v2_vregidx[definition]
+        batches_v2_batchidx[definition] = i
+        binstr = definition.split("_")[0]
+        binstrs.append(binstr)
+        all_instrs.add(binstr)
     rprint(f"i: {i} batch: {batch}")
+    batches_v2.append(batch)
+    batches_v2_instrs.append(binstrs)
+
+rprint(all_instrs)
+rprint(batches_v2)
+rprint(batches_v2_instrs)
+rprint(batches_v2_vregidx)
+rprint(batches_v2_batchidx)
 
 # for i, batch in enumerate(nx.topological_generations(GO)):
 #     batch = sorted(batch)
@@ -224,16 +254,21 @@ for i, batch in enumerate(nx.topological_generations(G)):
 
 """Minimal jobshop problem."""
 # Data.
-jobs_data = [  # task = (machine_id, ).
+instrs = tuple(sorted(all_instrs))
+instrs_lut = bidict.bidict(zip(instrs, range(len(instrs))))
+rprint(instrs)
+rprint(instrs_lut)
+rprint(instrs_lut.inverse)
+instr_data = [  # execution unit = (machine_id, ).
     [0, 1, 2],  # Job0
     [0, 2, 1],  # Job1
     [1, 2],  # Job2
 ]
 
-machines_count = 1 + max(task for job in jobs_data for task in job)
+machines_count = 1 + max(task for job in instr_data for task in job)
 all_machines = range(machines_count)
 # Computes horizon dynamically as the sum of all durations.
-horizon = sum(len(job) for job in jobs_data)
+horizon = sum(len(job) for job in instr_data)
 
 # Create the model.
 model = cp_model.CpModel()
@@ -247,7 +282,7 @@ assigned_task_type = collections.namedtuple("assigned_task_type", "start job ind
 all_tasks = {}
 machine_to_intervals = collections.defaultdict(list)
 
-for job_id, job in enumerate(jobs_data):
+for job_id, job in enumerate(instr_data):
     for task_id, task in enumerate(job):
         duration = 1
         machine = task
@@ -263,7 +298,7 @@ for machine in all_machines:
     model.add_no_overlap(machine_to_intervals[machine])
 
 # Precedences inside a job.
-for job_id, job in enumerate(jobs_data):
+for job_id, job in enumerate(instr_data):
     for task_id in range(len(job) - 1):
         model.add(all_tasks[job_id, task_id + 1].start >= all_tasks[job_id, task_id].end)
 
@@ -271,7 +306,7 @@ for job_id, job in enumerate(jobs_data):
 obj_var = model.new_int_var(0, horizon, "makespan")
 model.add_max_equality(
     obj_var,
-    [all_tasks[job_id, len(job) - 1].end for job_id, job in enumerate(jobs_data)],
+    [all_tasks[job_id, len(job) - 1].end for job_id, job in enumerate(instr_data)],
 )
 # rprint(f"model: {model}")
 model.minimize(obj_var)
@@ -294,7 +329,7 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
 
     # Create one list of assigned tasks per machine.
     assigned_jobs = collections.defaultdict(list)
-    for job_id, job in enumerate(jobs_data):
+    for job_id, job in enumerate(instr_data):
         for task_id, task in enumerate(job):
             machine = task
             assigned_jobs[machine].append(

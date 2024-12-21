@@ -116,8 +116,8 @@ def get_def_use(
             simp_inst = simp_lus[0]
             simp_lds = ld.split("_")
             simp_op = simp_lds[0]
-            blocklist = ("abcda", "ea", "blocksa", "res", "inselm", "insval", "add")
-            if simp_inst not in blocklist and simp_op not in blocklist:
+            simp_inst_blocklist = ("abcda", "ea", "blocksa", "res", "inselm", "insval", "add")
+            if simp_inst not in simp_inst_blocklist and simp_op not in simp_inst_blocklist:
                 GES.add_edge(simp_inst, simp_op, label=f"op{j}")
             GEE.add_edge(lu, ld, opnum=j)
             # print(f"ld: {ld}")
@@ -150,6 +150,11 @@ def get_def_use(
                 for i in range(4, 0, -1):
                     if ld == f"sha1c_{i}":
                         tG.add_edge(f"sha1c_{i-1}", ld, opnum=-1, style="invis")
+    blocklist = ("blocksa", "abcda", "ea")
+    for g in (G, GE, GES, GEE):
+        for n in list(g.nodes()):
+            if n in blocklist:
+                g.remove_node(n)
     assert G.is_directed()
     assert GE.is_directed()
     assert GES.is_directed()
@@ -185,13 +190,6 @@ def get_def_use(
     if Ffd is not None:
         rprint(f"Ffd: {Ffd} G: {G}")
         json.dump(nx.to_dict_of_dicts(G), Ffd, indent=4)
-    blocklist = ("blocksa", "abcda", "ea")
-    for n in list(G.nodes()):
-        if n in blocklist:
-            G.remove_node(n)
-    for n in list(GE.nodes()):
-        if n in blocklist:
-            GE.remove_node(n)
     if dfd is not None:
         nx.nx_agraph.write_dot(G, dfd)
     if Dfd is not None:
