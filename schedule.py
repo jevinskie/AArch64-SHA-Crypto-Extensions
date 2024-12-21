@@ -263,170 +263,94 @@ rprint(instrs_lut.inverse)
 # https://github.com/pganalyze/cp-sat-python-example/blob/main/shift_schedule.py
 model = cp_model.CpModel()
 
-# The employees and the roles they are qualified for
-employees = {
-    "Phil": ["Restocker"],
-    "Emma": ["Cashier", "Restocker"],
-    "David": ["Cashier", "Restocker"],
-    "Rebecca": ["Cashier"],
+# The execution units and the operations they can perform
+exec_units = {
+    "sha1c": ["sha1c"],
+    "sha1h": ["sha1h"],
+    "sha1m": ["sha1m"],
+    "sha1p": ["sha1p"],
+    "sha1su0": ["sha1su0"],
+    "sha1su1": ["sha1su1"],
+    "vaddX": ["vaddX", "vaddXY"],
+    "vaddY": ["vaddY", "vaddXY"],
 }
 
-# List of days for the schedule
-days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+# List of ticks ("cycles") for the schedule
+ticks = [f"t{i}" for i in range(22)]
 
-# List of shifts in a day
-shifts = ["Morning", "Afternoon", "Evening"]
+# List of possible operations
+operations = ["sha1c", "sha1h", "sha1m", "sha1p", "sha1su0", "sha1su1", "vaddX", "vaddXY", "vaddY"]
+add_operations = {"vaddX", "vaddY", "vaddXY"}
+rprint(add_operations)
 
-# List of possible roles
-roles = ["Cashier", "Restocker"]
-
-# `schedule[e][r][d][s]` indicates if employee `e`
-# works role `r` on day `d` during shift `s`
+# `schedule[e][o][t]` indicates if exec unit `e`
+# performs operation `o` on tick `t`
 schedule = {
-    e: {
-        r: {d: {s: model.new_bool_var(f"schedule_{e}_{r}_{d}_{s}") for s in shifts} for d in days}
-        for r in roles
-    }
-    for e in employees
+    e: {o: {t: model.new_bool_var(f"schedule_{e}_{o}_{t}") for t in ticks} for o in operations}
+    for e in exec_units
 }
 
 # A cashier has to be present at all times
-for d in days:
-    for s in shifts:
-        model.add(sum(schedule[e]["Cashier"][d][s] for e in employees) == 1)
+# for d in ticks:
+#     for s in shifts:
+#         model.add(sum(schedule[e]["Cashier"][d][s] for e in exec_units) == 1)
 
-# We need a restocker once per day
-for d in days:
-    model.add(sum(schedule[e]["Restocker"][d][s] for e in employees for s in shifts) == 1)
+# We need a vaddX once per tick
+# for t in ticks:
+#     model.add(sum(schedule[e]["vaddXY"][t] for e in exec_units) == 1)
 
-# Two restocking shifts should not be adjacent
-for i in range(len(days) - 1):
-    model.add(
-        sum(
-            schedule[e]["Restocker"][days[i]]["Evening"]
-            + schedule[e]["Restocker"][days[i + 1]]["Morning"]
-            for e in employees
-        )
-        <= 1
-    )
+# An exec unit can only perform one operation per tick
+for e in exec_units:
+    for t in ticks:
+        model.add(sum(schedule[e][o][t] for o in operations) <= 1)
 
-# An employee can only work one role per shift
-for e in employees:
-    for d in days:
-        for s in shifts:
-            model.add(sum(schedule[e][r][d][s] for r in roles) <= 1)
+# An exec unit can only perform one operation per tick
+for e in ("vaddX", "vaddY"):
+    for t in ticks:
+        model.add(schedule[e]["vaddXY"][t] + schedule[e][e][t] <= 1)
 
-# An employee can only be assigned 8 hours of work
-# per day (with no idle time in-between shifts)
-for e in employees:
-    for d in days:
-        model.add(
-            sum(schedule[e][r][d]["Morning"] + schedule[e][r][d]["Evening"] for r in roles) <= 1
-        )
-
-# Some employees are not qualified for certain roles
-for e in employees:
-    for r in roles:
-        for d in days:
-            for s in shifts:
-                if r not in employees[e]:
-                    model.add(schedule[e][r][d][s] == 0)
-
-# Do not assign more than 10 shifts to the same employee in the same week
-for e in employees:
-    model.add(sum(schedule[e][r][d][s] for r in roles for d in days for s in shifts) <= 10)
-
-# Phil must work 4 shifts per week
-model.add(sum(schedule["Phil"][r][d][s] for r in roles for d in days for s in shifts) == 4)
-
-# Phil cannot work during the day from Monday to Friday
-model.add(
-    sum(
-        schedule["Phil"][r][d][s]
-        for r in roles
-        for d in days
-        if d not in ["Saturday", "Sunday"]
-        for s in shifts
-        if s in ["Morning", "Afternoon"]
-    )
-    == 0
-)
-
-# Don't assign Phil and Emma to the same shifts
-for d in days:
-    for s in shifts:
-        model.add(sum(schedule[e][r][d][s] for e in ["Phil", "Emma"] for r in roles) <= 1)
-
-# Assign the weekend shifts equally between all employees
-for e in employees:
-    model.add(
-        sum(schedule[e][r][d][s] for r in roles for d in ["Saturday", "Sunday"] for s in shifts)
-        == 2
-    )
-
-# Emma doesn't work from Monday to Wednesday
-model.add(
-    sum(
-        schedule["Emma"][r][d][s]
-        for r in roles
-        for d in ["Monday", "Tuesday", "Wednesday"]
-        for s in shifts
-    )
-    == 0
-)
-
-# `total_shifts[e]` indicates the number of shifts assigned to employee `e`
-total_shifts = {e: model.new_int_var(0, 10, f"total_shifts_{e}") for e in employees}
-
-# Link `total_shifts` and `schedule`
-for e in employees:
-    model.add(
-        total_shifts[e] == sum(schedule[e][r][d][s] for r in roles for d in days for s in shifts)
-    )
-
-# `min_shifts` and `max_shifts` indicate the minimum and
-# maximum number of shifts assigned to any employee
-min_shifts = model.new_int_var(0, 10, "min_shifts")
-max_shifts = model.new_int_var(0, 10, "max_shifts")
-
-# Link `min_shifts`/`max_shifts` and `total_shifts`
-model.add_min_equality(min_shifts, [total_shifts[e] for e in employees if e != "Phil"])
-model.add_max_equality(max_shifts, [total_shifts[e] for e in employees if e != "Phil"])
-
-# Objective: Distribute the shifts fairly between employees
-model.minimize(max_shifts - min_shifts)
+# Some exec units can only perform certain operations
+for e in exec_units:
+    for o in operations:
+        for t in ticks:
+            if o not in exec_units[e]:
+                model.add(schedule[e][o][t] == 0)
 
 # Solve the model
 solver = cp_model.CpSolver()
-solver.solve(model)
+status = solver.solve(model)
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+    strstat = None
+    if status == cp_model.OPTIMAL:
+        strstat = "OPTIMAL"
+    elif status == cp_model.FEASIBLE:
+        strstat = "FEASIBLE"
+    print(f"Solution: {strstat}")
+else:
+    print("No solution found.")
+
+    # Statistics.
+    print("\nStatistics")
+    print(f"  - conflicts: {solver.num_conflicts}")
+    print(f"  - branches : {solver.num_branches}")
+    print(f"  - wall time: {solver.wall_time}s")
+
 print(solver.solution_info())
 print(model.model_stats())
 
 # Print the solution
-print(f"{' '*10} | " + " | ".join([f"{d:^9}" for d in days]) + " | Total |")
+print(f"{' '*10} | " + " | ".join([f"{t:^9}" for t in ticks]) + " | Total |")
 
-print(f"{' '*10} | " + " | ".join(["M | A | E" for d in range(len(days))]) + " |       |")
+print(f"{' '*10} | " + " | ".join(["M | A | E" for t in range(len(ticks))]) + " |       |")
 
-for e in employees:
-    shifts_worked = sum(
-        [solver.value(schedule[e][r][d][s]) for r in roles for s in shifts for d in days]
-    )
+for e in exec_units:
+    ticks_execed = sum([solver.value(schedule[e][o][t]) for o in operations for t in ticks])
 
     print(
         f"{e:<10} | "
-        + " | ".join(
-            [
-                "C"
-                if solver.value(schedule[e]["Cashier"][d][s]) == 1
-                else "R"
-                if solver.value(schedule[e]["Restocker"][d][s]) == 1
-                else " "
-                for d in days
-                for s in shifts
-            ]
-        )
+        + " | ".join([schedule[e]["sha1p"][t] for t in ticks])
         + " | "
-        + f"{shifts_worked:^5}"
+        + f"{ticks_execed:^5}"
         + " | "
     )
 
