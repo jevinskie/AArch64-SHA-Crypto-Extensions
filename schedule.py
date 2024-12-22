@@ -174,14 +174,14 @@ G = nx.relabel_nodes(G, nodes_map)
 #     # inspect(i, all=True)
 #     rprint(f"i: {i} i.opnum: {G[i[1]]}")
 
-def_uses: dict[list[str]] = {}
+def_uses: dict[tuple[str, ...]] = {}
 
 for definition in G.nodes():
-    print(f"definition: {definition} G.in_edges(definition): {G.in_edges(definition)}")
-    uses = [e[0] for e in G.in_edges(definition)]
+    # print(f"definition: {definition} G.in_edges(definition): {G.in_edges(definition)}")
+    uses = tuple(e[0] for e in G.in_edges(definition))
     def_uses[definition] = uses
 
-rprint(def_uses)
+# rprint(def_uses)
 
 batches: list[list[str]] = []
 node2batch: dict[str, int] = {}
@@ -336,7 +336,8 @@ exec_units = {
 }
 
 # List of ticks ("cycles") for the schedule
-ticks = [f"t{i}" for i in range(22)]
+ticks_int = list(range(22))
+ticks = [f"t{i}" for i in ticks_int]
 
 # list of instructions/definitions that must be made
 instr_seq = batches_v2_vregidx
@@ -362,14 +363,30 @@ schedule = {
 # for t in ticks:
 #     model.add(sum(schedule[e]["vaddXY"][t] for e in exec_units) == 1)
 
-# `instr_ticks[i][t]` indicates if instr/def `i` is produced on tick `t`
-instr_ticks = {
-    i: {t: model.new_bool_var(f"instr_ticks_{i}_{t}") for t in ticks} for i in instr_seq.rev
-}
+# `def_ticks[d][t]` indicates if def `d` is produced on tick `t`
+def_ticks = {d: {t: model.new_bool_var(f"def_ticks_{d}_{t}") for t in ticks} for d in instr_seq}
 
 # All defs must occur once and only once
-for i in instr_seq.rev:
-    model.add(sum(instr_ticks[i][t] for t in ticks) == 1)
+for d in instr_seq:
+    model.add(sum(def_ticks[d][t] for t in ticks) == 1)
+
+# `use_ticks[u][t]` indicates if def `u` is used in tick `t`
+use_ticks = {
+    u: {t: model.new_bool_var(f"use_ticks_{u}_{t}") for t in ticks}
+    for d in instr_seq
+    for u in def_uses[d]
+}
+
+
+rprint(def_ticks)
+rprint(use_ticks)
+
+# All def uses must proceed def
+for d in instr_seq:
+    for u in def_uses[d]:
+        for t in ticks_int:
+            model.add(sum(def_ticks[u][f"t{tp}"] for tp in range(t - 1)) == 1)
+
 
 # An exec unit can only perform one operation per tick
 for e in exec_units:
@@ -382,11 +399,11 @@ for e in ("vaddX", "vaddY"):
         model.add(schedule[e]["vaddXY"][t] + schedule[e][e][t] <= 1)
 
 # Some exec units can only perform certain operations
-for e in exec_units:
-    for o in operations:
-        for t in ticks:
-            if o not in exec_units[e]:
-                model.add(schedule[e][o][t] == 0)
+# for e in exec_units:
+#     for o in operations:
+#         for t in ticks:
+#             if o not in exec_units[e]:
+#                 model.add(schedule[e][o][t] == 0)
 
 # Solve the model
 solver = cp_model.CpSolver()
@@ -418,35 +435,21 @@ for e in exec_units:
 
 # rprint(solved_schedule)
 
-solved_instr_ticks = collections.defaultdict(
-    lambda: collections.defaultdict(collections.defaultdict)
-)
+solved_def_ticks = collections.defaultdict(lambda: collections.defaultdict(collections.defaultdict))
 for i in instr_seq.rev:
     for t in ticks:
-        solved_instr_ticks[i][t] = solver.value(instr_ticks[i][t])
+        solved_def_ticks[i][t] = solver.value(def_ticks[i][t])
 
-# rprint(solved_instr_ticks)
+rprint(solved_def_ticks)
 
 # pdf = pd.DataFrame(schedule)
 # rprint(pdf.describe())
 # rprint(pdf)
 
 # Print the solution
-print(f"{' '*3} | " + " | ".join([f"{t:^3}" for t in ticks]) + " | Total |")
+# just draw the owl
 
-print(f"{' '*10} | " + " | ".join(["M | A | E" for t in range(len(ticks))]) + " |       |")
-
-for e in exec_units:
-    ticks_execed = sum([solver.value(schedule[e][o][t]) for o in operations for t in ticks])
-
-    print(
-        f"{e:<10} | "
-        + " | ".join([schedule[e]["sha1p"][t] for t in ticks])
-        + " | "
-        + f"{ticks_execed:^5}"
-        + " | "
-    )
-
+print("\n\n\n\n\n\n")
 instr_data = [  # execution unit = (machine_id, ).
     [0, 1, 2],  # Job0
     [0, 2, 1],  # Job1
