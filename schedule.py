@@ -3,6 +3,7 @@
 import collections
 import enum
 import json
+import re
 import typing
 from collections.abc import Mapping, MutableMapping
 
@@ -108,6 +109,31 @@ G = nx.DiGraph(sha1comp_dod)
 # rprint(f"G.adjacency(): {list(G.adjacency())}")
 # rprint(f"G.predecessors('res'): {list(G.predecessors('res'))}")
 
+_suffix_underscore_pattern = r"^(.+?)_(\d+)$"
+_suffix_n_pattern = r"^(.+?)n(\d+)$"
+
+
+def get_eu(definition: str) -> tuple[str, int]:
+    m = re.match(_suffix_underscore_pattern, definition)
+    s = m.group(1)
+    n = int(m.group(2))
+    return s, n
+
+
+def nize_def(definition: str) -> str:
+    m = re.match(_suffix_underscore_pattern, definition)
+    s = m.group(1)
+    n = int(m.group(2))
+    return f"{s}n{n}"
+
+
+def get_eun(definition: str) -> tuple[str, int]:
+    m = re.match(_suffix_n_pattern, definition)
+    s = m.group(1)
+    n = int(m.group(2))
+    return s, n
+
+
 for n in list(G.nodes()):
     if n in (
         "ByteRevLUT",
@@ -135,15 +161,27 @@ for n in list(G.nodes()):
         G.remove_node(n)
         # pass
 
+old_nodes = G.nodes()
+nodes_map: dict[str, str] = {}
+
+for n in G.nodes():
+    nodes_map[n] = nize_def(n)
+
+G = nx.relabel_nodes(G, nodes_map)
+
+
 # for i in nx.edge_bfs(G):
 #     # inspect(i, all=True)
 #     rprint(f"i: {i} i.opnum: {G[i[1]]}")
 
-def_uses = dict[list[str]]
+def_uses: dict[list[str]] = {}
 
 for definition in G.nodes():
-    print(f"n: {n} G.in_edges(n): {G.in_edges(n)}")
-    uses = [e[0] for e in G.in_edges(n)]
+    print(f"definition: {definition} G.in_edges(definition): {G.in_edges(definition)}")
+    uses = [e[0] for e in G.in_edges(definition)]
+    def_uses[definition] = uses
+
+rprint(def_uses)
 
 batches: list[list[str]] = []
 node2batch: dict[str, int] = {}
@@ -218,11 +256,13 @@ for i, batch in enumerate(trace):
     batch_inputs = []
     for j, instr in enumerate(batch):
         # rprint(f"batch[{i:2}]: instr[{j}]: {instr}")
-        si = instr[0].split("_")
-        name = si[0]
+        # si = instr[0].split("_")
+        # name = si[0]
+        name, _ = get_eun(instr[0])
         preds = instr[1]
         for k, p in enumerate(preds):
-            pname = p.split("_")[0]
+            # pname = p.split("_")[0]
+            pname, _ = get_eun(p)
             batch_inputs.append((name, k, pname, op_color(clut[pname], k)))
             rprint(f"i: {i} j: {j} k: {k} name: {name} p: {p} pname: {pname}")
             port_usage[f"{name}_p{k}"][pname] += 1
