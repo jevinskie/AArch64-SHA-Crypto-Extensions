@@ -248,6 +248,7 @@ for i, batch in enumerate(nx.topological_generations(G)):
 rprint(all_instrs)
 rprint(batches_v2)
 rprint(batches_v2_instrs)
+rprint("batches_v2_vregidx:")
 rprint(batches_v2_vregidx)
 rprint(batches_v2_batchidx)
 
@@ -283,6 +284,9 @@ exec_units = {
 # List of ticks ("cycles") for the schedule
 ticks = [f"t{i}" for i in range(22)]
 
+# list of instructions/definitions that must be made
+instr_seq = batches_v2_vregidx
+
 # List of possible operations
 operations = ("sha1c", "sha1h", "sha1m", "sha1p", "sha1su0", "sha1su1", "vaddX", "vaddXY", "vaddY")
 add_operations = {"vaddX", "vaddY", "vaddXY"}
@@ -303,6 +307,15 @@ schedule = {
 # We need a vaddX once per tick
 # for t in ticks:
 #     model.add(sum(schedule[e]["vaddXY"][t] for e in exec_units) == 1)
+
+# `instr_ticks[i][t]` indicates if instr/def `i` is produced on tick `t`
+instr_ticks = {
+    i: {t: model.new_bool_var(f"instr_ticks_{i}_{t}") for t in ticks} for i in instr_seq.rev
+}
+
+# All defs must occur once and only once
+for i in instr_seq.rev:
+    model.add(sum(instr_ticks[i][t] for t in ticks) == 1)
 
 # An exec unit can only perform one operation per tick
 for e in exec_units:
@@ -349,11 +362,20 @@ for e in exec_units:
         for t in ticks:
             solved_schedule[e][o][t] = not not solver.value(schedule[e][o][t])
 
-rprint(solved_schedule)
+# rprint(solved_schedule)
 
-pdf = pd.DataFrame(schedule)
-rprint(pdf.describe())
-rprint(pdf)
+solved_instr_ticks = collections.defaultdict(
+    lambda: collections.defaultdict(collections.defaultdict)
+)
+for i in instr_seq.rev:
+    for t in ticks:
+        solved_instr_ticks[i][t] = solver.value(instr_ticks[i][t])
+
+# rprint(solved_instr_ticks)
+
+# pdf = pd.DataFrame(schedule)
+# rprint(pdf.describe())
+# rprint(pdf)
 
 # Print the solution
 print(f"{' '*3} | " + " | ".join([f"{t:^3}" for t in ticks]) + " | Total |")
