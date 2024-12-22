@@ -30,6 +30,8 @@ class BiDictStrInt(Mapping[str, int]):
         return self._mapping.inverse
 
     def __getitem__(self, key):
+        if not isinstance(key, str):
+            raise TypeError(f"key '{key}' is not str")
         if key in self._mapping:
             return self._mapping[key]
         else:
@@ -63,9 +65,15 @@ class MutBiDictStrInt(MutableMapping[str, int]):
         return self._mapping.inverse
 
     def __getitem__(self, key):
+        if not isinstance(key, str):
+            raise TypeError(f"key '{key}' is not str")
         return self._mapping[key]
 
     def __setitem__(self, key, value):
+        if not isinstance(key, str):
+            raise TypeError(f"key '{key}' is not str")
+        if not isinstance(value, int):
+            raise TypeError(f"value '{value}' is not int")
         self._mapping[key] = value
 
     def __delitem__(self, key):
@@ -130,6 +138,12 @@ for n in list(G.nodes()):
 # for i in nx.edge_bfs(G):
 #     # inspect(i, all=True)
 #     rprint(f"i: {i} i.opnum: {G[i[1]]}")
+
+def_uses = dict[list[str]]
+
+for definition in G.nodes():
+    print(f"n: {n} G.in_edges(n): {G.in_edges(n)}")
+    uses = [e[0] for e in G.in_edges(n)]
 
 batches: list[list[str]] = []
 node2batch: dict[str, int] = {}
