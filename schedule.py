@@ -329,11 +329,11 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
 else:
     print("No solution found.")
 
-    # Statistics.
-    print("\nStatistics")
-    print(f"  - conflicts: {solver.num_conflicts}")
-    print(f"  - branches : {solver.num_branches}")
-    print(f"  - wall time: {solver.wall_time}s")
+# Statistics.
+print("\nStatistics")
+print(f"  - conflicts: {solver.num_conflicts}")
+print(f"  - branches : {solver.num_branches}")
+print(f"  - wall time: {solver.wall_time}s")
 
 print(solver.solution_info())
 print(model.model_stats())
