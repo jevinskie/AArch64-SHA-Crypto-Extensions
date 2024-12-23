@@ -362,6 +362,7 @@ for i in range(sz):
     # or encode the equivalences. For brevity we skip the details,
     # but in practice you'd use model.AddElement(...) or a flow/circuit approach
     model.AddElement(pos[i], order, i)
+model.AddAllDifferent(pos)
 
 # Add the precedence constraints for edges:
 for u, v in G.edges():
