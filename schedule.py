@@ -347,56 +347,76 @@ operations = ("sha1c", "sha1h", "sha1m", "sha1p", "sha1su0", "sha1su1", "vaddX",
 add_operations = {"vaddX", "vaddY", "vaddXY"}
 rprint(add_operations)
 
-# `schedule[e][o][t]` indicates if exec unit `e`
-# performs operation `o` on tick `t`
-schedule = {
-    e: {o: {t: model.new_bool_var(f"schedule_{e}_{o}_{t}") for t in ticks} for o in operations}
-    for e in exec_units
-}
+sz = len(instrs)
 
-# A cashier has to be present at all times
-# for d in ticks:
-#     for s in shifts:
-#         model.add(sum(schedule[e]["Cashier"][d][s] for e in exec_units) == 1)
+# order[k] = which node is in the k-th position
+order = [model.NewIntVar(0, sz - 1, f"order_{k}") for k in range(sz)]
+model.AddAllDifferent(order)
 
-# We need a vaddX once per tick
-# for t in ticks:
-#     model.add(sum(schedule[e]["vaddXY"][t] for e in exec_units) == 1)
+# pos[i] = the position of node i in the order array
+pos = [model.NewIntVar(0, sz - 1, f"pos_{i}") for i in range(sz)]
+# Link pos <-> order:
+# For each k in [0..n-1], we have order[k] = i  ->  pos[i] = k
+for i in range(sz):
+    # One straightforward way is to add a table constraint
+    # or encode the equivalences. For brevity we skip the details,
+    # but in practice you'd use model.AddElement(...) or a flow/circuit approach
+    model.AddElement(pos[i], order, i)
 
-# `def_ticks[d][t]` indicates if def `d` is produced on tick `t`
-def_ticks = {d: {t: model.new_bool_var(f"def_ticks_{d}_{t}") for t in ticks} for d in instr_seq}
+# Add the precedence constraints for edges:
+for u, v in G.edges():
+    model.Add(pos[instr_seq[u]] < pos[instr_seq[v]])
 
-# All defs must occur once and only once
-for d in instr_seq:
-    model.add(sum(def_ticks[d][t] for t in ticks) == 1)
+# # `schedule[e][o][t]` indicates if exec unit `e`
+# # performs operation `o` on tick `t`
+# schedule = {
+#     e: {o: {t: model.new_bool_var(f"schedule_{e}_{o}_{t}") for t in ticks} for o in operations}
+#     for e in exec_units
+# }
 
-# `use_ticks[u][t]` indicates if def `u` is used in tick `t`
-use_ticks = {
-    u: {t: model.new_bool_var(f"use_ticks_{u}_{t}") for t in ticks}
-    for d in instr_seq
-    for u in def_uses[d]
-}
+# # A cashier has to be present at all times
+# # for d in ticks:
+# #     for s in shifts:
+# #         model.add(sum(schedule[e]["Cashier"][d][s] for e in exec_units) == 1)
+
+# # We need a vaddX once per tick
+# # for t in ticks:
+# #     model.add(sum(schedule[e]["vaddXY"][t] for e in exec_units) == 1)
+
+# # `def_ticks[d][t]` indicates if def `d` is produced on tick `t`
+# def_ticks = {d: {t: model.new_bool_var(f"def_ticks_{d}_{t}") for t in ticks} for d in instr_seq}
+
+# # All defs must occur once and only once
+# for d in instr_seq:
+#     model.add(sum(def_ticks[d][t] for t in ticks) == 1)
+
+# # `use_ticks[u][t]` indicates if def `u` is used in tick `t`
+# use_ticks = {
+#     u: {t: model.new_bool_var(f"use_ticks_{u}_{t}") for t in ticks}
+#     for d in instr_seq
+#     for u in def_uses[d]
+# }
 
 
-rprint(def_ticks)
-rprint(use_ticks)
+# rprint(def_ticks)
+# rprint(use_ticks)
 
-# All def uses must proceed def
-for d in instr_seq:
-    for u in def_uses[d]:
-        for t in ticks_int:
-            model.add(sum(def_ticks[u][f"t{tp}"] for tp in range(t - 1)) == 1)
+# # All def uses must proceed def
+# for d in instr_seq:
+#     for u in def_uses[d]:
+#         for t in ticks_int:
+#             model.add(sum(def_ticks[u][f"t{tp}"] for tp in range(t - 1)) == 1)
 
 
-# An exec unit can only perform one operation per tick
-for e in exec_units:
-    for t in ticks:
-        model.add(sum(schedule[e][o][t] for o in operations) <= 1)
+# # An exec unit can only perform one operation per tick
+# for e in exec_units:
+#     for t in ticks:
+#         model.add(sum(schedule[e][o][t] for o in operations) <= 1)
 
-# An exec unit can only perform one operation per tick
-for e in ("vaddX", "vaddY"):
-    for t in ticks:
-        model.add(schedule[e]["vaddXY"][t] + schedule[e][e][t] <= 1)
+# # An exec unit can only perform one operation per tick
+# for e in ("vaddX", "vaddY"):
+#     for t in ticks:
+#         model.add(schedule[e]["vaddXY"][t] + schedule[e][e][t] <= 1)
 
 # Some exec units can only perform certain operations
 # for e in exec_units:
@@ -427,20 +447,20 @@ print(f"  - wall time: {solver.wall_time}s")
 print(solver.solution_info())
 print(model.model_stats())
 
-solved_schedule = collections.defaultdict(lambda: collections.defaultdict(collections.defaultdict))
-for e in exec_units:
-    for o in operations:
-        for t in ticks:
-            solved_schedule[e][o][t] = not not solver.value(schedule[e][o][t])
+# solved_schedule = collections.defaultdict(lambda: collections.defaultdict(collections.defaultdict))
+# for e in exec_units:
+#     for o in operations:
+#         for t in ticks:
+#             solved_schedule[e][o][t] = not not solver.value(schedule[e][o][t])
 
-# rprint(solved_schedule)
+# # rprint(solved_schedule)
 
-solved_def_ticks = collections.defaultdict(lambda: collections.defaultdict(collections.defaultdict))
-for i in instr_seq.rev:
-    for t in ticks:
-        solved_def_ticks[i][t] = solver.value(def_ticks[i][t])
+# solved_def_ticks = collections.defaultdict(lambda: collections.defaultdict(collections.defaultdict))
+# for i in instr_seq.rev:
+#     for t in ticks:
+#         solved_def_ticks[i][t] = solver.value(def_ticks[i][t])
 
-rprint(solved_def_ticks)
+# rprint(solved_def_ticks)
 
 # pdf = pd.DataFrame(schedule)
 # rprint(pdf.describe())
