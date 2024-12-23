@@ -174,14 +174,14 @@ G = nx.relabel_nodes(G, nodes_map)
 #     # inspect(i, all=True)
 #     rprint(f"i: {i} i.opnum: {G[i[1]]}")
 
-def_uses: dict[tuple[str, ...]] = {}
+def_uses: dict[str, tuple[str, ...]] = {}
 
 for definition in G.nodes():
     # print(f"definition: {definition} G.in_edges(definition): {G.in_edges(definition)}")
     uses = tuple(e[0] for e in G.in_edges(definition))
     def_uses[definition] = uses
 
-# rprint(def_uses)
+rprint(def_uses)
 
 batches: list[list[str]] = []
 node2batch: dict[str, int] = {}
@@ -347,7 +347,7 @@ operations = ("sha1c", "sha1h", "sha1m", "sha1p", "sha1su0", "sha1su1", "vaddX",
 add_operations = {"vaddX", "vaddY", "vaddXY"}
 rprint(add_operations)
 
-sz = len(instrs)
+sz = len(instr_seq)
 
 # order[k] = which node is in the k-th position
 order = [model.NewIntVar(0, sz - 1, f"order_{k}") for k in range(sz)]
@@ -446,6 +446,15 @@ print(f"  - wall time: {solver.wall_time}s")
 
 print(solver.solution_info())
 print(model.model_stats())
+
+solved_pos = []
+for u, ui in instr_seq.items():
+    p = pos[ui]
+    sp = solver.value(pos[ui])
+    # defs, uses = def_uses[u]
+
+    print(f"p: {p} sp: {sp} i: {instr_seq.rev[sp]}")
+
 
 # solved_schedule = collections.defaultdict(lambda: collections.defaultdict(collections.defaultdict))
 # for e in exec_units:
