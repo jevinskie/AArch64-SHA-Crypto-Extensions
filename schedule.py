@@ -354,19 +354,20 @@ order = [model.NewIntVar(0, sz - 1, f"order_{k}") for k in range(sz)]
 model.AddAllDifferent(order)
 
 # pos[i] = the position of node i in the order array
-pos = [model.NewIntVar(0, sz - 1, f"pos_{i}") for i in range(sz)]
-# Link pos <-> order:
-# For each k in [0..n-1], we have order[k] = i  ->  pos[i] = k
-for i in range(sz):
-    # One straightforward way is to add a table constraint
-    # or encode the equivalences. For brevity we skip the details,
-    # but in practice you'd use model.AddElement(...) or a flow/circuit approach
-    model.AddElement(pos[i], order, i)
-model.AddAllDifferent(pos)
+# pos = [model.NewIntVar(0, sz - 1, f"pos_{i}") for i in range(sz)]
+# # Link pos <-> order:
+# # For each k in [0..n-1], we have order[k] = i  ->  pos[i] = k
+# for i in range(sz):
+#     # One straightforward way is to add a table constraint
+#     # or encode the equivalences. For brevity we skip the details,
+#     # but in practice you'd use model.AddElement(...) or a flow/circuit approach
+#     model.AddElement(pos[i], order, i)
+# model.AddAllDifferent(pos)
 
 # Add the precedence constraints for edges:
 for u, v in G.edges():
-    model.Add(pos[instr_seq[u]] < pos[instr_seq[v]])
+    # model.Add(pos[instr_seq[u]] < pos[instr_seq[v]])
+    model.Add(order[instr_seq[u]] < order[instr_seq[v]])
 
 # # `schedule[e][o][t]` indicates if exec unit `e`
 # # performs operation `o` on tick `t`
@@ -450,8 +451,8 @@ print(model.model_stats())
 
 solved_pos = []
 for u, ui in instr_seq.items():
-    p = pos[ui]
-    sp = solver.value(pos[ui])
+    p = order[ui]
+    sp = solver.value(order[ui])
     # defs, uses = def_uses[u]
 
     print(f"p: {p} sp: {sp} i: {instr_seq.rev[sp]}")
