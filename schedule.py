@@ -4,12 +4,15 @@ import collections
 import enum
 import json
 import re
+import sys
+import types
 from collections.abc import Mapping, MutableMapping
 
 import bidict
 import networkx as nx
 import pandas as pd
 import tabulate
+from more_itertools import always_reversible
 from ortools.sat.python import cp_model
 from rich import print as rprint
 from rich.pretty import pprint
@@ -18,6 +21,21 @@ from sha1_arm import cf, op_color
 
 tabulate
 pd
+
+
+_NumInPorts: dict[str, int] = {
+    "sha1c": 3,
+    "sha1h": 1,
+    "sha1m": 3,
+    "sha1p": 3,
+    "sha1su0": 3,
+    "sha1su1": 2,
+    "vaddX": 2,
+    "vaddXY": 2,
+    "vaddY": 2,
+}
+
+NumInPorts = types.MappingProxyType(_NumInPorts)
 
 
 class BiDictStrInt(Mapping[str, int]):
@@ -109,7 +127,7 @@ G = nx.DiGraph(sha1comp_dod)
 # rprint(f"G.predecessors('res'): {list(G.predecessors('res'))}")
 
 _suffix_underscore_pattern = r"^(.+?)_(\d+)$"
-_suffix_n_pattern = r"^(.+?)n(\d+)$"
+_suffix_n_pattern = r"^(.+?)N(\d+)$"
 
 
 def get_eu(definition: str) -> tuple[str, int]:
@@ -123,7 +141,12 @@ def nize_def(definition: str) -> str:
     m = re.match(_suffix_underscore_pattern, definition)
     s = m.group(1)
     n = int(m.group(2))
-    return f"{s}n{n}"
+    return f"{s}N{n}"
+
+
+def portize_use(use: str, port: int) -> str:
+    assert 0 <= port <= 2
+    return f"{use}P{port}"
 
 
 def get_eun(definition: str) -> tuple[str, int]:
@@ -244,11 +267,15 @@ clut = {
     "e": 6,
 }
 
-port_assignments = {f"{i}_p{p}": collections.defaultdict() for p in range(3) for i in clut.keys()}
+port_assignments = {
+    portize_use(i, p): collections.defaultdict() for p in range(3) for i in clut.keys()
+}
 
 rprint(f"port_assignments:\n{port_assignments}")
 
-port_usage = {f"{i}_p{p}": collections.defaultdict(int) for p in range(3) for i in clut.keys()}
+port_usage = {
+    portize_use(i, p): collections.defaultdict(int) for p in range(3) for i in clut.keys()
+}
 
 rprint(f"port_usage:\n{port_usage}")
 
@@ -267,7 +294,7 @@ for i, batch in enumerate(trace):
             pname, _ = get_eun(p)
             batch_inputs.append((name, k, pname, op_color(clut[pname], k)))
             rprint(f"i: {i} j: {j} k: {k} name: {name} p: {p} pname: {pname}")
-            port_usage[f"{name}_p{k}"][pname] += 1
+            port_usage[portize_use(name, k)][pname] += 1
     # batch_inputs = sorted(batch_inputs, key=lambda v: (v[0], v[1]))
     # rprint(f"batch_inputs[{i:2}]: {batch_inputs}")
     rprint(f"batch[{i:2}]: ", end=None)
@@ -286,9 +313,19 @@ batches_v2: list[list[str]] = []
 batches_v2_instrs: list[list[str]] = []
 batches_v2_batchidx: dict[str, int] = {}
 batches_v2_vregidx = VRegIdx()
-all_instrs: set[str] = set()
+all_instrs_set: set[str] = set()
 batch_uses: list[list[str]] = []
 batch_defs: list[list[str]] = []
+
+for batch in nx.topological_generations(G):
+    for definition in batch:
+        instr, _ = get_eun(definition)
+        all_instrs_set.add(instr)
+
+all_instrs: tuple[str, ...] = tuple(sorted(all_instrs_set))
+
+rprint("all_instrs:")
+pprint(all_instrs)
 
 for i, batch in enumerate(nx.topological_generations(G)):
     batch = sorted(batch)
@@ -298,9 +335,10 @@ for i, batch in enumerate(nx.topological_generations(G)):
     for definition in batch:
         batches_v2_vregidx[definition]
         batches_v2_batchidx[definition] = i
-        binstr = definition.split("_")[0]  # FIXME
+        print(f"definition: {definition}")
+        binstr, _ = get_eun(definition)
+        print(f"binstr: {binstr}")
         binstrs.append(binstr)
-        all_instrs.add(binstr)
         duses = [e[0] for e in G.in_edges(definition)]
         b_uses.update(duses)
     rprint(f"i: {i} batch: {batch}")
@@ -308,7 +346,6 @@ for i, batch in enumerate(nx.topological_generations(G)):
     batches_v2_instrs.append(binstrs)
     batch_uses.append(list(sorted(b_uses)))
 
-rprint(all_instrs)
 rprint(batches_v2)
 rprint(batches_v2_instrs)
 rprint("batches_v2_vregidx:")
@@ -316,6 +353,25 @@ rprint(batches_v2_vregidx)
 rprint(batches_v2_batchidx)
 rprint(f"batch_uses:\n{batch_uses}")
 rprint(f"batch_defs:\n{batch_defs}")
+
+
+defs_ports: dict[str, tuple[str, ...]] = {}
+for i, batch in always_reversible(enumerate(batches_v2)):
+    for ldef in batch:
+        ldef_instr, _ = get_eun(ldef)
+        defs_ports[ldef] = [None] * NumInPorts[ldef_instr]
+        ldef_uses = {u: ui["opnum"] for u, ui in G[ldef].items() if ui["opnum"] >= 0}
+        for ldef_user, ldef_user_opnum in ldef_uses.items():
+            defs_ports[ldef_user][ldef_user_opnum] = ldef
+
+defs_ports = dict(reversed(defs_ports.items()))
+
+rprint("defs_ports:")
+pprint(defs_ports)
+
+rprint(G["sha1hN16"])
+
+sys.exit(0)
 
 # for i, batch in enumerate(nx.topological_generations(GO)):
 #     batch = sorted(batch)
@@ -325,7 +381,7 @@ rprint(f"batch_defs:\n{batch_defs}")
 
 """Minimal jobshop problem."""
 # Data.
-instrs = tuple(sorted(all_instrs))
+instrs = tuple(sorted(all_instrs_set))
 rprint(instrs)
 
 instrs_lut = bidict.bidict(zip(instrs, range(len(instrs))))
