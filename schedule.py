@@ -355,19 +355,51 @@ rprint(f"batch_uses:\n{batch_uses}")
 rprint(f"batch_defs:\n{batch_defs}")
 
 
-defs_ports: dict[str, tuple[str, ...]] = {}
+defs_port_uses: dict[str, list[str | None]] = {}
 for i, batch in always_reversible(enumerate(batches_v2)):
     for ldef in batch:
         ldef_instr, _ = get_eun(ldef)
-        defs_ports[ldef] = [None] * NumInPorts[ldef_instr]
+        defs_port_uses[ldef] = [None] * NumInPorts[ldef_instr]
         ldef_uses = {u: ui["opnum"] for u, ui in G[ldef].items() if ui["opnum"] >= 0}
         for ldef_user, ldef_user_opnum in ldef_uses.items():
-            defs_ports[ldef_user][ldef_user_opnum] = ldef
+            defs_port_uses[ldef_user][ldef_user_opnum] = ldef
 
-defs_ports = dict(reversed(defs_ports.items()))
+defs_port_uses = dict(reversed(defs_port_uses.items()))
 
-rprint("defs_ports:")
-pprint(defs_ports)
+rprint("defs_port_uses:")
+pprint(defs_port_uses)
+
+instr_port_uses: dict[str, list[dict[str, dict[int, int]] | None]] = {
+    i: [None] * NumInPorts[i] for i in NumInPorts
+}
+for d, pu in defs_port_uses.items():
+    instr, _ = get_eun(d)
+    for i, u in enumerate(pu):
+        if u is None:
+            continue
+
+        uinstr, _ = get_eun(u)
+        ubidx = batches_v2_batchidx[u]
+        dbidx = batches_v2_batchidx[d]
+        dist = dbidx - ubidx
+        assert dist > 0
+        print(f"uibdx: {ubidx}")
+        if instr_port_uses[instr][i] is None:
+            instr_port_uses[instr][i] = {}
+        if uinstr not in instr_port_uses[instr][i]:
+            instr_port_uses[instr][i][uinstr] = collections.defaultdict(int)
+        instr_port_uses[instr][i][uinstr][f"dist{dist}"] += 1
+
+for i, instr in enumerate(list(instr_port_uses)):
+    op_list = instr_port_uses[instr]
+    for j, op_sources in enumerate(op_list):
+        if op_sources is None:
+            continue
+        for oinstr in op_sources:
+            op_list[j][oinstr] = dict(op_sources[oinstr])
+
+rprint("instr_port_uses:")
+pprint(instr_port_uses)
 
 rprint(G["sha1hN16"])
 
