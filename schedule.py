@@ -388,7 +388,7 @@ for d, pu in defs_port_uses.items():
             instr_port_uses[instr][i] = {}
         if uinstr not in instr_port_uses[instr][i]:
             instr_port_uses[instr][i][uinstr] = collections.defaultdict(int)
-        instr_port_uses[instr][i][uinstr][f"dist{dist}"] += 1
+        instr_port_uses[instr][i][uinstr][f"d{dist}"] += 1
 
 for i, instr in enumerate(list(instr_port_uses)):
     op_list = instr_port_uses[instr]
