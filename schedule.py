@@ -4,7 +4,6 @@ import collections
 import enum
 import json
 import re
-import typing
 from collections.abc import Mapping, MutableMapping
 
 import bidict
@@ -245,6 +244,9 @@ clut = {
     "e": 6,
 }
 
+port_assignments = {f"{i}_p{p}": collections.defaultdict() for p in range(3) for i in clut.keys()}
+
+rprint(f"port_assignments:\n{port_assignments}")
 
 port_usage = {f"{i}_p{p}": collections.defaultdict(int) for p in range(3) for i in clut.keys()}
 
@@ -285,19 +287,26 @@ batches_v2_instrs: list[list[str]] = []
 batches_v2_batchidx: dict[str, int] = {}
 batches_v2_vregidx = VRegIdx()
 all_instrs: set[str] = set()
+batch_uses: list[list[str]] = []
+batch_defs: list[list[str]] = []
 
 for i, batch in enumerate(nx.topological_generations(G)):
-    batch: typing.Iterable[str] = sorted(batch)
+    batch = sorted(batch)
     binstrs: list[str] = []
+    b_uses: set[str] = set()
+    batch_defs.append(batch)
     for definition in batch:
         batches_v2_vregidx[definition]
         batches_v2_batchidx[definition] = i
-        binstr = definition.split("_")[0]
+        binstr = definition.split("_")[0]  # FIXME
         binstrs.append(binstr)
         all_instrs.add(binstr)
+        duses = [e[0] for e in G.in_edges(definition)]
+        b_uses.update(duses)
     rprint(f"i: {i} batch: {batch}")
     batches_v2.append(batch)
     batches_v2_instrs.append(binstrs)
+    batch_uses.append(list(sorted(b_uses)))
 
 rprint(all_instrs)
 rprint(batches_v2)
@@ -305,6 +314,8 @@ rprint(batches_v2_instrs)
 rprint("batches_v2_vregidx:")
 rprint(batches_v2_vregidx)
 rprint(batches_v2_batchidx)
+rprint(f"batch_uses:\n{batch_uses}")
+rprint(f"batch_defs:\n{batch_defs}")
 
 # for i, batch in enumerate(nx.topological_generations(GO)):
 #     batch = sorted(batch)
@@ -315,10 +326,23 @@ rprint(batches_v2_batchidx)
 """Minimal jobshop problem."""
 # Data.
 instrs = tuple(sorted(all_instrs))
-instrs_lut = bidict.bidict(zip(instrs, range(len(instrs))))
 rprint(instrs)
+
+instrs_lut = bidict.bidict(zip(instrs, range(len(instrs))))
 rprint(instrs_lut)
 rprint(instrs_lut.inverse)
+
+instrs_eus = tuple([get_eun(d) for d in instrs])
+rprint(instrs_eus)
+
+instrs_counts = collections.defaultdict(int)
+for d in instrs:
+    eu, _ = get_eun(d)
+    print(f"d: {d} eu: {eu}")
+    instrs_counts[eu] += 1
+instrs_counts = dict(instrs_counts)
+rprint(instrs_counts)
+
 
 # https://github.com/pganalyze/cp-sat-python-example/blob/main/shift_schedule.py
 model = cp_model.CpModel()
@@ -348,10 +372,21 @@ add_operations = {"vaddX", "vaddY", "vaddXY"}
 rprint(add_operations)
 
 sz = len(instr_seq)
+num_cycles = len(batches)
 
-# order[k] = which node is in the k-th position
-order = [model.NewIntVar(0, sz - 1, f"order_{k}") for k in range(sz)]
-model.AddAllDifferent(order)
+# order[o][k] = which op node is in the k-th cycle
+order = {}
+for o in operations:
+    order[o] = [
+        model.NewIntVar(0, instrs_counts[o] - 1, f"order_{o}_{k}") for k in range(num_cycles)
+    ]
+    # below unsafe?
+    # model.AddAllDifferent(order[o])
+
+order_s = [model.NewIntVar(0, sz - 1, f"order_s_{k}") for k in range(sz)]
+model.AddAllDifferent(order_s)
+for u, v in G.edges():
+    model.Add(order_s[instr_seq[u]] < order_s[instr_seq[v]])
 
 # pos[i] = the position of node i in the order array
 # pos = [model.NewIntVar(0, sz - 1, f"pos_{i}") for i in range(sz)]
@@ -364,10 +399,16 @@ model.AddAllDifferent(order)
 #     model.AddElement(pos[i], order, i)
 # model.AddAllDifferent(pos)
 
+for i, batch in enumerate(batches_v2):
+    for d in batch:
+        pass
+
+
 # Add the precedence constraints for edges:
 for u, v in G.edges():
-    # model.Add(pos[instr_seq[u]] < pos[instr_seq[v]])
-    model.Add(order[instr_seq[u]] < order[instr_seq[v]])
+    u_eu, u_n = get_eun(u)
+    v_eu, v_n = get_eun(v)
+    # model.Add(order[u_eu] < order[v_eu])
 
 # # `schedule[e][o][t]` indicates if exec unit `e`
 # # performs operation `o` on tick `t`
@@ -449,14 +490,25 @@ print(f"  - wall time: {solver.wall_time}s")
 print(solver.solution_info())
 print(model.model_stats())
 
-solved_pos = []
+# solved_pos = []
+# for u, ui in instr_seq.items():
+# p = order[ui]
+# sp = solver.value(order[ui])
+# defs, uses = def_uses[u]
+
+# print(f"p: {p} sp: {sp} i: {instr_seq.rev[sp]}")
+
+for k1, v1 in order.items():
+    for v2 in v1:
+        s = solver.value(v2)
+        print(s)
+    print(f"v: {v} s: {s}")
+
 for u, ui in instr_seq.items():
-    p = order[ui]
-    sp = solver.value(order[ui])
-    # defs, uses = def_uses[u]
+    p = order_s[ui]
+    sp = solver.value(order_s[ui])
 
     print(f"p: {p} sp: {sp} i: {instr_seq.rev[sp]}")
-
 
 # solved_schedule = collections.defaultdict(lambda: collections.defaultdict(collections.defaultdict))
 # for e in exec_units:
