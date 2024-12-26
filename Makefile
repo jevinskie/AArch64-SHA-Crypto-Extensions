@@ -57,7 +57,7 @@ C_CXX_FLAGS += -fsafe-buffer-usage-suggestions
 C_CXX_FLAGS += -Wno-unsafe-buffer-usage
 C_CXX_FLAGS += -mcpu=apple-m1
 CFLAGS := $(C_CXX_FLAGS) -std=gnu2x  -Wno-declaration-after-statement -Wno-pre-c2x-compat
-CXXFLAGS := $(C_CXX_FLAGS) -std=gnu++2b -fforce-emit-vtables -Wno-c++98-compat-pedantic -Wno-c++20-compat-pedantic -I 3rdparty/cifra
+CXXFLAGS := $(C_CXX_FLAGS) -std=gnu++2b -fforce-emit-vtables -Wno-c++98-compat-pedantic -Wno-c++20-compat-pedantic -I 3rdparty/cifra -I 3rdparty/magic_enum/include
 LDFLAGS := -lfmt
 ifeq ($(shell uname -s),Darwin)
 CXXFLAGS += -isystem /opt/homebrew/opt/fmt/include

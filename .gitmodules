@@ -2,3 +2,6 @@
 	path = 3rdparty/teeny-sha1
 	url = https://github.com/jevinskie/teeny-sha1
 	branch = jev/trace
+[submodule "3rdparty/magic_enum"]
+	path = 3rdparty/magic_enum
+	url = https://github.com/Neargye/magic_enum

@@ -9,6 +9,7 @@
 #include <bit>
 #include <cstring>
 #include <fmt/format.h>
+#include <magic_enum/magic_enum_all.hpp>
 
 #define ANSI_BOLD_RED_FG    "\x1b[38;5;196m"
 #define ANSI_BOLD_GREEN_FG  "\x1b[38;5;34m"
@@ -23,6 +24,10 @@
 #else
 #define PRND(n)
 #endif
+
+extern "C" volatile uint32_t g_volunk;
+volatile uint32_t g_volunk;
+#define VOLUNK() (g_volunk)
 
 // #include "sha1-wrappers.h"
 extern void dump_uint32x4_t(const char *const _Nonnull prefix, const uint32x4_t v);
@@ -464,6 +469,32 @@ extern "C" CoolSHA1Digest sha1_arm_unrolled_compress_one(const uint32x4_t abcd_p
     return {abcd, e0};
 }
 
+enum MicroOp : uint16_t {
+    P    = (1u << 0),
+    SU0  = (1u << 1),
+    SU1  = (1u << 2),
+    C    = (1u << 3),
+    M    = (1u << 4),
+    H    = (1u << 5),
+    AX   = (1u << 6),
+    AY   = (1u << 7),
+    AXY  = (1u << 8),
+    RAND = (1u << 9),
+};
+template <> struct magic_enum::customize::enum_range<MicroOp> {
+    static constexpr bool is_flags = true;
+};
+
+// 'sha1c'  : {1:  6},
+// 'sha1h'  : {1: 18, 2:  1},
+// 'sha1m'  : {1:  6},
+// 'sha1p'  : {1: 10},
+// 'sha1su0': {1: 16},
+// 'sha1su1': {1: 45, 2: 13, 3: 12},
+// 'vaddX'  : {1:  1, 2: 1},
+// 'vaddXY' : {1:  0, 2:  0, 3: 16},
+// 'vaddY'  : {1:  0, 2:  1, 3:  1},
+
 extern "C" CoolSHA1Digest sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_t e_p,
                                                                     const uint32x4x4_t blocks_p,
                                                                     const uint16_t *_Nonnull microcode_p,
@@ -482,65 +513,101 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
     uint32_t pop1{};
     uint32x4_t su0res{}, su0op0{}, su0op1{}, su0op2{};
     uint32x4_t su1res{}, su1op0{}, su1op1{};
+    uint32x4_t su1resd2{}, su1resd3{};
     uint32x4_t cres{}, cop0{}, cop2{};
     uint32_t cop1{};
     uint32x4_t mres{}, mop0{}, mop2{};
     uint32_t mop1{};
     uint32_t hres{}, hop0{};
-    uint32x4_t aXres{}, aXop0{}, aXop1{}, aYres{}, aYop0{}, aYop1{};
-    uint32x4_t aXYres{};
+    uint32_t hresd2{};
+    uint32x4_t aXres{}, aXop0{}, aXop1{};
+    uint32x4_t aXresd2{};
+    uint32x4_t aYres{}, aYop0{}, aYop1{};
+    uint32x4_t aYresd2{}, aYresd3{};
+    uint32x4_t aXYres{}, aXYop0{}, aXYop1{};
+    uint32x4_t aXYresd2{}, aXYresd3{};
 
     // microcoded loop
     // for (size_t i = 0; i < std::size(microcode); ++i) {
     for (size_t i = 0; i < microcode_sz_p; ++i) {
         // const uint16_t c = microcode[i];
         const uint16_t c = microcode_p[i];
-        if (c & (1 << 0)) {
+        if (c & MicroOp::P) {
             pres = vsha1pq_u32(pop0, pop1, pop2);
         }
-        if (c & (1 << 1)) {
+        if (c & MicroOp::SU0) {
             su0res = vsha1su0q_u32(su0op0, su0op1, su0op2);
         }
-        if (c & (1 << 2)) {
+        if (c & MicroOp::SU1) {
             su1res = vsha1su1q_u32(su1op0, su1op1);
         }
-        if (c & (1 << 3)) {
+        if (c & MicroOp::C) {
             cres = vsha1cq_u32(cop0, cop1, cop2);
         }
-        if (c & (1 << 4)) {
+        if (c & MicroOp::M) {
             mres = vsha1mq_u32(mop0, mop1, mop2);
         }
-        if (c & (1 << 5)) {
+        if (c & MicroOp::H) {
             hres = vsha1h_u32(hop0);
         }
-        if (c & (1 << 6)) {
+        if (c & MicroOp::AX) {
             aXres = vaddq_u32(aXop0, aXop1);
         }
-        if (c & (1 << 7)) {
+        if (c & MicroOp::AY) {
             aYres = vaddq_u32(aYop0, aYop1);
         }
-        if (c & (1 << 8)) {
-            pop0 += rand() & 0xff;
-            pop1 += rand() & 0xff;
-            pop2 += rand() & 0xff;
-            su0op0 += rand() & 0xff;
-            su0op1 += rand() & 0xff;
-            su0op2 += rand() & 0xff;
-            su1op0 += rand() & 0xff;
-            su1op1 += rand() & 0xff;
-            cop0 += rand() & 0xff;
-            cop1 += rand() & 0xff;
-            cop2 += rand() & 0xff;
-            mop0 += rand() & 0xff;
-            mop1 += rand() & 0xff;
-            mop2 += rand() & 0xff;
-            hop0 += rand() & 0xff;
-            aXop0 += rand() & 0xff;
-            aXop1 += rand() & 0xff;
-            aYop0 += rand() & 0xff;
-            aYop1 += rand() & 0xff;
+        if (c & MicroOp::AXY) {
+            aXYres = vaddq_u32(aXYop0, aXYop1);
         }
+        if (c & MicroOp::RAND) {
+            pop0 += VOLUNK();
+            pop1 += VOLUNK();
+            pop2 += VOLUNK();
+            su0op0 += VOLUNK();
+            su0op1 += VOLUNK();
+            su0op2 += VOLUNK();
+            su1op0 += VOLUNK();
+            su1op1 += VOLUNK();
+            cop0 += VOLUNK();
+            cop1 += VOLUNK();
+            cop2 += VOLUNK();
+            mop0 += VOLUNK();
+            mop1 += VOLUNK();
+            mop2 += VOLUNK();
+            hop0 += VOLUNK();
+            aXop0 += VOLUNK();
+            aXop1 += VOLUNK();
+            aYop0 += VOLUNK();
+            aYop1 += VOLUNK();
+            aXYop0 += VOLUNK();
+            aXYop1 += VOLUNK();
+            VOLUNK() = pres[0];
+            VOLUNK() = su0res[0];
+            VOLUNK() = su1res[0];
+            VOLUNK() = cres[0];
+            VOLUNK() = mres[0];
+            VOLUNK() = hres;
+            VOLUNK() = aXres[0];
+            VOLUNK() = aYres[0];
+            VOLUNK() = aXYres[0];
+            VOLUNK() = aXYresd3[0];
+            VOLUNK() = aYresd3[0];
+            VOLUNK() = aXresd2[0];
+            VOLUNK() = hresd2;
+            VOLUNK() = su1resd3[0];
+        }
+
+        aXYresd3 = aXYresd2;
+        aXYresd2 = aXYres;
+        aYresd3  = aYresd2;
+        aYresd2  = aYres;
+        aXresd2  = aXYres;
+        hresd2   = hres;
+        su1resd3 = su1resd2;
+        su1resd2 = su1res;
     }
+
+#if 0
     dump_uint32x4_t(ANSI_BOLD_RED_FG "pres" ANSI_RESET "  ", pres);
     dump_uint32x4_t(ANSI_BOLD_ORANGE_FG "su0res" ANSI_RESET, su0res);
     dump_uint32x4_t(ANSI_BOLD_VIOLET_FG "su1res" ANSI_RESET, su1res);
@@ -550,6 +617,7 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
     dump_uint32x4_t(ANSI_BOLD_RED_FG "aXres" ANSI_RESET "  ", aXres);
     dump_uint32x4_t(ANSI_BOLD_RED_FG "aYres" ANSI_RESET "  ", aYres);
     dump_uint32x4_t(ANSI_BOLD_RED_FG "pres" ANSI_RESET "  ", pres);
+#endif
 
-    return {};
+    return {.abcd = mres, .e = hres};
 }
