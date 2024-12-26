@@ -480,6 +480,7 @@ enum MicroOp : uint16_t {
     AY   = (1u << 7),
     AXY  = (1u << 8),
     RAND = (1u << 9),
+    ZERO = (1u << 10),
 };
 template <> struct magic_enum::customize::enum_range<MicroOp> {
     static constexpr bool is_flags = true;
@@ -508,94 +509,125 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
 #endif
 {
 
-    constexpr uint8_t microcode[] = {0};
-    uint32x4_t pres{}, pop0{}, pop2{};
-    uint32_t pop1{};
-    uint32x4_t su0res{}, su0op0{}, su0op1{}, su0op2{};
-    uint32x4_t su1res{}, su1op0{}, su1op1{};
-    uint32x4_t su1resd2{}, su1resd3{};
-    uint32x4_t cres{}, cop0{}, cop2{};
-    uint32_t cop1{};
-    uint32x4_t mres{}, mop0{}, mop2{};
-    uint32_t mop1{};
-    uint32_t hres{}, hop0{};
-    uint32_t hresd2{};
-    uint32x4_t aXres{}, aXop0{}, aXop1{};
-    uint32x4_t aXresd2{};
-    uint32x4_t aYres{}, aYop0{}, aYop1{};
-    uint32x4_t aYresd2{}, aYresd3{};
-    uint32x4_t aXYres{}, aXYop0{}, aXYop1{};
-    uint32x4_t aXYresd2{}, aXYresd3{};
+    uint32x4_t pres, pop0, pop2;
+    uint32_t pop1;
+    uint32x4_t pres_staged;
+    uint32x4_t su0res, su0op0, su0op1, su0op2;
+    uint32x4_t su0res_staged;
+    uint32x4_t su1res, su1op0, su1op1;
+    uint32x4_t su1res_staged;
+    uint32x4_t su1resd2, su1resd3;
+    uint32x4_t cres, cop0, cop2;
+    uint32_t cop1;
+    uint32x4_t cres_staged;
+    uint32x4_t mres, mop0, mop2;
+    uint32_t mop1;
+    uint32x4_t mres_staged;
+    uint32_t hres, hop0;
+    uint32_t hres_staged;
+    uint32_t hresd2;
+    uint32x4_t aXres, aXop0, aXop1;
+    uint32x4_t aXres_staged;
+    uint32x4_t aXresd2;
+    uint32x4_t aYres, aYop0, aYop1;
+    uint32x4_t aYres_staged;
+    uint32x4_t aYresd2, aYresd3;
+    uint32x4_t aXYres, aXYop0, aXYop1;
+    uint32x4_t aXYres_staged;
+    uint32x4_t aXYresd2, aXYresd3;
+    uint32x4_t accumulator{};
 
     // microcoded loop
     // for (size_t i = 0; i < std::size(microcode); ++i) {
     for (size_t i = 0; i < microcode_sz_p; ++i) {
         // const uint16_t c = microcode[i];
         const uint16_t c = microcode_p[i];
+        if (c & MicroOp::ZERO) {
+            const uint32_t r    = VOLUNK();
+            const uint32x4_t vr = vdupq_n_u32(r);
+            pop0                = vr;
+            pop1                = r;
+            pop2                = vr;
+            su0op0              = vr;
+            su0op1              = vr;
+            su0op2              = vr;
+            su1op0              = vr;
+            su1op1              = vr;
+            cop0                = vr;
+            cop1                = r;
+            cop2                = vr;
+            mop0                = vr;
+            mop1                = r;
+            mop2                = vr;
+            hop0                = r;
+            aXop0               = vr;
+            aXop1               = vr;
+            aYop0               = vr;
+            aYop1               = vr;
+            aXYop0              = vr;
+            aXYop1              = vr;
+            pres                = vr;
+            su0res              = vr;
+            su1res              = vr;
+            cres                = vr;
+            mres                = vr;
+            hres                = r;
+            aXres               = vr;
+            aYres               = vr;
+            aXYres              = vr;
+            su1resd3 = su1resd2 = vr;
+            hresd2              = r;
+            aXresd2             = vr;
+            aYresd3 = aYresd2 = vr;
+            aXYresd3 = aXYresd2 = vr;
+            pres_staged         = vr;
+            su0res_staged       = vr;
+            su1res_staged       = vr;
+            cres_staged         = vr;
+            mres_staged         = vr;
+            hres_staged         = r;
+            aXres_staged        = vr;
+            aYres_staged        = vr;
+            aXYres_staged       = vr;
+            continue;
+        }
         if (c & MicroOp::P) {
-            pres = vsha1pq_u32(pop0, pop1, pop2);
+            pres_staged = vsha1pq_u32(pop0, pop1, pop2);
         }
         if (c & MicroOp::SU0) {
-            su0res = vsha1su0q_u32(su0op0, su0op1, su0op2);
+            su0res_staged = vsha1su0q_u32(su0op0, su0op1, su0op2);
         }
         if (c & MicroOp::SU1) {
-            su1res = vsha1su1q_u32(su1op0, su1op1);
+            su1res_staged = vsha1su1q_u32(su1op0, su1op1);
         }
         if (c & MicroOp::C) {
-            cres = vsha1cq_u32(cop0, cop1, cop2);
+            cres_staged = vsha1cq_u32(cop0, cop1, cop2);
         }
         if (c & MicroOp::M) {
-            mres = vsha1mq_u32(mop0, mop1, mop2);
+            mres_staged = vsha1mq_u32(mop0, mop1, mop2);
         }
         if (c & MicroOp::H) {
-            hres = vsha1h_u32(hop0);
+            hres_staged = vsha1h_u32(hop0);
         }
         if (c & MicroOp::AX) {
-            aXres = vaddq_u32(aXop0, aXop1);
+            aXres_staged = vaddq_u32(aXop0, aXop1);
         }
         if (c & MicroOp::AY) {
-            aYres = vaddq_u32(aYop0, aYop1);
+            aYres_staged = vaddq_u32(aYop0, aYop1);
         }
         if (c & MicroOp::AXY) {
-            aXYres = vaddq_u32(aXYop0, aXYop1);
+            aXYres_staged = vaddq_u32(aXYop0, aXYop1);
         }
-        if (c & MicroOp::RAND) {
-            pop0 += VOLUNK();
-            pop1 += VOLUNK();
-            pop2 += VOLUNK();
-            su0op0 += VOLUNK();
-            su0op1 += VOLUNK();
-            su0op2 += VOLUNK();
-            su1op0 += VOLUNK();
-            su1op1 += VOLUNK();
-            cop0 += VOLUNK();
-            cop1 += VOLUNK();
-            cop2 += VOLUNK();
-            mop0 += VOLUNK();
-            mop1 += VOLUNK();
-            mop2 += VOLUNK();
-            hop0 += VOLUNK();
-            aXop0 += VOLUNK();
-            aXop1 += VOLUNK();
-            aYop0 += VOLUNK();
-            aYop1 += VOLUNK();
-            aXYop0 += VOLUNK();
-            aXYop1 += VOLUNK();
-            VOLUNK() = pres[0];
-            VOLUNK() = su0res[0];
-            VOLUNK() = su1res[0];
-            VOLUNK() = cres[0];
-            VOLUNK() = mres[0];
-            VOLUNK() = hres;
-            VOLUNK() = aXres[0];
-            VOLUNK() = aYres[0];
-            VOLUNK() = aXYres[0];
-            VOLUNK() = aXYresd3[0];
-            VOLUNK() = aYresd3[0];
-            VOLUNK() = aXresd2[0];
-            VOLUNK() = hresd2;
-            VOLUNK() = su1resd3[0];
-        }
+
+        pres   = pres_staged;
+        su0res = su0res_staged;
+        su1res = su1res_staged;
+        cres   = cres_staged;
+        mres   = mres_staged;
+        hres   = hres_staged;
+        aXres  = aXres_staged;
+        aYres  = aYres_staged;
+        aXYres = aXYres_staged;
 
         aXYresd3 = aXYresd2;
         aXYresd2 = aXYres;
@@ -619,5 +651,18 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
     dump_uint32x4_t(ANSI_BOLD_RED_FG "pres" ANSI_RESET "  ", pres);
 #endif
 
-    return {.abcd = mres, .e = hres};
+    accumulator += pres;
+    accumulator += su0res;
+    accumulator += su1res;
+    accumulator += cres;
+    accumulator += mres;
+    accumulator += aXres;
+    accumulator += aYres;
+    accumulator += aXresd2;
+    accumulator += aXYresd3;
+    accumulator += aXYresd3;
+    accumulator += hresd2;
+    accumulator += su1resd3;
+
+    return {.abcd = accumulator, .e = accumulator[0]};
 }
