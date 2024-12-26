@@ -619,6 +619,7 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
             aXYres_staged = vaddq_u32(aXYop0, aXYop1);
         }
 
+        // commit results
         pres   = pres_staged;
         su0res = su0res_staged;
         su1res = su1res_staged;
@@ -629,6 +630,7 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
         aYres  = aYres_staged;
         aXYres = aXYres_staged;
 
+        // pipeline register history
         aXYresd3 = aXYresd2;
         aXYresd2 = aXYres;
         aYresd3  = aYresd2;
