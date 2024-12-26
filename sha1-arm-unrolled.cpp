@@ -661,7 +661,7 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
     accumulator += aXres;
     accumulator += aYres;
     accumulator += aXresd2;
-    accumulator += aXYresd3;
+    accumulator += aYresd3;
     accumulator += aXYresd3;
     accumulator += hresd2;
     accumulator += su1resd3;
