@@ -383,23 +383,35 @@ for d, pu in defs_port_uses.items():
         dbidx = batches_v2_batchidx[d]
         dist = dbidx - ubidx
         assert dist > 0
-        print(f"uibdx: {ubidx}")
         if instr_port_uses[instr][i] is None:
             instr_port_uses[instr][i] = {}
         if uinstr not in instr_port_uses[instr][i]:
-            instr_port_uses[instr][i][uinstr] = collections.defaultdict(int)
+            instr_port_uses[instr][i][uinstr] = collections.Counter()
         instr_port_uses[instr][i][uinstr][f"d{dist}"] += 1
 
+rprint("instr_port_uses:")
+pprint(instr_port_uses)
+
+_instr_op_delays: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
 for i, instr in enumerate(list(instr_port_uses)):
     op_list = instr_port_uses[instr]
     for j, op_sources in enumerate(op_list):
         if op_sources is None:
             continue
         for oinstr in op_sources:
-            op_list[j][oinstr] = dict(op_sources[oinstr])
+            _instr_op_delays[oinstr] += op_list[j][oinstr]
 
-rprint("instr_port_uses:")
-pprint(instr_port_uses)
+rprint("_instr_op_delays:")
+pprint(_instr_op_delays)
+
+instr_op_delays: dict[str, dict[int, int]] = {}
+for instr, delays in _instr_op_delays.items():
+    idelays = dict(sorted({int(d[1:]): c for d, c in delays.items()}.items()))
+    instr_op_delays[instr] = idelays
+instr_op_delays = dict(sorted(instr_op_delays.items()))
+
+rprint("instr_op_delays:")
+pprint(instr_op_delays)
 
 rprint(G["sha1hN16"])
 

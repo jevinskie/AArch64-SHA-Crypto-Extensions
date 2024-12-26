@@ -38,3 +38,17 @@ instr_port_uses = {
                  None]
 }
 ```
+
+```python
+instr_op_delays = {
+    'sha1c'  : {1:  6},
+    'sha1h'  : {1: 18, 2:  1},
+    'sha1m'  : {1:  6},
+    'sha1p'  : {1: 10},
+    'sha1su0': {1: 16},
+    'sha1su1': {1: 45, 2: 13, 3: 12},
+    'vaddX'  : {1:  1, 2: 1},
+    'vaddXY' : {1:  0, 2:  0, 3: 16},
+    'vaddY'  : {1:  0, 2:  1, 3:  1}
+}
+```
