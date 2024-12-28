@@ -355,6 +355,21 @@ rprint(f"batch_uses:\n{batch_uses}")
 rprint(f"batch_defs:\n{batch_defs}")
 
 
+PG = nx.DiGraph(outputorder="edgesfirst")
+for i, batch in enumerate(batches_v2):
+    for ldef in batch:
+        ldef_instr, _ = get_eun(ldef)
+        PG.add_node(ldef, label=ldef_instr)
+        # defs_port_uses[ldef] = [None] * NumInPorts[ldef_instr]
+        ldef_uses = sorted(u for u, ui in G[ldef].items() if ui["opnum"] >= 0)
+        rprint(f"ldef: {ldef} ldef_uses: {ldef_uses}")
+        # for ldef_user, ldef_user_opnum in ldef_uses.items():
+        # defs_port_uses[ldef_user][ldef_user_opnum] = ldef
+
+nx.nx_agraph.write_dot(PG, "pipeline.dot")
+
+rprint(f"PG: {PG}")
+
 defs_port_uses: dict[str, list[str | None]] = {}
 for i, batch in always_reversible(enumerate(batches_v2)):
     for ldef in batch:
