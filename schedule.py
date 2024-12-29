@@ -4,9 +4,11 @@ import collections
 import enum
 import json
 import re
+import shutil
+import subprocess
 import sys
 import types
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 
 import bidict
 import networkx as nx
@@ -36,6 +38,31 @@ _NumInPorts: dict[str, int] = {
 }
 
 NumInPorts = types.MappingProxyType(_NumInPorts)
+
+
+def run_cmd(*args, log: bool = False, **kwargs) -> str:
+    args = (*args,)
+    if log:
+        print(f"Running: {' '.join(map(str, args))}", file=sys.stderr)
+    r = subprocess.run(list(map(str, args)), capture_output=True, **kwargs)
+    if r.returncode != 0:
+        sys.stderr.buffer.write(r.stdout)
+        sys.stderr.buffer.write(r.stderr)
+        raise subprocess.CalledProcessError(r.returncode, args, r.stdout, r.stderr)
+    try:
+        r.out = r.stdout.decode()
+    except UnicodeDecodeError:
+        pass
+    return r
+
+
+def gen_cmd(bin_name: str) -> Callable:
+    bin_path = shutil.which(bin_name)
+    assert bin_path is not None
+    return lambda *args, **kwargs: run_cmd(bin_path, *args, **kwargs)
+
+
+nop = gen_cmd("nop")
 
 
 class BiDictStrInt(Mapping[str, int]):
