@@ -2,13 +2,15 @@
 
 import collections
 import enum
+import io
 import json
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import types
-from collections.abc import Callable, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
 
 import bidict
 import networkx as nx
@@ -40,29 +42,18 @@ _NumInPorts: dict[str, int] = {
 NumInPorts = types.MappingProxyType(_NumInPorts)
 
 
-def run_cmd(*args, log: bool = False, **kwargs) -> str:
-    args = (*args,)
-    if log:
-        print(f"Running: {' '.join(map(str, args))}", file=sys.stderr)
-    r = subprocess.run(list(map(str, args)), capture_output=True, **kwargs)
-    if r.returncode != 0:
-        sys.stderr.buffer.write(r.stdout)
-        sys.stderr.buffer.write(r.stderr)
-        raise subprocess.CalledProcessError(r.returncode, args, r.stdout, r.stderr)
-    try:
-        r.out = r.stdout.decode()
-    except UnicodeDecodeError:
-        pass
-    return r
-
-
-def gen_cmd(bin_name: str) -> Callable:
-    bin_path = shutil.which(bin_name)
-    assert bin_path is not None
-    return lambda *args, **kwargs: run_cmd(bin_path, *args, **kwargs)
-
-
-nop = gen_cmd("nop")
+def dot_format(dot_src: str) -> str:
+    bin_path = shutil.which("nop")
+    args = (bin_path,)
+    with tempfile.TemporaryFile("w") as tf:
+        tf.write(dot_src)
+        tf.seek(0, io.SEEK_SET)
+        r = subprocess.run(args, stdin=tf, capture_output=True, text=True)
+        if r.returncode != 0:
+            sys.stderr.write(r.stdout)
+            sys.stderr.write(r.stderr)
+            raise subprocess.CalledProcessError(r.returncode, args, r.stdout, r.stderr)
+        return r.stdout
 
 
 class BiDictStrInt(Mapping[str, int]):
@@ -454,6 +445,17 @@ instr_op_delays = dict(sorted(instr_op_delays.items()))
 
 rprint("instr_op_delays:")
 pprint(instr_op_delays)
+
+
+def write_pipeline_dot(sched_info: object, out_path: str) -> None:
+    s = "digraph g { graph [ rankdir=LR];}"
+    ps = dot_format(s)
+    rprint(f"ps: {ps!r}")
+    with open(out_path, "w") as f:
+        f.write(ps)
+
+
+write_pipeline_dot(object(), "pipeline.dot")
 
 rprint(G["sha1hN16"])
 
