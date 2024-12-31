@@ -447,10 +447,24 @@ rprint("instr_op_delays:")
 pprint(instr_op_delays)
 
 
+def get_node(ssa_def: str, num_ops: int) -> str:
+    # vaddX [label="vaddX|{{<f0> op0| <f1> op2}| <f2> res}", shape=record];
+    ops = "|".join(f"<op{n}> op{n}" for n in range(num_ops))
+    label = f"{ssa_def}|{{{{{ops}}}|<res> res}}"
+    return f'{ssa_def} [label="{label}", shape=record];'
+
+
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    s = "digraph g { graph [ rankdir=LR];}"
+    gn = get_node("vaddX7", 2)
+    print(f"gn: '{gn}'")
+    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16, shape=ellipse];\n"
+    s += f"\t{gn}"
+    s += "\n}\n"
+    print(f"s: {s}")
     ps = dot_format(s)
-    rprint(f"ps: {ps!r}")
+    print(f"ps raw: {ps.encode()}")
+    rprint(f"ps!r: {ps!r}")
+    print(f"ps: {ps}")
     with open(out_path, "w") as f:
         f.write(ps)
 
