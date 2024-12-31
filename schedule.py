@@ -16,7 +16,7 @@ import bidict
 import networkx as nx
 import pandas as pd
 import tabulate
-from more_itertools import always_reversible
+from more_itertools import all_unique, always_reversible
 from ortools.sat.python import cp_model
 from rich import print as rprint
 from rich.pretty import pprint
@@ -328,6 +328,7 @@ rprint("port_usage:")
 pprint(port_usage)
 
 batches_v2: list[list[str]] = []
+batches_v2_linear: list[str] = []
 batches_v2_instrs: list[list[str]] = []
 batches_v2_batchidx: dict[str, int] = {}
 batches_v2_vregidx = VRegIdx()
@@ -359,12 +360,19 @@ for i, batch in enumerate(nx.topological_generations(G)):
         binstrs.append(binstr)
         duses = [e[0] for e in G.in_edges(definition)]
         b_uses.update(duses)
+        batches_v2_linear.append(definition)
     rprint(f"i: {i} batch: {batch}")
     batches_v2.append(batch)
     batches_v2_instrs.append(binstrs)
     batch_uses.append(list(sorted(b_uses)))
 
+assert all_unique(batches_v2_linear)
+
+rprint("batches_v2:")
 rprint(batches_v2)
+rprint("batches_v2_linear:")
+rprint(batches_v2_linear)
+rprint("batches_v2_instrs:")
 rprint(batches_v2_instrs)
 rprint("batches_v2_vregidx:")
 rprint(batches_v2_vregidx)
@@ -456,10 +464,11 @@ def get_node(ssa_def: str, num_ops: int) -> str:
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n"
-    for d in def_uses:
-        print(f"d: {d}")
-        instr, _ = get_eun(d)
-        s += f"\t{get_node(d, NumInPorts[instr])}\n"
+    for batch in batches_v2:
+        for d in batch:
+            print(f"d: {d}")
+            instr, _ = get_eun(d)
+            s += f"\t{get_node(d, NumInPorts[instr])}\n"
     for d, uses in defs_port_uses.items():
         for pnum, u in enumerate(uses):
             if u is None:

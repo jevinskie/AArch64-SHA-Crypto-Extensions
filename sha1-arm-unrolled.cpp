@@ -40,6 +40,98 @@ namespace {
 constexpr std::array<uint32_t, 4> K = {0x5A827999U, 0x6ED9EBA1U, 0x8F1BBCDCU, 0xCA62C1D6U};
 } // namespace
 
+// https://github.com/facebook/folly/blob/main/folly/lang/Hint.h
+
+//  compiler_must_not_elide
+//
+//  Ensures that the referred-to value will be computed even when an optimizing
+//  compiler might otherwise remove the computation. Note: this hint takes its
+//  value parameter by reference.
+//
+//  Useful for values that are computed during benchmarking but otherwise are
+//  unused. The compiler tends to do a good job at eliminating unused variables,
+//  which can affect benchmark results, and this hint instructs the compiler to
+//  treat the value as though it were used.
+struct compiler_must_not_elide_fn {
+    template <typename T> [[gnu::always_inline]] void operator()(T const &t) const noexcept;
+};
+inline constexpr compiler_must_not_elide_fn compiler_must_not_elide{};
+
+//  compiler_must_not_predict
+//
+//  Ensures that the compiler will not use its knowledge of the referred-to
+//  value to optimize or otherwise shape the following code. Note: this hint
+//  takes its value parameter by reference.
+//
+//  Useful when constant propagation or power reduction is possible in a
+//  benchmark but not in real use cases. Optimizations done to benchmarked code
+//  which cannot be done to real code can affect benchmark results, and this
+//  hint instructs the compiler to treat value which it can predict as though it
+//  were unpredictable.
+struct compiler_must_not_predict_fn {
+    template <typename T> [[gnu::always_inline]] void operator()(T &t) const noexcept;
+};
+inline constexpr compiler_must_not_predict_fn compiler_must_not_predict{};
+
+// https://github.com/facebook/folly/blob/main/folly/lang/Hint-inl.h
+namespace detail {
+
+template <typename T, typename D = std::decay_t<T>>
+using compiler_must_force_indirect = std::bool_constant<!std::is_trivially_copyable_v<D> || //
+                                                        sizeof(long) < sizeof(D) ||         //
+                                                        std::is_pointer<D>::value>;
+
+template <typename T> [[gnu::always_inline]] void compiler_must_not_elide(T const &t, std::false_type) {
+    // the "r" constraint forces the compiler to make the value available in a
+    // register to the asm block, which means that it must first have been
+    // computed or loaded
+    //
+    // used for small trivial values which the compiler will put into registers
+    //
+    // avoided for pointers to avoid fallout in calling code which mistakenly
+    // applies the hint to the address of a value but not to the value itself
+    asm volatile("" : : "r"(t));
+}
+
+template <typename T> [[gnu::always_inline]] void compiler_must_not_elide(T const &t, std::true_type) {
+    // tells the compiler that the asm block will read the value from memory,
+    // and that in addition it might read or write from any memory location
+    //
+    // if the memory clobber could be split into input and output, that would be
+    // preferrable
+    asm volatile("" : : "m"(t) : "memory");
+}
+
+template <typename T> [[gnu::always_inline]] void compiler_must_not_predict(T &t, std::false_type) {
+    asm volatile("" : "+r"(t));
+}
+
+template <typename T> [[gnu::always_inline]] void compiler_must_not_predict(T &t, std::true_type) {
+    asm volatile("" : : "m"(t) : "memory");
+}
+
+} // namespace detail
+
+template <typename T> [[gnu::always_inline]] void compiler_must_not_elide_fn::operator()(T const &t) const noexcept {
+    using i = detail::compiler_must_force_indirect<T>;
+    detail::compiler_must_not_elide(t, i{});
+}
+
+template <typename T> [[gnu::always_inline]] void compiler_must_not_predict_fn::operator()(T &t) const noexcept {
+    using i = detail::compiler_must_force_indirect<T>;
+    detail::compiler_must_not_predict(t, i{});
+}
+
+// https://github.com/facebook/folly/blob/main/folly/BenchmarkUtil.h
+
+template <class T> [[gnu::always_inline]] void doNotOptimizeAway(const T &datum) {
+    compiler_must_not_elide(datum);
+}
+
+template <typename T> [[gnu::always_inline]] void makeUnpredictable(T &datum) {
+    compiler_must_not_predict(datum);
+}
+
 template <size_t N>
 static void sha1_arm_unrolled_compress(uint32_t *__restrict _Nonnull state, const uint8_t *__restrict _Nonnull blocks)
 #if defined(__clang__)
@@ -589,6 +681,105 @@ sha1_arm_unrolled_compress_one_microcoded(const uint32x4_t abcd_p, const uint32_
             aXres_staged        = vr;
             aYres_staged        = vr;
             aXYres_staged       = vr;
+#if 0
+            compiler_must_not_elide(pop0);
+            compiler_must_not_elide(pop1);
+            compiler_must_not_elide(pop2);
+            compiler_must_not_elide(su0op0);
+            compiler_must_not_elide(su0op1);
+            compiler_must_not_elide(su0op2);
+            compiler_must_not_elide(su1op0);
+            compiler_must_not_elide(su1op1);
+            compiler_must_not_elide(cop0);
+            compiler_must_not_elide(cop1);
+            compiler_must_not_elide(cop2);
+            compiler_must_not_elide(mop0);
+            compiler_must_not_elide(mop1);
+            compiler_must_not_elide(mop2);
+            compiler_must_not_elide(hop0);
+            compiler_must_not_elide(aXop0);
+            compiler_must_not_elide(aXop1);
+            compiler_must_not_elide(aYop0);
+            compiler_must_not_elide(aYop1);
+            compiler_must_not_elide(aXYop0);
+            compiler_must_not_elide(aXYop1);
+            compiler_must_not_elide(pres);
+            compiler_must_not_elide(su0res);
+            compiler_must_not_elide(su1res);
+            compiler_must_not_elide(cres);
+            compiler_must_not_elide(mres);
+            compiler_must_not_elide(hres);
+            compiler_must_not_elide(aXres);
+            compiler_must_not_elide(aYres);
+            compiler_must_not_elide(aXYres);
+            compiler_must_not_elide(su1resd3);
+            compiler_must_not_elide(su1resd2);
+            compiler_must_not_elide(hresd2);
+            compiler_must_not_elide(aXresd2);
+            compiler_must_not_elide(aYresd3);
+            compiler_must_not_elide(aYresd2);
+            compiler_must_not_elide(aXYresd3);
+            compiler_must_not_elide(aXYresd2);
+            compiler_must_not_elide(pres_staged);
+            compiler_must_not_elide(su0res_staged);
+            compiler_must_not_elide(su1res_staged);
+            compiler_must_not_elide(cres_staged);
+            compiler_must_not_elide(mres_staged);
+            compiler_must_not_elide(hres_staged);
+            compiler_must_not_elide(aXres_staged);
+            compiler_must_not_elide(aYres_staged);
+            compiler_must_not_elide(aXYres_staged);
+#endif
+#if 0
+            compiler_must_not_predict(pop0);
+            compiler_must_not_predict(pop1);
+            compiler_must_not_predict(pop2);
+            compiler_must_not_predict(su0op0);
+            compiler_must_not_predict(su0op1);
+            compiler_must_not_predict(su0op2);
+            compiler_must_not_predict(su1op0);
+            compiler_must_not_predict(su1op1);
+            compiler_must_not_predict(cop0);
+            compiler_must_not_predict(cop1);
+            compiler_must_not_predict(cop2);
+            compiler_must_not_predict(mop0);
+            compiler_must_not_predict(mop1);
+            compiler_must_not_predict(mop2);
+            compiler_must_not_predict(hop0);
+            compiler_must_not_predict(aXop0);
+            compiler_must_not_predict(aXop1);
+            compiler_must_not_predict(aYop0);
+            compiler_must_not_predict(aYop1);
+            compiler_must_not_predict(aXYop0);
+            compiler_must_not_predict(aXYop1);
+            compiler_must_not_predict(pres);
+            compiler_must_not_predict(su0res);
+            compiler_must_not_predict(su1res);
+            compiler_must_not_predict(cres);
+            compiler_must_not_predict(mres);
+            compiler_must_not_predict(hres);
+            compiler_must_not_predict(aXres);
+            compiler_must_not_predict(aYres);
+            compiler_must_not_predict(aXYres);
+            compiler_must_not_predict(su1resd3);
+            compiler_must_not_predict(su1resd2);
+            compiler_must_not_predict(hresd2);
+            compiler_must_not_predict(aXresd2);
+            compiler_must_not_predict(aYresd3);
+            compiler_must_not_predict(aYresd2);
+            compiler_must_not_predict(aXYresd3);
+            compiler_must_not_predict(aXYresd2);
+            compiler_must_not_predict(pres_staged);
+            compiler_must_not_predict(su0res_staged);
+            compiler_must_not_predict(su1res_staged);
+            compiler_must_not_predict(cres_staged);
+            compiler_must_not_predict(mres_staged);
+            compiler_must_not_predict(hres_staged);
+            compiler_must_not_predict(aXres_staged);
+            compiler_must_not_predict(aYres_staged);
+            compiler_must_not_predict(aXYres_staged);
+#endif
+
             continue;
         }
         if (c & MicroOp::P) {
