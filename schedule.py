@@ -455,15 +455,13 @@ def get_node(ssa_def: str, num_ops: int) -> str:
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    gn = get_node("vaddX7", 2)
-    print(f"gn: '{gn}'")
-    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16, shape=ellipse];\n"
-    s += f"\t{gn}"
+    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n"
+    for d in def_uses:
+        print(f"d: {d}")
+        instr, _ = get_eun(d)
+        s += f"\t{get_node(d, NumInPorts[instr])}\n"
     s += "\n}\n"
-    print(f"s: {s}")
     ps = dot_format(s)
-    print(f"ps raw: {ps.encode()}")
-    rprint(f"ps!r: {ps!r}")
     print(f"ps: {ps}")
     with open(out_path, "w") as f:
         f.write(ps)
