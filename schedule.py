@@ -460,6 +460,11 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
         print(f"d: {d}")
         instr, _ = get_eun(d)
         s += f"\t{get_node(d, NumInPorts[instr])}\n"
+    for d, uses in defs_port_uses.items():
+        for pnum, u in enumerate(uses):
+            if u is None:
+                continue
+            s += f"\t{u}:res -> {d}:op{pnum}\n"
     s += "\n}\n"
     ps = dot_format(s)
     print(f"ps: {ps}")
