@@ -27,6 +27,9 @@ def rgb_unpack(s: str) -> tuple[float, float, float]:
     r = int(s[1:3], 16) / 255
     g = int(s[3:5], 16) / 255
     b = int(s[5:7], 16) / 255
+    assert 0 <= r <= 1
+    assert 0 <= g <= 1
+    assert 0 <= b <= 1
     return r, g, b
 
 
@@ -85,6 +88,9 @@ def term_color_rgb_int(r: int, g: int, b: int) -> str:
     assert isinstance(r, int)
     assert isinstance(g, int)
     assert isinstance(b, int)
+    assert int(r) == r
+    assert int(g) == g
+    assert int(b) == b
     assert 0 <= r <= 255
     assert 0 <= g <= 255
     assert 0 <= b <= 255
@@ -98,43 +104,58 @@ def term_color_rgb_float(r: float, g: float, b: float) -> str:
     assert 0 <= r <= 1
     assert 0 <= g <= 1
     assert 0 <= b <= 1
-    # r, g, b = int(round(r * 255)), int(round(g * 255)), int(round(b * 255))
-    r, g, b = int(r * 255), int(g * 255), int(b * 255)
+    r, g, b = int(round(r * 255)), int(round(g * 255)), int(round(b * 255))
+    # r, g, b = int(r * 255), int(g * 255), int(b * 255)
+    assert 0 <= r <= 255
+    assert 0 <= g <= 255
+    assert 0 <= b <= 255
     return f"\x1b[38;2;{r};{g};{b}m"
 
 
 def term_color_hsv(h: float, s: float, v: float) -> str:
+    assert 0 <= h <= 1
+    assert 0 <= s <= 1
+    assert 0 <= v <= 1
     r, g, b = colorsys.hsv_to_rgb(h, s, v)
-    print(f"r: {r} g: {g} b: {b}")
     return term_color_rgb_float(r, g, b)
 
 
 def op_hsv(n: int, m: int) -> tuple[float, float, float]:
-    assert n < len(palette)
-    assert m < 3
+    assert 0 <= n < len(palette)
+    assert 0 <= m < 3
     h, s, v = colorsys.rgb_to_hsv(*palette[n])
     scale = m / 3
-    dim_val = scale / 1.5
-    s -= dim_val
-    # if n in (1, 2, 7):
-    # v -= dim_val
+    dim_pct = scale / 1.5
+    s *= 1 - dim_pct
+    assert 0 <= h <= 1
+    assert 0 <= s <= 1
+    assert 0 <= v <= 1
     return h, s, v
 
 
 def op_rgb(n: int, m: int) -> tuple[int, int, int]:
-    # r, g, b = map(lambda n: int(round(n * 255)), colorsys.hsv_to_rgb(*op_hsv(n, m)))
-    r, g, b = map(lambda n: int(n * 255), colorsys.hsv_to_rgb(*op_hsv(n, m)))
+    r, g, b = map(lambda n: int(round(n * 255)), colorsys.hsv_to_rgb(*op_hsv(n, m)))
+    # r, g, b = map(lambda n: int(n * 255), colorsys.hsv_to_rgb(*op_hsv(n, m)))
+    assert isinstance(r, int)
+    assert isinstance(g, int)
+    assert isinstance(b, int)
+    assert int(r) == r
+    assert int(g) == g
+    assert int(b) == b
+    assert 0 <= r <= 255
+    assert 0 <= g <= 255
+    assert 0 <= b <= 255
     return r, g, b
 
 
 def op_color(n: int, m: int) -> str:
     return term_color_hsv(*op_hsv(n, m))
+    # return term_color_rgb_int(*op_rgb(n, m))
 
 
 def dump_palette(pal: tuple[tuple[int, int, int]]) -> None:
     for i, c in enumerate(pal):
         tc = term_color_rgb_float(*c)
-        print(f"tc: {tc!r}")
         print(f"{tc}number {infe.number_to_words(i)}{cf.reset}")
 
 

@@ -312,11 +312,11 @@ for i, batch in enumerate(trace):
             # pname = p.split("_")[0]
             pname, _ = get_eun(p)
             batch_inputs.append((name, k, pname, op_color(clut[pname], k)))
-            rprint(f"i: {i} j: {j} k: {k} name: {name} p: {p} pname: {pname}")
+            # rprint(f"i: {i} j: {j} k: {k} name: {name} p: {p} pname: {pname}")
             port_usage[portize_use(name, k)][pname] += 1
-    # batch_inputs = sorted(batch_inputs, key=lambda v: (v[0], v[1]))
+    # batch_inputs = list(sorted(batch_inputs, key=lambda v: (v[0], v[1])))
     # rprint(f"batch_inputs[{i:2}]: {batch_inputs}")
-    rprint(f"batch[{i:2}]: ", end=None)
+    rprint(f"batch[{i:2}]: ", end="")
     print(" ".join([f"{b[3]}{b[0]}{cf.reset}" for b in batch_inputs]))
 
 for k in list(port_usage.keys()):
@@ -488,12 +488,16 @@ rprint(G["sha1hN16"])
 
 print("palette_a_8")
 sha1_arm.dump_palette(sha1_arm.palette_a_8)
+print("\n\n\n")
 print("palette_b_7")
 sha1_arm.dump_palette(sha1_arm.palette_b_7)
+print("\n\n\n")
 print("palette_c_8")
 sha1_arm.dump_palette(sha1_arm.palette_c_8)
+print("\n\n\n")
 print("palette_d_8")
 sha1_arm.dump_palette(sha1_arm.palette_d_9)
+print("\n\n\n")
 
 sys.exit(0)
 
