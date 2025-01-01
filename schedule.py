@@ -354,9 +354,9 @@ for i, batch in enumerate(nx.topological_generations(G)):
     for definition in batch:
         batches_v2_vregidx[definition]
         batches_v2_batchidx[definition] = i
-        print(f"definition: {definition}")
+        # print(f"definition: {definition}")
         binstr, _ = get_eun(definition)
-        print(f"binstr: {binstr}")
+        # print(f"binstr: {binstr}")
         binstrs.append(binstr)
         duses = [e[0] for e in G.in_edges(definition)]
         b_uses.update(duses)

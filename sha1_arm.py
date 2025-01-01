@@ -27,19 +27,53 @@ def rgb_unpack(s: str) -> tuple[float, float, float]:
     return r, g, b
 
 
-palette = [
-    rgb_unpack(c)
-    for c in (
-        "#0433ff",
-        "#00fdff",
-        "#00f900",
-        "#ff40ff",
-        "#ff9300",
-        "#942192",
-        "#ff2600",
-        "#c6ff4c",
-    )
-]
+palette_a_8_hex = (
+    "#0433ff",
+    "#00fdff",
+    "#00f900",
+    "#ff40ff",
+    "#ff9300",
+    "#942192",
+    "#ff2600",
+    "#c6ff4c",
+)
+
+# https://colorbrewer2.org/?type=qualitative&scheme=Set3&n=7
+palette_b_7_hex = ("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69")
+
+palette_c_8_hex = (
+    "#8dd3c7",
+    "#ffffb3",
+    "#bebada",
+    "#fb8072",
+    "#80b1d3",
+    "#fdb462",
+    "#b3de69",
+    "#fccde5",
+)
+
+# https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=9
+palette_d_9_hex = (
+    "#a6cee3",
+    "#1f78b4",
+    "#b2df8a",
+    "#33a02c",
+    "#fb9a99",
+    "#e31a1c",
+    "#fdbf6f",
+    "#ff7f00",
+    "#cab2d6",
+)
+
+palette_hex: tuple[str, ...] = tuple()
+palette_hex = palette_a_8_hex
+palette_hex = palette_b_7_hex
+palette_hex = palette_c_8_hex
+palette_hex = palette_d_9_hex
+
+palette_hex = palette_c_8_hex
+
+palette = [rgb_unpack(c) for c in palette_hex]
 
 
 def term_color_hsv(h: float, s: float, v: float) -> str:
@@ -61,10 +95,7 @@ def op_hsv(n: int, m: int) -> tuple[float, float, float]:
 
 
 def op_rgb(n: int, m: int) -> tuple[int, int, int]:
-    r, g, b = colorsys.hsv_to_rgb(*op_hsv(n, m))
-    r *= 255
-    g *= 255
-    b *= 255
+    r, g, b = map(lambda n: int(n * 255), colorsys.hsv_to_rgb(*op_hsv(n, m)))
     return r, g, b
 
 
