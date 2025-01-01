@@ -49,6 +49,7 @@ palette_a_8 = [rgb_unpack(c) for c in palette_a_8_hex]
 palette_b_7_hex = ("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69")
 palette_b_7 = [rgb_unpack(c) for c in palette_b_7_hex]
 
+# https://colorbrewer2.org/?type=qualitative&scheme=Set3&n=8
 palette_c_8_hex = (
     "#8dd3c7",
     "#ffffb3",
@@ -78,8 +79,8 @@ palette_d_9 = [rgb_unpack(c) for c in palette_d_9_hex]
 palette_hex: tuple[str, ...] = tuple()
 # palette_hex = palette_a_8_hex
 # palette_hex = palette_b_7_hex
-palette_hex = palette_c_8_hex
-# palette_hex = palette_d_9_hex
+# palette_hex = palette_c_8_hex
+palette_hex = palette_d_9_hex
 
 palette = [rgb_unpack(c) for c in palette_hex]
 

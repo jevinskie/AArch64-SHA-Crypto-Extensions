@@ -271,20 +271,38 @@ class Instr(enum.IntEnum):
     E = 6
 
 
-clut = {
+clut_palette_d_9 = {
     "sha1c": 0,
-    "sha1h": 1,
-    "sha1p": 2,
-    "sha1m": 3,
-    "sha1su0": 4,
+    "sha1h": 2,
+    "sha1p": 1,
+    "sha1m": 8,
+    "sha1su0": 3,
     "sha1su1": 5,
     "vaddX": 6,
-    "vaddY": 7,
-    "vaddXY": 6,
+    "vaddY": 4,
+    "vaddXY": 7,
     "add": 6,
     "abcd": 6,
     "e": 6,
 }
+
+clut_palette_c_8 = {
+    "sha1c": 0,
+    "sha1h": 4,
+    "sha1p": 1,
+    "sha1m": 7,
+    "sha1su0": 3,
+    "sha1su1": 6,
+    "vaddX": 5,
+    "vaddY": 1,
+    "vaddXY": 5,
+    "add": 5,
+    "abcd": 5,
+    "e": 5,
+}
+
+# clut = clut_palette_d_9
+clut = clut_palette_c_8
 
 port_assignments = {
     portize_use(i, p): collections.defaultdict() for p in range(3) for i in clut.keys()
