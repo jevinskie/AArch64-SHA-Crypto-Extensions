@@ -7,7 +7,10 @@ import typing
 
 import attrs
 import colorful as cf
+import inflect
 from rich import print as rprint
+
+infe = inflect.engine()
 
 cf.use_true_colors()
 cf.update_palette(
@@ -37,9 +40,11 @@ palette_a_8_hex = (
     "#ff2600",
     "#c6ff4c",
 )
+palette_a_8 = [rgb_unpack(c) for c in palette_a_8_hex]
 
 # https://colorbrewer2.org/?type=qualitative&scheme=Set3&n=7
 palette_b_7_hex = ("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69")
+palette_b_7 = [rgb_unpack(c) for c in palette_b_7_hex]
 
 palette_c_8_hex = (
     "#8dd3c7",
@@ -51,6 +56,7 @@ palette_c_8_hex = (
     "#b3de69",
     "#fccde5",
 )
+palette_c_8 = [rgb_unpack(c) for c in palette_c_8_hex]
 
 # https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=9
 palette_d_9_hex = (
@@ -64,22 +70,43 @@ palette_d_9_hex = (
     "#ff7f00",
     "#cab2d6",
 )
+palette_d_9 = [rgb_unpack(c) for c in palette_d_9_hex]
 
 palette_hex: tuple[str, ...] = tuple()
-palette_hex = palette_a_8_hex
-palette_hex = palette_b_7_hex
+# palette_hex = palette_a_8_hex
+# palette_hex = palette_b_7_hex
 palette_hex = palette_c_8_hex
-palette_hex = palette_d_9_hex
-
-palette_hex = palette_c_8_hex
+# palette_hex = palette_d_9_hex
 
 palette = [rgb_unpack(c) for c in palette_hex]
 
 
+def term_color_rgb_int(r: int, g: int, b: int) -> str:
+    assert isinstance(r, int)
+    assert isinstance(g, int)
+    assert isinstance(b, int)
+    assert 0 <= r <= 255
+    assert 0 <= g <= 255
+    assert 0 <= b <= 255
+    return f"\x1b[38;2;{r};{g};{b}m"
+
+
+def term_color_rgb_float(r: float, g: float, b: float) -> str:
+    assert isinstance(r, float)
+    assert isinstance(g, float)
+    assert isinstance(b, float)
+    assert 0 <= r <= 1
+    assert 0 <= g <= 1
+    assert 0 <= b <= 1
+    # r, g, b = int(round(r * 255)), int(round(g * 255)), int(round(b * 255))
+    r, g, b = int(r * 255), int(g * 255), int(b * 255)
+    return f"\x1b[38;2;{r};{g};{b}m"
+
+
 def term_color_hsv(h: float, s: float, v: float) -> str:
     r, g, b = colorsys.hsv_to_rgb(h, s, v)
-    r, g, b = int(round(r * 255)), int(round(g * 255)), int(round(b * 255))
-    return f"\x1b[38;2;{r};{g};{b}m"
+    print(f"r: {r} g: {g} b: {b}")
+    return term_color_rgb_float(r, g, b)
 
 
 def op_hsv(n: int, m: int) -> tuple[float, float, float]:
@@ -89,18 +116,26 @@ def op_hsv(n: int, m: int) -> tuple[float, float, float]:
     scale = m / 3
     dim_val = scale / 1.5
     s -= dim_val
-    if n in (1, 2, 7):
-        v -= dim_val
+    # if n in (1, 2, 7):
+    # v -= dim_val
     return h, s, v
 
 
 def op_rgb(n: int, m: int) -> tuple[int, int, int]:
+    # r, g, b = map(lambda n: int(round(n * 255)), colorsys.hsv_to_rgb(*op_hsv(n, m)))
     r, g, b = map(lambda n: int(n * 255), colorsys.hsv_to_rgb(*op_hsv(n, m)))
     return r, g, b
 
 
 def op_color(n: int, m: int) -> str:
     return term_color_hsv(*op_hsv(n, m))
+
+
+def dump_palette(pal: tuple[tuple[int, int, int]]) -> None:
+    for i, c in enumerate(pal):
+        tc = term_color_rgb_float(*c)
+        print(f"tc: {tc!r}")
+        print(f"{tc}number {infe.number_to_words(i)}{cf.reset}")
 
 
 @attrs.define(auto_attribs=True)

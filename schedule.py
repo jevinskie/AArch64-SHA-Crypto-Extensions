@@ -21,6 +21,7 @@ from ortools.sat.python import cp_model
 from rich import print as rprint
 from rich.pretty import pprint
 
+import sha1_arm
 from sha1_arm import cf, op_color
 
 tabulate
@@ -484,6 +485,15 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
 write_pipeline_dot(object(), "pipeline.dot")
 
 rprint(G["sha1hN16"])
+
+print("palette_a_8")
+sha1_arm.dump_palette(sha1_arm.palette_a_8)
+print("palette_b_7")
+sha1_arm.dump_palette(sha1_arm.palette_b_7)
+print("palette_c_8")
+sha1_arm.dump_palette(sha1_arm.palette_c_8)
+print("palette_d_8")
+sha1_arm.dump_palette(sha1_arm.palette_d_9)
 
 sys.exit(0)
 
