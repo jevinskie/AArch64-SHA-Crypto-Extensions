@@ -163,7 +163,7 @@ def dump_palette(pal: tuple[tuple[int, int, int]]) -> None:
 def dump_palette_ops(pal: tuple[tuple[int, int, int]]) -> None:
     for i in range(len(pal)):
         s = f"pal[{i}]: "
-        s += " ".join(f"{op_color(i, j)}operand[{j}]{cf.reset}" for j in range(3))
+        s += " ".join(f"{op_color(i, j, pal)}operand[{j}]{cf.reset}" for j in range(3))
         print(s)
 
 
