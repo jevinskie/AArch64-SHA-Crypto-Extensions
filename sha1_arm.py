@@ -121,10 +121,10 @@ def term_color_hsv(h: float, s: float, v: float) -> str:
     return term_color_rgb_float(r, g, b)
 
 
-def op_hsv(n: int, m: int) -> tuple[float, float, float]:
-    assert 0 <= n < len(palette)
+def op_hsv(n: int, m: int, p: tuple[float, float, float] = palette) -> tuple[float, float, float]:
+    assert 0 <= n < len(p)
     assert 0 <= m < 3
-    h, s, v = colorsys.rgb_to_hsv(*palette[n])
+    h, s, v = colorsys.rgb_to_hsv(*p[n])
     scale = m / 3
     dim_pct = scale / 1.5
     s *= 1 - dim_pct
@@ -149,8 +149,8 @@ def op_rgb(n: int, m: int) -> tuple[int, int, int]:
     return r, g, b
 
 
-def op_color(n: int, m: int) -> str:
-    return term_color_hsv(*op_hsv(n, m))
+def op_color(n: int, m: int, p: tuple[float, float, float] = palette) -> str:
+    return term_color_hsv(*op_hsv(n, m, p))
     # return term_color_rgb_int(*op_rgb(n, m))
 
 
@@ -158,6 +158,13 @@ def dump_palette(pal: tuple[tuple[int, int, int]]) -> None:
     for i, c in enumerate(pal):
         tc = term_color_rgb_float(*c)
         print(f"{tc}number {infe.number_to_words(i)}{cf.reset}")
+
+
+def dump_palette_ops(pal: tuple[tuple[int, int, int]]) -> None:
+    for i in range(len(pal)):
+        s = f"pal[{i}]: "
+        s += " ".join(f"{op_color(i, j)}operand[{j}]{cf.reset}" for j in range(3))
+        print(s)
 
 
 @attrs.define(auto_attribs=True)

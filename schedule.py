@@ -517,6 +517,19 @@ print("palette_d_8")
 sha1_arm.dump_palette(sha1_arm.palette_d_9)
 print("\n\n\n")
 
+print("palette_a_8")
+sha1_arm.dump_palette_ops(sha1_arm.palette_a_8)
+print("\n\n\n")
+print("palette_b_7")
+sha1_arm.dump_palette_ops(sha1_arm.palette_b_7)
+print("\n\n\n")
+print("palette_c_8")
+sha1_arm.dump_palette_ops(sha1_arm.palette_c_8)
+print("\n\n\n")
+print("palette_d_8")
+sha1_arm.dump_palette_ops(sha1_arm.palette_d_9)
+print("\n\n\n")
+
 sys.exit(0)
 
 # for i, batch in enumerate(nx.topological_generations(GO)):
