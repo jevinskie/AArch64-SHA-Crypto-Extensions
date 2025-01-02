@@ -7,6 +7,7 @@ import typing
 
 import attrs
 import colorful as cf
+import colorspacious as clr
 import inflect
 from rich import print as rprint
 
@@ -30,6 +31,16 @@ def rgb_unpack(s: str) -> tuple[float, float, float]:
     assert 0 <= r <= 1
     assert 0 <= g <= 1
     assert 0 <= b <= 1
+    return r, g, b
+
+
+def rgb_unpack_int(s: str) -> tuple[float, float, float]:
+    r = int(s[1:3], 16) / 255
+    g = int(s[3:5], 16) / 255
+    b = int(s[5:7], 16) / 255
+    assert 0 <= r <= 255
+    assert 0 <= g <= 255
+    assert 0 <= b <= 255
     return r, g, b
 
 
@@ -79,8 +90,8 @@ palette_d_9 = [rgb_unpack(c) for c in palette_d_9_hex]
 palette_hex: tuple[str, ...] = tuple()
 # palette_hex = palette_a_8_hex
 # palette_hex = palette_b_7_hex
-# palette_hex = palette_c_8_hex
-palette_hex = palette_d_9_hex
+palette_hex = palette_c_8_hex
+# palette_hex = palette_d_9_hex
 
 palette = [rgb_unpack(c) for c in palette_hex]
 
@@ -121,12 +132,45 @@ def term_color_hsv(h: float, s: float, v: float) -> str:
     return term_color_rgb_float(r, g, b)
 
 
-def op_hsv(n: int, m: int, p: tuple[float, float, float] = palette) -> tuple[float, float, float]:
+def term_color_jch(j: float, c: float, h: float) -> str:
+    assert isinstance(j, float)
+    assert isinstance(c, float)
+    assert isinstance(h, float)
+    assert 0 <= j <= 100
+    assert 0 <= c <= 300  # normal max of around 150?
+    assert 0 <= h < 360
+    # start_to_end_fn = clr.cspace_converter("JCh", "sRGB255")
+    # rprint(start_to_end_fn.nodes)
+    # rprint(f"start_to_end_fn: {start_to_end_fn}")
+    r, g, b = clr.cspace_convert((j, c, h), "JCh", "sRGB255")
+    # r, g, b = start_to_end_fn((j, c, h))
+    # rprint(f"j: {j:.03} c: {c:.03} h: {h}")
+    # rprint(f"r: {r} g: {g} b: {b}")
+    # color spaces be weird yo
+    r = min(max(r, 0.0), 255.0)
+    g = min(max(g, 0.0), 255.0)
+    b = min(max(b, 0.0), 255.0)
+    r, g, b = int(round(r)), int(round(g)), int(round(b))
+    # rprint(f"r: {r} g: {g} b: {b}")
+    assert isinstance(r, int)
+    assert isinstance(g, int)
+    assert isinstance(b, int)
+    assert 0 <= r <= 255
+    assert 0 <= g <= 255
+    assert 0 <= b <= 255
+    return f"\x1b[38;2;{r};{g};{b}m"
+
+
+def op_hsv(
+    n: int, m: int, p: list[tuple[float, float, float]] = palette
+) -> tuple[float, float, float]:
     assert 0 <= n < len(p)
     assert 0 <= m < 3
     h, s, v = colorsys.rgb_to_hsv(*p[n])
+    # print(f"h: {h:.03} s: {s:.03} v: {v:.03}")
     scale = m / 3
-    dim_pct = scale / 1.5
+    # scale = math.exp(max(math.log(m + math.nextafter(0, math.inf)), 0) ** 2 + math.log(1 / 3))
+    dim_pct = scale / 1
     s *= 1 - dim_pct
     assert 0 <= h <= 1
     assert 0 <= s <= 1
@@ -149,9 +193,30 @@ def op_rgb(n: int, m: int) -> tuple[int, int, int]:
     return r, g, b
 
 
-def op_color(n: int, m: int, p: tuple[float, float, float] = palette) -> str:
-    return term_color_hsv(*op_hsv(n, m, p))
+def op_jch(
+    n: int, m: int, p: list[tuple[float, float, float]] = palette
+) -> tuple[float, float, float]:
+    assert 0 <= n < len(p)
+    assert 0 <= m < 3
+    j, c, h = clr.cspace_convert(p[n], "sRGB1", "JCh")
+    # rprint(f"j: {j:.03} c: {c:.03} h: {h}")
+    scale = m / 3
+    # scale = math.exp(max(math.log(m + math.nextafter(0, math.inf)), 0) ** 2 + math.log(1/3))
+    dim_pct = scale / 1
+    # c *= 1 - dim_pct
+    c *= 1 - dim_pct
+    # j = max(min(j * (1 - dim_pct/1.5), 100.0), 0.0)
+    # j /= (m + 1)
+    assert 0 <= j <= 100
+    assert 0 <= c <= 300  # normal max of around 150?
+    assert 0 <= h < 360
+    return j, c, h
+
+
+def op_color(n: int, m: int, p: list[tuple[float, float, float]] = palette) -> str:
+    # return term_color_hsv(*op_hsv(n, m, p))
     # return term_color_rgb_int(*op_rgb(n, m))
+    return term_color_jch(*op_jch(n, m, p))
 
 
 def dump_palette(pal: tuple[tuple[int, int, int]]) -> None:
