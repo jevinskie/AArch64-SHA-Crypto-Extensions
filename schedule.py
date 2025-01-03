@@ -504,6 +504,9 @@ write_pipeline_dot(object(), "pipeline.dot")
 
 rprint(G["sha1hN16"])
 
+# ffmpeg -i input.mp4 -filter_complex "[0]reverse[r];[0][r]concat=n=2:v=1:a=0,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" output.gif
+
+
 print("palette_a_8")
 sha1_arm.dump_palette(sha1_arm.palette_a_8)
 print("\n\n\n")
