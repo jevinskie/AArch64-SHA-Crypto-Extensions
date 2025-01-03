@@ -474,64 +474,70 @@ rprint("instr_op_delays:")
 pprint(instr_op_delays)
 
 
-def get_node(ssa_def: str, num_ops: int) -> str:
+def get_node(ssa_def: str, instr: str, num_ops: int) -> str:
     # vaddX [label="vaddX|{{<f0> op0| <f1> op2}| <f2> res}", shape=record];
     ops = "|".join(f"<op{n}> op{n}" for n in range(num_ops))
     label = f"{ssa_def}|{{{{{ops}}}|<res> res}}"
-    return f'{ssa_def} [label="{label}", shape=record];'
+    hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0))
+    return f'{ssa_def} [label="{label}", fillcolor="{hexc}", style="filled", shape=record];'
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n"
+    nodes: list[str] = []
+    edges: list[str] = []
     for batch in batches_v2:
         for d in batch:
-            print(f"d: {d}")
             instr, _ = get_eun(d)
-            s += f"\t{get_node(d, NumInPorts[instr])}\n"
+            nodes.append(f"\t{get_node(d, instr, NumInPorts[instr])}")
     for d, uses in defs_port_uses.items():
         for pnum, u in enumerate(uses):
             if u is None:
                 continue
-            s += f"\t{u}:res -> {d}:op{pnum}\n"
+            edges.append(f"\t{u}:res -> {d}:op{pnum}")
+    s += "\n".join(nodes)
+    s += "\n\n\n"
+    s += "\n".join(edges)
     s += "\n}\n"
-    ps = dot_format(s)
-    print(f"ps: {ps}")
+    # ps = dot_format(s)
+    ps = s
+    # print(f"ps: {ps}")
     with open(out_path, "w") as f:
         f.write(ps)
 
 
 write_pipeline_dot(object(), "pipeline.dot")
 
-rprint(G["sha1hN16"])
+# rprint(G["sha1hN16"])
 
 # ffmpeg -i input.mp4 -filter_complex "[0]reverse[r];[0][r]concat=n=2:v=1:a=0,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" output.gif
 
 
-print("palette_a_8")
-sha1_arm.dump_palette(sha1_arm.palette_a_8)
-print("\n\n\n")
-print("palette_b_7")
-sha1_arm.dump_palette(sha1_arm.palette_b_7)
-print("\n\n\n")
-print("palette_c_8")
-sha1_arm.dump_palette(sha1_arm.palette_c_8)
-print("\n\n\n")
-print("palette_d_9")
-sha1_arm.dump_palette(sha1_arm.palette_d_9)
-print("\n\n\n")
+# print("palette_a_8")
+# sha1_arm.dump_palette(sha1_arm.palette_a_8)
+# print("\n\n\n")
+# print("palette_b_7")
+# sha1_arm.dump_palette(sha1_arm.palette_b_7)
+# print("\n\n\n")
+# print("palette_c_8")
+# sha1_arm.dump_palette(sha1_arm.palette_c_8)
+# print("\n\n\n")
+# print("palette_d_9")
+# sha1_arm.dump_palette(sha1_arm.palette_d_9)
+# print("\n\n\n")
 
-print("palette_a_8")
-sha1_arm.dump_palette_ops(sha1_arm.palette_a_8)
-print("\n\n\n")
-print("palette_b_7")
-sha1_arm.dump_palette_ops(sha1_arm.palette_b_7)
-print("\n\n\n")
-print("palette_c_8")
-sha1_arm.dump_palette_ops(sha1_arm.palette_c_8)
-print("\n\n\n")
-print("palette_d_9")
-sha1_arm.dump_palette_ops(sha1_arm.palette_d_9)
-print("\n\n\n")
+# print("palette_a_8")
+# sha1_arm.dump_palette_ops(sha1_arm.palette_a_8)
+# print("\n\n\n")
+# print("palette_b_7")
+# sha1_arm.dump_palette_ops(sha1_arm.palette_b_7)
+# print("\n\n\n")
+# print("palette_c_8")
+# sha1_arm.dump_palette_ops(sha1_arm.palette_c_8)
+# print("\n\n\n")
+# print("palette_d_9")
+# sha1_arm.dump_palette_ops(sha1_arm.palette_d_9)
+# print("\n\n\n")
 
 sys.exit(0)
 

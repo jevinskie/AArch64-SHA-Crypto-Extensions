@@ -34,14 +34,24 @@ def rgb_unpack(s: str) -> tuple[float, float, float]:
     return r, g, b
 
 
-def rgb_unpack_int(s: str) -> tuple[float, float, float]:
-    r = int(s[1:3], 16) / 255
-    g = int(s[3:5], 16) / 255
-    b = int(s[5:7], 16) / 255
+def rgb_unpack_int(s: str) -> tuple[int, int, int]:
+    r = int(s[1:3], 16)
+    g = int(s[3:5], 16)
+    b = int(s[5:7], 16)
     assert 0 <= r <= 255
     assert 0 <= g <= 255
     assert 0 <= b <= 255
     return r, g, b
+
+
+def rgb_pack_int(r: int, g: int, b: int) -> str:
+    assert isinstance(r, int)
+    assert isinstance(g, int)
+    assert isinstance(b, int)
+    assert 0 <= r <= 255
+    assert 0 <= g <= 255
+    assert 0 <= b <= 255
+    return f"#{r:02x}{g:02x}{b:02x}"
 
 
 palette_a_8_hex = (
