@@ -20,6 +20,7 @@ from more_itertools import all_unique, always_reversible
 from ortools.sat.python import cp_model
 from rich import print as rprint
 from rich.pretty import pprint
+from yattag import Doc
 
 import sha1_arm
 from sha1_arm import cf, op_color
@@ -173,6 +174,28 @@ def get_eun(definition: str) -> tuple[str, int]:
     s = m.group(1)
     n = int(m.group(2))
     return s, n
+
+
+def gen_table(name: str, ops: list[str]):
+    doc, tag, text = Doc().tagtext()
+
+    # Start the table
+    with tag("table", border="0", cellborder="1", cellspacing="0"):
+        # First row: Combined label spanning two cells
+        with tag("tr"):
+            with tag("td", colspan="2"):
+                text(name)
+
+        # Second row: Left cell split into operands, right cell is result
+        for i, operand in enumerate(ops):
+            with tag("tr"):
+                with tag("td"):
+                    text(operand)
+                if i == 0:
+                    with tag("td", rowspan=f"{len(ops)}"):
+                        text("res")
+
+    return doc.getvalue()
 
 
 for n in list(G.nodes()):
@@ -484,18 +507,22 @@ def get_node(ssa_def: str, instr: str, num_ops: int) -> str:
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n"
-    nodes: list[str] = []
+    super_nodes: list[str] = []
     edges: list[str] = []
-    for batch in batches_v2:
+    for i, batch in enumerate(batches_v2):
+        nodes: list[str] = []
         for d in batch:
             instr, _ = get_eun(d)
             nodes.append(f"\t{get_node(d, instr, NumInPorts[instr])}")
+        sn = f'subgraph cluster_t{i} {{\n\tlabel = "t_{i}"; color="#00000000";\n'
+        sn += "\n".join(nodes) + "\n}"
+        super_nodes.append(sn)
     for d, uses in defs_port_uses.items():
         for pnum, u in enumerate(uses):
             if u is None:
                 continue
             edges.append(f"\t{u}:res -> {d}:op{pnum}")
-    s += "\n".join(nodes)
+    s += "\n".join(super_nodes)
     s += "\n\n\n"
     s += "\n".join(edges)
     s += "\n}\n"
