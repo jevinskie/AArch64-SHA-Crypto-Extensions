@@ -178,21 +178,6 @@ def op_hsv(
     return h, s, v
 
 
-def op_rgb(n: int, m: int) -> tuple[int, int, int]:
-    r, g, b = map(lambda n: int(round(n * 255)), colorsys.hsv_to_rgb(*op_hsv(n, m)))
-    # r, g, b = map(lambda n: int(n * 255), colorsys.hsv_to_rgb(*op_hsv(n, m)))
-    assert isinstance(r, int)
-    assert isinstance(g, int)
-    assert isinstance(b, int)
-    assert int(r) == r
-    assert int(g) == g
-    assert int(b) == b
-    assert 0 <= r <= 255
-    assert 0 <= g <= 255
-    assert 0 <= b <= 255
-    return r, g, b
-
-
 def op_jch(
     n: int, m: int, p: list[tuple[float, float, float]] = palette
 ) -> tuple[float, float, float]:
@@ -211,6 +196,29 @@ def op_jch(
     assert 0 <= c <= 300  # normal max of around 150?
     assert 0 <= h < 360
     return j, c, h
+
+
+def op_rgb(n: int, m: int) -> tuple[int, int, int]:
+    j, c, h = op_jch(n, m)
+    assert isinstance(j, float)
+    assert isinstance(c, float)
+    assert isinstance(h, float)
+    assert 0 <= j <= 100
+    assert 0 <= c <= 300  # normal max of around 150?
+    assert 0 <= h < 360
+    r, g, b = clr.cspace_convert((j, c, h), "JCh", "sRGB255")
+    # color spaces be weird yo
+    r = min(max(r, 0.0), 255.0)
+    g = min(max(g, 0.0), 255.0)
+    b = min(max(b, 0.0), 255.0)
+    r, g, b = int(round(r)), int(round(g)), int(round(b))
+    assert isinstance(r, int)
+    assert isinstance(g, int)
+    assert isinstance(b, int)
+    assert 0 <= r <= 255
+    assert 0 <= g <= 255
+    assert 0 <= b <= 255
+    return r, g, b
 
 
 def op_color(n: int, m: int, p: list[tuple[float, float, float]] = palette) -> str:
