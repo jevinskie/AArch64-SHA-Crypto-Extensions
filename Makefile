@@ -333,6 +333,9 @@ run-ubsan: sha1-arm-ubsan
 %.dot.pdf: %.dot
 	dot -o$@ -Tpdf $^
 
+%.dot.svg: %.dot
+	dot -o$@ -Tsvg $^
+
 sha1-compress-one.ll: sha1-arm-unrolled-O3.ll
 	llvm-extract -o $(basename $@)_extract.bc --func=sha1_arm_unrolled_compress_one $^
 	llvm-dis -o $@ $(basename $@)_extract.bc

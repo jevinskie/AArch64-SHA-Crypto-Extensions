@@ -8,7 +8,10 @@
 /compile_commands.json
 /sha1-arm-opt-remarks.txt
 /uint32_to_ascii_hex
-/*.asm
-/*.ll
-/*.ii
-/*.o
+**/*.asm
+**/*.ll
+**/*.ii
+**/*.o
+**/*.pdf
+**/*.svg
+**/*.png
