@@ -497,17 +497,26 @@ rprint("instr_op_delays:")
 pprint(instr_op_delays)
 
 
-def get_node(ssa_def: str, instr: str, num_ops: int, hidden: bool = False) -> str:
+def get_node(
+    ssa_def: str, instr: str, cycle: int, num_ops: int, bubble: bool = False
+) -> tuple[str, str]:
     # vaddX [label="vaddX|{{<f0> op0| <f1> op2}| <f2> res}", shape=record];
     ops = "|".join(f"<op{n}> op{n}" for n in range(num_ops))
     label = f"{ssa_def}|{{{{{ops}}}|<res> res}}"
     hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0))
-    style = 'style="filled"' if not hidden else 'style="invis"'
-    return f'{ssa_def} [label="{label}", fillcolor="{hexc}", {style}, shape=record];'
+    style = 'style="filled"' if not bubble else 'style="invis"'
+    node_name = f"{instr}T{cycle}"
+    cmt = "REAL" if not bubble else "BUBBLE"
+    return (
+        node_name,
+        f'{node_name} [label="{label}", fillcolor="{hexc}", {style}, shape=record]; # {cmt}',
+    )
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n\tcompound=true;\n"
+    def2node: dict[str, str] = {}
+    dummy_count: dict[str, int] = {i: 0 for i in all_instrs}
     super_nodes: list[str] = []
     edges: list[str] = []
     super_node_order_edges: list[str] = []
@@ -518,9 +527,11 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
         # binstrs: list[str] = []
         for d in batch:
             instr, _ = get_eun(d)
-            # real_instrs.add(instr)
+            real_instrs.add(instr)
             instr_idx = all_instrs.index(instr)
-            # nodes[instr_idx] = f"\t{get_node(d, instr, NumInPorts[instr])}"
+            node_name, node_dot = get_node(d, instr, i, NumInPorts[instr])
+            nodes[instr_idx] = f"\t{node_dot}"
+            def2node[d] = node_name
         # rprint(f"partial nodes[{i}]: {nodes}")
         dummy_instrs = all_instrs_set.difference(real_instrs)
         # rprint(f"dummy_instrs[{i}]: {dummy_instrs}")
@@ -528,22 +539,28 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             # rprint(f"stub_instr[{i}]: {stub_instr}")
             instr_idx = all_instrs.index(stub_instr)
             # rprint(f"stub_instr_idx[{i}]: {instr_idx}")
-            nodes[instr_idx] = (
-                f"\t{get_node(f'{stub_instr}N{i}', stub_instr, NumInPorts[stub_instr], hidden=True)}"
+            dc = dummy_count[stub_instr]
+            dummy_count[stub_instr] += 1
+            _, node_dot = get_node(
+                f"{stub_instr}ND{dc}", stub_instr, i, NumInPorts[stub_instr], bubble=True
             )
+            nodes[instr_idx] = f"\t{node_dot}"
         # rprint(f"full nodes[{i}]: {nodes}")
         intra_cycle_order_edges: list[str] = []
         for j in range(len(all_instrs) - 1):
-            intra_cycle_order_edges.append(f"\t{all_instrs[j]}N{i} -> {all_instrs[j+1]}N{i}")
-        edges += intra_cycle_order_edges
+            intra_cycle_order_edges.append(
+                f'\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [style="invis"]'
+            )
+        instr_node_order_edges += intra_cycle_order_edges
         sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
+    # rprint(f"def2node: {def2node}")
     for d, uses in defs_port_uses.items():
         for pnum, u in enumerate(uses):
             if u is None:
                 continue
-            edges.append(f"\t{u}:res -> {d}:op{pnum}")
+            edges.append(f"\t{def2node[u]}:res -> {def2node[d]}:op{pnum}")
     # super_node_order_edges = [f"\tcluster_t{t} -> cluster_t{t + 1}" for t in range(len(batches_v2) - 1) ]
     s += "\n".join(super_nodes)
     s += "\n\n\n"
@@ -553,13 +570,11 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\n\n\n"
     s += "\n".join(edges)
     s += "\n}\n"
-    ps = dot_format(s)
-    # ps = s
-    # print(f"ps: {ps}")
-    with open(out_path, "w") as f:
-        f.write(ps)
     with open("pipeline-raw.dot", "w") as f:
         f.write(s)
+    ps = dot_format(s)
+    with open(out_path, "w") as f:
+        f.write(ps)
 
 
 write_pipeline_dot(object(), "pipeline.dot")
