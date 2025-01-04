@@ -506,15 +506,18 @@ def get_node(ssa_def: str, instr: str, num_ops: int) -> str:
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n"
+    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n\tcompound=true;\n"
     super_nodes: list[str] = []
     edges: list[str] = []
+    super_node_order_edges: list[str] = []
+    instr_node_order_edges: list[str] = []
     for i, batch in enumerate(batches_v2):
         nodes: list[str] = []
+        # binstrs: list[str] = []
         for d in batch:
             instr, _ = get_eun(d)
             nodes.append(f"\t{get_node(d, instr, NumInPorts[instr])}")
-        sn = f'subgraph cluster_t{i} {{\n\tlabel = "t_{i}"; color="#00000000";\n'
+        sn = f'subgraph t_{i} {{\n\tcluster=true;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     for d, uses in defs_port_uses.items():
@@ -522,7 +525,12 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             if u is None:
                 continue
             edges.append(f"\t{u}:res -> {d}:op{pnum}")
+    # super_node_order_edges = [f"\tt_{t} -> t_{t + 1}" for t in range(len(batches_v2) - 1) ]
     s += "\n".join(super_nodes)
+    s += "\n\n\n"
+    s += "\n".join(super_node_order_edges)
+    s += "\n\n\n"
+    s += "\n".join(instr_node_order_edges)
     s += "\n\n\n"
     s += "\n".join(edges)
     s += "\n}\n"
