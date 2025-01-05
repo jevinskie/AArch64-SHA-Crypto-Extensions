@@ -514,13 +514,16 @@ def get_node(
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n\tcompound=false;\n"
+    s = 'digraph g {\n\t# compound=true;\n\t# packmode="graph";\n\trankdir=LR;\n\tnode [fontsize=16];\n'
+    num_cycles = len(batches_v2)
     def2node: dict[str, str] = {}
+    cycle2instr2node: dict[int, dict[str, str]] = {c: {} for c in range(num_cycles)}
     dummy_count: dict[str, int] = {i: 0 for i in all_instrs}
     super_nodes: list[str] = []
     edges: list[str] = []
     super_node_order_edges: list[str] = []
-    instr_node_order_edges: list[str] = []
+    intra_cycle_order_edges: list[str] = []
+    inter_cycle_order_edges: list[str] = []
     for i, batch in enumerate(batches_v2):
         nodes: list[str] = [""] * len(all_instrs)
         real_instrs = set()
@@ -532,6 +535,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             node_name, node_dot = get_node(d, instr, i, NumInPorts[instr])
             nodes[instr_idx] = f"\t{node_dot}"
             def2node[d] = node_name
+            cycle2instr2node[i][instr] = node_name
         # rprint(f"partial nodes[{i}]: {nodes}")
         dummy_instrs = all_instrs_set.difference(real_instrs)
         # rprint(f"dummy_instrs[{i}]: {dummy_instrs}")
@@ -541,18 +545,17 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             # rprint(f"stub_instr_idx[{i}]: {instr_idx}")
             dc = dummy_count[stub_instr]
             dummy_count[stub_instr] += 1
-            _, node_dot = get_node(
-                f"{stub_instr}ND{dc}", stub_instr, i, NumInPorts[stub_instr], bubble=False
-            )
+            d = f"{stub_instr}ND{dc}"
+            node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=False)
             nodes[instr_idx] = f"\t{node_dot}"
+            def2node[d] = node_name
+            cycle2instr2node[i][stub_instr] = node_name
         # rprint(f"full nodes[{i}]: {nodes}")
-        intra_cycle_order_edges: list[str] = []
         for j in range(len(all_instrs) - 1):
             intra_cycle_order_edges.append(
-                f'\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [style="invis"];'
+                f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=true]; # intra-cycle"
             )
-        instr_node_order_edges += intra_cycle_order_edges
-        sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\trankdir=TD;\n\tlabel="t_{i}";\n'
+        sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")
@@ -560,14 +563,33 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
         for pnum, u in enumerate(uses):
             if u is None:
                 continue
-            edges.append(f"\t{def2node[u]}:res -> {def2node[d]}:op{pnum}")
-    # super_node_order_edges = [f"\tcluster_t{t} -> cluster_t{t + 1};" for t in range(len(batches_v2) - 1) ]
+            # edges.append(f"\t{def2node[u]}:res -> {def2node[d]}:op{pnum}")
+    # super_node_order_edges = [
+    #     f"\tcluster_t{t} -> cluster_t{t + 1};" for t in range(len(batches_v2) - 1)
+    # ]
+    # super_node_order_edges = [
+    #     f"\t{}{t} -> cluster_t{t + 1};" for t in range(len(batches_v2) - 1)
+    # ]
+    # rprint(f"cycle2instr2node: {cycle2instr2node}")
+    # inter-cycle makes staircase
+    inter_cycle_order_edges = [
+        f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true]; # inter-cycle"
+        for c in range(num_cycles - 1)
+        for i in all_instrs
+    ]
+    s += "\t# super nodes\n"
     s += "\n".join(super_nodes)
     s += "\n\n\n"
+    s += "\t# super node order edges\n"
     s += "\n".join(super_node_order_edges)
     s += "\n\n\n"
-    s += "\n".join(instr_node_order_edges)
+    s += "\t# intra-cycle order edges\n"
+    s += "\n".join(intra_cycle_order_edges)
     s += "\n\n\n"
+    s += "\t# inter-cycle order edges\n"
+    s += "\n".join(inter_cycle_order_edges)
+    s += "\n\n\n"
+    s += "\t# edges\n"
     s += "\n".join(edges)
     s += "\n}\n"
     with open("pipeline-raw.dot", "w") as f:
