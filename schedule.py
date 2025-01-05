@@ -514,7 +514,7 @@ def get_node(
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n\tcompound=true;\n"
+    s = "digraph g {\n\tgraph [rankdir=LR];\n\tnode [fontsize=16];\n\tcompound=false;\n"
     def2node: dict[str, str] = {}
     dummy_count: dict[str, int] = {i: 0 for i in all_instrs}
     super_nodes: list[str] = []
@@ -542,17 +542,17 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             dc = dummy_count[stub_instr]
             dummy_count[stub_instr] += 1
             _, node_dot = get_node(
-                f"{stub_instr}ND{dc}", stub_instr, i, NumInPorts[stub_instr], bubble=True
+                f"{stub_instr}ND{dc}", stub_instr, i, NumInPorts[stub_instr], bubble=False
             )
             nodes[instr_idx] = f"\t{node_dot}"
         # rprint(f"full nodes[{i}]: {nodes}")
         intra_cycle_order_edges: list[str] = []
         for j in range(len(all_instrs) - 1):
             intra_cycle_order_edges.append(
-                f'\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [style="invis"]'
+                f'\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [style="invis"];'
             )
         instr_node_order_edges += intra_cycle_order_edges
-        sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\tlabel="t_{i}";\n'
+        sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\trankdir=TD;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")
@@ -561,7 +561,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             if u is None:
                 continue
             edges.append(f"\t{def2node[u]}:res -> {def2node[d]}:op{pnum}")
-    # super_node_order_edges = [f"\tcluster_t{t} -> cluster_t{t + 1}" for t in range(len(batches_v2) - 1) ]
+    # super_node_order_edges = [f"\tcluster_t{t} -> cluster_t{t + 1};" for t in range(len(batches_v2) - 1) ]
     s += "\n".join(super_nodes)
     s += "\n\n\n"
     s += "\n".join(super_node_order_edges)
