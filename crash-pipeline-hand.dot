@@ -1,0 +1,28 @@
+digraph g {
+{
+	cluster=true;
+	sha1mT15
+	[
+	shape=none,
+	label=<<table><tr><td>sha1mN4</td></tr><tr><td port="op0">op0</td><td port="res">res</td></tr></table>>
+	]
+	;
+}
+{
+	cluster=true;
+	sha1hT16
+	[
+	shape=none,
+	label=<<table><tr><td>sha1hN15</td></tr><tr><td port="op0">op0</td><td port="res">res</td></tr></table>>
+	]
+	;
+	sha1pT16
+	[
+	shape=none,
+	label=<<table><tr><td>sha1pN5</td></tr><tr><td port="op0">op0</td><td port="res">res</td></tr></table>>
+	]
+	;
+}
+	sha1mT15:res -> sha1pT16:op0
+	sha1mT15:res -> sha1hT16:op0
+}
