@@ -528,7 +528,7 @@ def get_node(
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    s = 'digraph g {\n\t# compound=true;\n\t# packmode="graph";\n\trankdir=LR;\n\tnode [fontsize=16];\n'
+    s = 'digraph g {\n\t# compound=true;\n\t# packmode="graph";\n\trankdir=LR;\n\tnode [fontsize=16, fontname="SF Pro Display"];\n'
     num_cycles = len(batches_v2)
     def2node: dict[str, str] = {}
     cycle2instr2node: dict[int, dict[str, str]] = {c: {} for c in range(num_cycles)}
