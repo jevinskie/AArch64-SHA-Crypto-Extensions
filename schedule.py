@@ -569,6 +569,9 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             intra_cycle_order_edges.append(
                 f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
             )
+            intra_cycle_order_edges.append(
+                f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
+            )
         sn = f'subgraph t{i} {{\n\tcluster=true;\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
@@ -588,6 +591,10 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     # inter-cycle makes staircase
     inter_cycle_order_edges = [
         f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
+        for c in range(num_cycles - 1)
+        for i in all_instrs
+    ] + [
+        f"\t{cycle2instr2node[c+1][i]} -> {cycle2instr2node[c][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
         for c in range(num_cycles - 1)
         for i in all_instrs
     ]
