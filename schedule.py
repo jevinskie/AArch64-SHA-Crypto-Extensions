@@ -176,7 +176,7 @@ def get_eun(definition: str) -> tuple[str, int]:
     return s, n
 
 
-def gen_table(name: str, ops: list[str]):
+def gen_table(name: str, num_ops: int) -> str:
     doc, tag, text = Doc().tagtext()
 
     # Start the table
@@ -187,12 +187,12 @@ def gen_table(name: str, ops: list[str]):
                 text(name)
 
         # Second row: Left cell split into operands, right cell is result
-        for i, operand in enumerate(ops):
+        for i in range(num_ops):
             with tag("tr"):
-                with tag("td"):
-                    text(operand)
+                with tag("td", port=f"op{i}"):
+                    text(f"op{i}")
                 if i == 0:
-                    with tag("td", rowspan=f"{len(ops)}"):
+                    with tag("td", rowspan=f"{num_ops}", port="res"):
                         text("res")
 
     return doc.getvalue()
@@ -500,13 +500,15 @@ pprint(instr_op_delays)
 def get_node(
     ssa_def: str, instr: str, cycle: int, num_ops: int, bubble: bool = False
 ) -> tuple[str, str]:
+    node_name = f"{instr}T{cycle}"
+    table_html = gen_table(ssa_def, num_ops)
+    cmt = "REAL" if not bubble else "BUBBLE"
+    return node_name, f"{node_name} [shape=plaintext, label=<{table_html}>]; # {cmt}"
     # vaddX [label="vaddX|{{<f0> op0| <f1> op2}| <f2> res}", shape=record];
     ops = "|".join(f"<op{n}> op{n}" for n in range(num_ops))
     label = f"{ssa_def}|{{{{{ops}}}|<res> res}}"
     hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0))
     style = 'style="filled"' if not bubble else 'style="invis"'
-    node_name = f"{instr}T{cycle}"
-    cmt = "REAL" if not bubble else "BUBBLE"
     return (
         node_name,
         f'{node_name} [label="{label}", fillcolor="{hexc}", {style}, shape=record]; # {cmt}',
@@ -553,7 +555,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
         # rprint(f"full nodes[{i}]: {nodes}")
         for j in range(len(all_instrs) - 1):
             intra_cycle_order_edges.append(
-                f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100]; # intra-cycle"
+                f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=true,weight=100000,color=red]; # intra-cycle"
             )
         sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
@@ -573,7 +575,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     # rprint(f"cycle2instr2node: {cycle2instr2node}")
     # inter-cycle makes staircase
     inter_cycle_order_edges = [
-        f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000]; # inter-cycle"
+        f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
         for c in range(num_cycles - 1)
         for i in all_instrs
     ]
