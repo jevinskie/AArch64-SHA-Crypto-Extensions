@@ -1,16 +1,16 @@
 digraph g {
 	subgraph cluster_x
 	{
-		sha1mT15
+		X
 	}
 	subgraph cluster_y
 	{
-		sha1hT16
-		sha1pT16
+		Y
+		Z
 			[
 				label=<<table><tr><td port="op0">op0</td></tr></table>>
 			]
 	}
-	sha1mT15 -> sha1hT16
-	sha1mT15 -> sha1pT16:op0
+	X -> Y
+	X -> Z:op0
 }
