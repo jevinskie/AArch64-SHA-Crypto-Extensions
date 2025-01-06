@@ -1,0 +1,11 @@
+digraph g {
+subgraph cluster_t0 {
+	sha1mT15 [shape=none, label=<<table border="0" cellborder="1" cellspacing="0" bgcolor="#fccde5"><tr><td colspan="2">sha1mN4</td></tr><tr><td port="op0">op0</td><td rowspan="3" port="res">res</td></tr><tr><td port="op1">op1</td></tr><tr><td port="op2">op2</td></tr></table>>]; # REAL
+}
+subgraph cluster_t16 {
+	sha1hT16 [shape=none, label=<<table border="0" cellborder="1" cellspacing="0" bgcolor="#80b1d3"><tr><td colspan="2">sha1hN15</td></tr><tr><td port="op0">op0</td><td rowspan="1" port="res">res</td></tr></table>>]; # REAL
+	sha1pT16 [shape=none, label=<<table border="0" cellborder="1" cellspacing="0" bgcolor="#bebada"><tr><td colspan="2">sha1pN5</td></tr><tr><td port="op0">op0</td><td rowspan="3" port="res">res</td></tr><tr><td port="op1">op1</td></tr><tr><td port="op2">op2</td></tr></table>>]; # REAL
+}
+	sha1mT15:res -> sha1pT16:op0
+	sha1mT15:res -> sha1hT16:op0
+}
