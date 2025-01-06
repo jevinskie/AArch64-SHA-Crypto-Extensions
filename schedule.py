@@ -185,10 +185,25 @@ def get_eund(definition: str) -> tuple[str, int, bool]:
     return s, n, d
 
 
+clut_palette_d_9 = {
+    "sha1c": 0,
+    "sha1h": 2,
+    "sha1p": 1,
+    "sha1m": 8,
+    "sha1su0": 3,
+    "sha1su1": 5,
+    "vaddX": 6,
+    "vaddY": 4,
+    "vaddXY": 7,
+    "add": 6,
+    "abcd": 6,
+    "e": 6,
+}
+
 clut_palette_c_8 = {
     "sha1c": 0,
     "sha1h": 4,
-    "sha1p": 1,
+    "sha1p": 2,
     "sha1m": 7,
     "sha1su0": 3,
     "sha1su1": 6,
@@ -322,21 +337,6 @@ class Instr(enum.IntEnum):
     ABCD = 6
     E = 6
 
-
-clut_palette_d_9 = {
-    "sha1c": 0,
-    "sha1h": 2,
-    "sha1p": 1,
-    "sha1m": 8,
-    "sha1su0": 3,
-    "sha1su1": 5,
-    "vaddX": 6,
-    "vaddY": 4,
-    "vaddXY": 7,
-    "add": 6,
-    "abcd": 6,
-    "e": 6,
-}
 
 port_assignments = {
     portize_use(i, p): collections.defaultdict() for p in range(3) for i in clut.keys()
@@ -647,8 +647,8 @@ write_pipeline_dot(object(), "pipeline.dot")
 # print("palette_b_7")
 # sha1_arm.dump_palette_ops(sha1_arm.palette_b_7)
 # print("\n\n\n")
-print("palette_c_8")
-sha1_arm.dump_palette_ops(sha1_arm.palette_c_8)
+# print("palette_c_8")
+# sha1_arm.dump_palette_ops(sha1_arm.palette_c_8)
 # print("\n\n\n")
 # print("palette_d_9")
 # sha1_arm.dump_palette_ops(sha1_arm.palette_d_9)
