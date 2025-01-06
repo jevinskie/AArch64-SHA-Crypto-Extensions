@@ -148,6 +148,7 @@ G = nx.DiGraph(sha1comp_dod)
 
 _suffix_underscore_pattern = r"^(.+?)_(\d+)$"
 _suffix_n_pattern = r"^(.+?)N(\d+)$"
+_suffix_nd_pattern = r"^(.+?)(N|ND)?(\d+)$"
 
 
 def get_eu(definition: str) -> tuple[str, int]:
@@ -176,12 +177,40 @@ def get_eun(definition: str) -> tuple[str, int]:
     return s, n
 
 
+def get_eund(definition: str) -> tuple[str, int, bool]:
+    m = re.match(_suffix_nd_pattern, definition)
+    s = m.group(1)
+    n = int(m.group(3))
+    d = True if m.group(2) == "ND" else False
+    return s, n, d
+
+
+clut_palette_c_8 = {
+    "sha1c": 0,
+    "sha1h": 4,
+    "sha1p": 1,
+    "sha1m": 7,
+    "sha1su0": 3,
+    "sha1su1": 6,
+    "vaddX": 5,
+    "vaddY": 1,
+    "vaddXY": 5,
+    "add": 5,
+    "abcd": 5,
+    "e": 5,
+}
+
+# clut = clut_palette_d_9
+clut = clut_palette_c_8
+
+
 def gen_table(name: str, num_ops: int) -> str:
     doc, tag, text = Doc().tagtext()
+    instr, _, _ = get_eund(name)
+    node_hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0))
 
-    # Start the table
-    with tag("table", border="0", cellborder="1", cellspacing="0"):
-        # First row: Combined label spanning two cells
+    with tag("table", border="0", cellborder="1", cellspacing="0", bgcolor=node_hexc):
+        # First row: overall node label spanning two cells
         with tag("tr"):
             with tag("td", colspan="2"):
                 text(name)
@@ -308,24 +337,6 @@ clut_palette_d_9 = {
     "abcd": 6,
     "e": 6,
 }
-
-clut_palette_c_8 = {
-    "sha1c": 0,
-    "sha1h": 4,
-    "sha1p": 1,
-    "sha1m": 7,
-    "sha1su0": 3,
-    "sha1su1": 6,
-    "vaddX": 5,
-    "vaddY": 1,
-    "vaddXY": 5,
-    "add": 5,
-    "abcd": 5,
-    "e": 5,
-}
-
-# clut = clut_palette_d_9
-clut = clut_palette_c_8
 
 port_assignments = {
     portize_use(i, p): collections.defaultdict() for p in range(3) for i in clut.keys()
@@ -502,7 +513,6 @@ def get_node(
 ) -> tuple[str, str]:
     node_name = f"{instr}T{cycle}"
     table_html = gen_table(ssa_def, num_ops)
-    hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0))
     style = "" if not bubble else " style=invis,"
     cmt = "REAL" if not bubble else "BUBBLE"
     return node_name, f"{node_name} [shape=none,{style} label=<{table_html}>]; # {cmt}"
@@ -510,6 +520,7 @@ def get_node(
     ops = "|".join(f"<op{n}> op{n}" for n in range(num_ops))
     label = f"{ssa_def}|{{{{{ops}}}|<res> res}}"
     style = 'style="filled"' if not bubble else 'style="invis"'
+    hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0))
     return (
         node_name,
         f'{node_name} [label="{label}", fillcolor="{hexc}", {style}, shape=record]; # {cmt}',

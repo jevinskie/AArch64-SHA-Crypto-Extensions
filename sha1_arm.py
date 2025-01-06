@@ -44,14 +44,14 @@ def rgb_unpack_int(s: str) -> tuple[int, int, int]:
     return r, g, b
 
 
-def rgb_pack_int(r: int, g: int, b: int) -> str:
+def rgb_pack_int(r: int, g: int, b: int, prefix: str = "#") -> str:
     assert isinstance(r, int)
     assert isinstance(g, int)
     assert isinstance(b, int)
     assert 0 <= r <= 255
     assert 0 <= g <= 255
     assert 0 <= b <= 255
-    return f"#{r:02x}{g:02x}{b:02x}"
+    return f"{prefix}{r:02x}{g:02x}{b:02x}"
 
 
 palette_a_8_hex = (
