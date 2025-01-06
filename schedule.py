@@ -612,7 +612,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\n".join(inter_cycle_order_edges)
     s += "\n\n\n"
     s += "\t# edges\n"
-    # s += "\n".join(edges)
+    s += "\n".join(edges)
     s += "\n}\n"
     with open("pipeline-raw.dot", "w") as f:
         f.write(s)
