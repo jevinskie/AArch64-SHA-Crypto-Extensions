@@ -566,9 +566,9 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             cycle2instr2node[i][stub_instr] = node_name
         # rprint(f"full nodes[{i}]: {nodes}")
         for j in range(len(all_instrs) - 1):
-            intra_cycle_order_edges.append(
-                f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
-            )
+            # intra_cycle_order_edges.append(
+            #     f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
+            # )
             intra_cycle_order_edges.append(
                 f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
             )
@@ -593,11 +593,12 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
         f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
         for c in range(num_cycles - 1)
         for i in all_instrs
-    ] + [
-        f"\t{cycle2instr2node[c+1][i]} -> {cycle2instr2node[c][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
-        for c in range(num_cycles - 1)
-        for i in all_instrs
     ]
+    # inter_cycle_order_edges += [
+    #     f"\t{cycle2instr2node[c+1][i]} -> {cycle2instr2node[c][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
+    #     for c in range(num_cycles - 1)
+    #     for i in all_instrs
+    # ]
     s += "\t# super nodes\n"
     s += "\n".join(super_nodes)
     s += "\n\n\n"
@@ -611,7 +612,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\n".join(inter_cycle_order_edges)
     s += "\n\n\n"
     s += "\t# edges\n"
-    s += "\n".join(edges)
+    # s += "\n".join(edges)
     s += "\n}\n"
     with open("pipeline-raw.dot", "w") as f:
         f.write(s)
