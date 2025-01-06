@@ -1,0 +1,16 @@
+digraph g {
+	subgraph cluster_x
+	{
+		sha1mT15
+	}
+	subgraph cluster_y
+	{
+		sha1hT16
+		sha1pT16
+			[
+				label=<<table><tr><td port="op0">op0</td></tr></table>>
+			]
+	}
+	sha1mT15 -> sha1hT16
+	sha1mT15 -> sha1pT16:op0
+}
