@@ -546,14 +546,14 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             dc = dummy_count[stub_instr]
             dummy_count[stub_instr] += 1
             d = f"{stub_instr}ND{dc}"
-            node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=True)
+            node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=False)
             nodes[instr_idx] = f"\t{node_dot}"
             def2node[d] = node_name
             cycle2instr2node[i][stub_instr] = node_name
         # rprint(f"full nodes[{i}]: {nodes}")
         for j in range(len(all_instrs) - 1):
             intra_cycle_order_edges.append(
-                f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=true]; # intra-cycle"
+                f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100]; # intra-cycle"
             )
         sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
@@ -573,7 +573,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     # rprint(f"cycle2instr2node: {cycle2instr2node}")
     # inter-cycle makes staircase
     inter_cycle_order_edges = [
-        f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true]; # inter-cycle"
+        f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000]; # inter-cycle"
         for c in range(num_cycles - 1)
         for i in all_instrs
     ]
