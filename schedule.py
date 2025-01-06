@@ -546,7 +546,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             dc = dummy_count[stub_instr]
             dummy_count[stub_instr] += 1
             d = f"{stub_instr}ND{dc}"
-            node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=False)
+            node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=True)
             nodes[instr_idx] = f"\t{node_dot}"
             def2node[d] = node_name
             cycle2instr2node[i][stub_instr] = node_name
@@ -563,7 +563,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
         for pnum, u in enumerate(uses):
             if u is None:
                 continue
-            # edges.append(f"\t{def2node[u]}:res -> {def2node[d]}:op{pnum}")
+            edges.append(f"\t{def2node[u]}:res -> {def2node[d]}:op{pnum}")
     # super_node_order_edges = [
     #     f"\tcluster_t{t} -> cluster_t{t + 1};" for t in range(len(batches_v2) - 1)
     # ]
