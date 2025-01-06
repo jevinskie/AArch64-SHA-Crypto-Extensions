@@ -528,7 +528,15 @@ def get_node(
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    s = 'digraph g {\n\tcompound=true;\n\t# packmode="graph";\n\tesep=150;sep=300;\n\trankdir=LR;\n\tnode [fontsize=16, fontname="Menlo"];\n'
+    s = ""
+    # s += "strict "
+    s += "digraph g {\n"
+    # s += "\n\tcompound=true;"
+    # s += '\n\tpackmode="graph";'
+    s += "\tesep=150;\n"
+    s += "\tsep=300;\n"
+    s += "\trankdir=LR;\n"
+    s += '\tnode [fontsize=16, fontname="Menlo"];\n'
     num_cycles = len(batches_v2)
     def2node: dict[str, str] = {}
     cycle2instr2node: dict[int, dict[str, str]] = {c: {} for c in range(num_cycles)}
