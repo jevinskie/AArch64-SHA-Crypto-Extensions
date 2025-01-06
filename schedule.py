@@ -528,7 +528,7 @@ def get_node(
 
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
-    s = 'digraph g {\n\t# compound=true;\n\t# packmode="graph";\n\trankdir=LR;\n\tnode [fontsize=16, fontname="SF Pro Display"];\n'
+    s = 'digraph g {\n\t# compound=true;\n\t# packmode="graph";\n\tesep=150;sep=300;\n\trankdir=LR;\n\tnode [fontsize=16, fontname="SF Pro Display"];\n'
     num_cycles = len(batches_v2)
     def2node: dict[str, str] = {}
     cycle2instr2node: dict[int, dict[str, str]] = {c: {} for c in range(num_cycles)}
@@ -569,7 +569,9 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             intra_cycle_order_edges.append(
                 f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
             )
-        sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
+        sn = (
+            f'subgraph t{i} {{\n\tcluster=false;\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
+        )
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")
