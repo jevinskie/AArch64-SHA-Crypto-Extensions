@@ -543,6 +543,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\trankdir=LR;\n"
     # s += "\tmargin=100;\n"
     s += "\toverlap=false;\n"
+    # s += "\tsplines=curved;\n"
     s += "\tnode [fontsize=16, fontname=Menlo];\n"
     num_cycles = len(batches_v2)
     def2node: dict[str, str] = {}
@@ -585,9 +586,9 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             #     f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
             # )
             intra_cycle_order_edges.append(
-                f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
+                f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,style=invis]; # intra-cycle"
             )
-        sn = f'subgraph t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
+        sn = f'subgraph cluster_t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")
@@ -605,7 +606,8 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     # rprint(f"cycle2instr2node: {cycle2instr2node}")
     # inter-cycle makes staircase
     inter_cycle_order_edges = [
-        f'\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple,lhead="cluster_t{c+1}",ltail="cluster_t{c}"]; # inter-cycle'
+        # f'\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple,style=invis,lhead="cluster_t{c+1}",ltail="cluster_t{c}"]; # inter-cycle'
+        f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,style=invis]; # inter-cycle"
         for c in range(num_cycles - 1)
         for i in all_instrs
     ]
@@ -627,7 +629,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\n".join(inter_cycle_order_edges)
     s += "\n\n\n"
     s += "\t# edges\n"
-    s += "\n".join(edges)
+    # s += "\n".join(edges)
     s += "\n}\n"
     with open("pipeline-raw.dot", "w") as f:
         f.write(s)
