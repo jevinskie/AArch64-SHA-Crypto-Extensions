@@ -219,10 +219,10 @@ clut_palette_c_8 = {
 clut = clut_palette_c_8
 
 
-def gen_table(name: str, num_ops: int) -> str:
+def gen_table(name: str, num_ops: int, dummy: bool = False) -> str:
     doc, tag, text = Doc().tagtext()
     instr, _, _ = get_eund(name)
-    node_hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0))
+    node_hexc = sha1_arm.rgb_pack_int(*sha1_arm.op_rgb(clut[instr], 0, dummy=dummy))
 
     with tag("table", border="0", cellborder="1", cellspacing="0", bgcolor=node_hexc):
         # First row: overall node label spanning two cells
@@ -512,8 +512,9 @@ def get_node(
     ssa_def: str, instr: str, cycle: int, num_ops: int, bubble: bool = False
 ) -> tuple[str, str]:
     node_name = f"{instr}T{cycle}"
-    table_html = gen_table(ssa_def, num_ops)
-    style = "" if not bubble else " style=invis,"
+    table_html = gen_table(ssa_def, num_ops, dummy=bubble)
+    style = ""
+    # style = "" if not bubble else " style=invis,"
     cmt = "REAL" if not bubble else "BUBBLE"
     return node_name, f"{node_name} [shape=none,{style} label=<{table_html}>]; # {cmt}"
     # vaddX [label="vaddX|{{<f0> op0| <f1> op2}| <f2> res}", shape=record];
@@ -576,7 +577,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             dc = dummy_count[stub_instr]
             dummy_count[stub_instr] += 1
             d = f"{stub_instr}ND{dc}"
-            node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=False)
+            node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=True)
             nodes[instr_idx] = f"\t{node_dot}"
             def2node[d] = node_name
             cycle2instr2node[i][stub_instr] = node_name
@@ -588,7 +589,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             intra_cycle_order_edges.append(
                 f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,style=invis]; # intra-cycle"
             )
-        sn = f'subgraph cluster_t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
+        sn = f'subgraph cluster_t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n\tfontname=Menlo;\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")

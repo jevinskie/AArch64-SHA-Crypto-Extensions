@@ -189,27 +189,34 @@ def op_hsv(
 
 
 def op_jch(
-    n: int, m: int, p: list[tuple[float, float, float]] = palette
+    n: int, m: int, p: list[tuple[float, float, float]] = palette, dummy: bool = False
 ) -> tuple[float, float, float]:
     assert 0 <= n < len(p)
     assert 0 <= m < 3
     j, c, h = clr.cspace_convert(p[n], "sRGB1", "JCh")
     # rprint(f"j: {j:.03} c: {c:.03} h: {h}")
-    scale = m / 3
-    # scale = math.exp(max(math.log(m + math.nextafter(0, math.inf)), 0) ** 2 + math.log(1/3))
-    dim_pct = scale / 1
-    # c *= 1 - dim_pct
-    c *= 1 - dim_pct
-    # j = max(min(j * (1 - dim_pct/1.5), 100.0), 0.0)
-    # j /= (m + 1)
+    if not dummy:
+        scale = m / 3
+        # scale = math.exp(max(math.log(m + math.nextafter(0, math.inf)), 0) ** 2 + math.log(1/3))
+        dim_pct = scale / 1
+        # c *= 1 - dim_pct
+        c *= 1 - dim_pct
+        # j = max(min(j * (1 - dim_pct/1.5), 100.0), 0.0)
+        # j /= (m + 1)
+    else:
+        # j += (100 - j) / 2
+        c /= 4
+        # j = 100 - ((100 - j) / 2)
+        # c *= 0.3
+        # h *= 0.3
     assert 0 <= j <= 100
     assert 0 <= c <= 300  # normal max of around 150?
     assert 0 <= h < 360
     return j, c, h
 
 
-def op_rgb(n: int, m: int) -> tuple[int, int, int]:
-    j, c, h = op_jch(n, m)
+def op_rgb(n: int, m: int, dummy: bool = False) -> tuple[int, int, int]:
+    j, c, h = op_jch(n, m, dummy=dummy)
     assert isinstance(j, float)
     assert isinstance(c, float)
     assert isinstance(h, float)
