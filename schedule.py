@@ -531,12 +531,19 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s = ""
     # s += "strict "
     s += "digraph g {\n"
-    # s += "\n\tcompound=true;"
-    # s += '\n\tpackmode="graph";'
+    # s += "\tcompound=true;\n"
+    # s += "\tpackmode=graph;\n"
+    s += "\tmode=hier;\n"
+    # s += "\tmode=ipsep;\n"
+    # s += "\tnewrank=true;\n"
+    # s += "\tpack=false;\n"
+    # s += "\tclusterrank=global;\n"
     s += "\tesep=150;\n"
     s += "\tsep=300;\n"
     s += "\trankdir=LR;\n"
-    s += '\tnode [fontsize=16, fontname="Menlo"];\n'
+    # s += "\tmargin=100;\n"
+    s += "\toverlap=false;\n"
+    s += "\tnode [fontsize=16, fontname=Menlo];\n"
     num_cycles = len(batches_v2)
     def2node: dict[str, str] = {}
     cycle2instr2node: dict[int, dict[str, str]] = {c: {} for c in range(num_cycles)}
@@ -580,7 +587,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             intra_cycle_order_edges.append(
                 f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
             )
-        sn = f'subgraph cluster_t{i} {{\n\tcluster=true;\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
+        sn = f'subgraph t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")
