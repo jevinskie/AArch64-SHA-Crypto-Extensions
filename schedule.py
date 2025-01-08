@@ -199,6 +199,18 @@ def get_eund(definition: str) -> tuple[str, int, bool]:
     return s, n, d
 
 
+good_ordering_top2bot: dict[str, int] = {
+    "sha1su0": 0,
+    "sha1su1": 1,
+    "vaddXY": 2,
+    "vaddY": 3,
+    "vaddX": 4,
+    "sha1h": 5,
+    "sha1p": 6,
+    "sha1m": 7,
+    "sha1c": 8,
+}
+
 clut_palette_d_9 = {
     "sha1c": 0,
     "sha1h": 2,
@@ -561,7 +573,11 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\trankdir=LR;\n"
     # s += "\tmargin=100;\n"
     s += "\toverlap=false;\n"
+    s += '\tranksep="2";\n'
+    # s += "\tsplines=polyline\n"
+    # s += "\tsplines=ortho\n"
     # s += "\tsplines=curved;\n"
+    # s += "\tmclimit=9999;\n"
     s += "\tnode [fontsize=16, fontname=Menlo];\n"
     num_cycles = len(batches_v2)
     def2node: dict[str, str] = {}
@@ -570,13 +586,19 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     super_nodes: list[str] = []
     edges: list[str] = []
     # super_node_order_edges: list[str] = []
-    intra_cycle_order_edges: list[str] = []
+    # intra_cycle_order_edges: list[str] = []
     # inter_cycle_order_edges: list[str] = []
     for i, batch in enumerate(batches_v2):
         nodes: list[str] = [""] * len(all_instrs)
+        intra_cycle_order_edges: list[str] = []
         real_instrs = set()
         # binstrs: list[str] = []
-        for d in batch:
+        prev_instr = None
+        sorted_batch_instrs = [(d, get_eun(d)[0]) for d in batch]
+        sorted_batch_instrs = [
+            t[0] for t in sorted(sorted_batch_instrs, key=lambda t: good_ordering_top2bot[t[1]])
+        ]
+        for d in sorted_batch_instrs:
             instr, _ = get_eun(d)
             real_instrs.add(instr)
             instr_idx = all_instrs.index(instr)
@@ -584,6 +606,11 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             nodes[instr_idx] = f"\t{node_dot}"
             def2node[d] = node_name
             cycle2instr2node[i][instr] = node_name
+            if prev_instr is not None:
+                intra_cycle_order_edges.append(
+                    f"\t{prev_instr}T{i} -> {instr}T{i} [constraint=true,color=red,style=invis]; # intra-cycle"
+                )
+            prev_instr = instr
         # rprint(f"partial nodes[{i}]: {nodes}")
         dummy_instrs = all_instrs_set.difference(real_instrs)
         # rprint(f"dummy_instrs[{i}]: {dummy_instrs}")
@@ -599,22 +626,28 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             # def2node[d] = node_name
             # cycle2instr2node[i][stub_instr] = node_name
         # rprint(f"full nodes[{i}]: {nodes}")
-        for j in range(len(all_instrs) - 1):
-            # intra_cycle_order_edges.append(
-            #     f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
-            # )
-            intra_cycle_order_edges.append(
-                f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
-            )
+        # for j in range(len(all_instrs) - 1):
+        #     # intra_cycle_order_edges.append(
+        #     #     f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
+        #     # )
+        #     intra_cycle_order_edges.append(
+        #         f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
+        #     )
         sn = f'subgraph t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n\tfontname=Menlo;\n'
-        sn += "\n".join(nodes) + "\n}"
+        sn += "\n".join(nodes)
+        sn += "\n\n\t# intra-cycle order edges\n"
+        sn += "\n".join(intra_cycle_order_edges)
+        sn += "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")
     for d, uses in defs_port_uses.items():
         for pnum, u in enumerate(uses):
             if u is None:
                 continue
-            edges.append(f"\t{def2node[u]}:res -> {def2node[d]}:op{pnum}")
+            edges.append(
+                # f'\t{def2node[u]}:res -> {def2node[d]}:op{pnum} [sametail="{def2node[u]}_res"]'
+                f"\t{def2node[u]}:res:e -> {def2node[d]}:op{pnum}:w"
+            )
     # super_node_order_edges = [
     #     f"\tcluster_t{t} -> cluster_t{t + 1};" for t in range(len(batches_v2) - 1)
     # ]
@@ -642,7 +675,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\t# super node order edges\n"
     # s += "\n".join(super_node_order_edges)
     s += "\n\n\n"
-    s += "\t# intra-cycle order edges\n"
+    # s += "\t# intra-cycle order edges\n"
     # s += "\n".join(intra_cycle_order_edges)
     s += "\n\n\n"
     s += "\t# inter-cycle order edges\n"
