@@ -573,7 +573,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     # s += "\tesep=150;\n"
     # s += "\tsep=300;\n"
     s += "\trankdir=LR;\n"
-    s += "\tcenter=true;\n"
+    # s += "\tcenter=true;\n"
     # s += "\tmargin=100;\n"
     # s += "\toverlap=false;\n"
     s += "\tranksep=2;\n"
