@@ -527,8 +527,8 @@ def get_node(
 ) -> tuple[str, str]:
     node_name = f"{instr}T{cycle}"
     table_html = gen_table(ssa_def, num_ops, dummy=bubble)
-    # style = ""
-    style = "" if not bubble else " style=invis,"
+    style = ""
+    # style = "" if not bubble else " style=invis,"
     cmt = "REAL" if not bubble else "BUBBLE"
     return (
         node_name,
@@ -569,9 +569,9 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     dummy_count: dict[str, int] = {i: 0 for i in all_instrs}
     super_nodes: list[str] = []
     edges: list[str] = []
-    super_node_order_edges: list[str] = []
+    # super_node_order_edges: list[str] = []
     intra_cycle_order_edges: list[str] = []
-    inter_cycle_order_edges: list[str] = []
+    # inter_cycle_order_edges: list[str] = []
     for i, batch in enumerate(batches_v2):
         nodes: list[str] = [""] * len(all_instrs)
         real_instrs = set()
@@ -595,16 +595,16 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             dummy_count[stub_instr] += 1
             d = f"{stub_instr}ND{dc}"
             node_name, node_dot = get_node(d, stub_instr, i, NumInPorts[stub_instr], bubble=True)
-            nodes[instr_idx] = f"\t{node_dot}"
-            def2node[d] = node_name
-            cycle2instr2node[i][stub_instr] = node_name
+            # nodes[instr_idx] = f"\t{node_dot}"
+            # def2node[d] = node_name
+            # cycle2instr2node[i][stub_instr] = node_name
         # rprint(f"full nodes[{i}]: {nodes}")
         for j in range(len(all_instrs) - 1):
             # intra_cycle_order_edges.append(
             #     f"\t{all_instrs[j]}T{i} -> {all_instrs[j+1]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
             # )
             intra_cycle_order_edges.append(
-                f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,style=invis]; # intra-cycle"
+                f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,color=red]; # intra-cycle"
             )
         sn = f'subgraph t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n\tfontname=Menlo;\n'
         sn += "\n".join(nodes) + "\n}"
@@ -623,12 +623,14 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     # ]
     # rprint(f"cycle2instr2node: {cycle2instr2node}")
     # inter-cycle makes staircase
-    inter_cycle_order_edges = [
-        # f'\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple,style=invis,lhead="cluster_t{c+1}",ltail="cluster_t{c}"]; # inter-cycle'
-        f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,style=invis]; # inter-cycle"
-        for c in range(num_cycles - 1)
-        for i in all_instrs
-    ]
+
+    # inter_cycle_order_edges = [
+    #     # f'\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple,style=invis,lhead="cluster_t{c+1}",ltail="cluster_t{c}"]; # inter-cycle'
+    #     f"\t{cycle2instr2node[c][i]} -> {cycle2instr2node[c+1][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
+    #     for c in range(num_cycles - 1)
+    #     for i in all_instrs
+    # ]
+
     # inter_cycle_order_edges += [
     #     f"\t{cycle2instr2node[c+1][i]} -> {cycle2instr2node[c][i]} [constraint=true,weight=10000,color=purple]; # inter-cycle"
     #     for c in range(num_cycles - 1)
@@ -638,13 +640,13 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\n".join(super_nodes)
     s += "\n\n\n"
     s += "\t# super node order edges\n"
-    s += "\n".join(super_node_order_edges)
+    # s += "\n".join(super_node_order_edges)
     s += "\n\n\n"
     s += "\t# intra-cycle order edges\n"
-    s += "\n".join(intra_cycle_order_edges)
+    # s += "\n".join(intra_cycle_order_edges)
     s += "\n\n\n"
     s += "\t# inter-cycle order edges\n"
-    s += "\n".join(inter_cycle_order_edges)
+    # s += "\n".join(inter_cycle_order_edges)
     s += "\n\n\n"
     s += "\t# edges\n"
     s += "\n".join(edges)
