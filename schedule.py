@@ -553,7 +553,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     # s += "\tpackmode=graph;\n"
     s += "\tmode=hier;\n"
     # s += "\tmode=ipsep;\n"
-    # s += "\tnewrank=true;\n"
+    s += "\tnewrank=true;\n"
     # s += "\tpack=false;\n"
     # s += "\tclusterrank=global;\n"
     s += "\tesep=150;\n"
