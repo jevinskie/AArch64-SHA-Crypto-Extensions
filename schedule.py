@@ -43,6 +43,20 @@ _NumInPorts: dict[str, int] = {
 
 NumInPorts = types.MappingProxyType(_NumInPorts)
 
+# width, height for font Menlo 16 points
+# from grid-v1-pipeline-raw-rendered.dot
+instr_sizes: dict[str, tuple[float, float]] = {
+    "sha1c": (1.5243, 1.5278),
+    "sha1h": (1.3889, 0.81944),
+    "sha1m": (1.5243, 1.5278),
+    "sha1p": (1.2535, 1.5278),
+    "sha1su0": (1.6597, 1.5278),
+    "sha1su1": (1.6597, 1.1736),
+    "vaddX": (1.5243, 1.1736),
+    "vaddXY": (1.5243, 1.1736),
+    "vaddY": (1.5243, 1.1736),
+}
+
 
 def dot_format(dot_src: str) -> str:
     bin_path = shutil.which("nop")
@@ -445,7 +459,7 @@ for i, batch in enumerate(batches_v2):
         # for ldef_user, ldef_user_opnum in ldef_uses.items():
         # defs_port_uses[ldef_user][ldef_user_opnum] = ldef
 
-nx.nx_agraph.write_dot(PG, "pipeline.dot")
+# nx.nx_agraph.write_dot(PG, "pipeline.dot")
 
 rprint(f"PG: {PG}")
 
@@ -513,10 +527,13 @@ def get_node(
 ) -> tuple[str, str]:
     node_name = f"{instr}T{cycle}"
     table_html = gen_table(ssa_def, num_ops, dummy=bubble)
-    style = ""
-    # style = "" if not bubble else " style=invis,"
+    # style = ""
+    style = "" if not bubble else " style=invis,"
     cmt = "REAL" if not bubble else "BUBBLE"
-    return node_name, f"{node_name} [shape=none,{style} label=<{table_html}>]; # {cmt}"
+    return (
+        node_name,
+        f'{node_name} [group="{instr}",shape=none,{style} label=<{table_html}>]; # {cmt}',
+    )
     # vaddX [label="vaddX|{{<f0> op0| <f1> op2}| <f2> res}", shape=record];
     ops = "|".join(f"<op{n}> op{n}" for n in range(num_ops))
     label = f"{ssa_def}|{{{{{ops}}}|<res> res}}"
@@ -589,7 +606,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
             intra_cycle_order_edges.append(
                 f"\t{all_instrs[j+1]}T{i} -> {all_instrs[j]}T{i} [constraint=false,weight=100000,style=invis]; # intra-cycle"
             )
-        sn = f'subgraph cluster_t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n\tfontname=Menlo;\n'
+        sn = f'subgraph t{i} {{\n\trank=same;\n\t# rankdir=TD;\n\tlabel="t_{i}";\n\tfontname=Menlo;\n'
         sn += "\n".join(nodes) + "\n}"
         super_nodes.append(sn)
     # rprint(f"def2node: {def2node}")
@@ -630,7 +647,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s += "\n".join(inter_cycle_order_edges)
     s += "\n\n\n"
     s += "\t# edges\n"
-    # s += "\n".join(edges)
+    s += "\n".join(edges)
     s += "\n}\n"
     with open("pipeline-raw.dot", "w") as f:
         f.write(s)
