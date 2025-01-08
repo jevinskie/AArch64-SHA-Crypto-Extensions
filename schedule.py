@@ -559,21 +559,25 @@ def get_node(
 
 def write_pipeline_dot(sched_info: object, out_path: str) -> None:
     s = ""
-    # s += "strict "
+    s += "strict "
     s += "digraph g {\n"
     # s += "\tcompound=true;\n"
-    # s += "\tpackmode=graph;\n"
-    s += "\tmode=hier;\n"
+    # s += '\tpackmode="node";\n'
+    # s += '\tpackmode="cluster";\n'
+    # s += '\tpackmode="graph";\n'
+    # s += "\tmode=hier;\n"
     # s += "\tmode=ipsep;\n"
-    s += "\tnewrank=true;\n"
+    # s += "\tnewrank=true;\n"
     # s += "\tpack=false;\n"
     # s += "\tclusterrank=global;\n"
-    s += "\tesep=150;\n"
-    s += "\tsep=300;\n"
+    # s += "\tesep=150;\n"
+    # s += "\tsep=300;\n"
     s += "\trankdir=LR;\n"
+    s += "\tcenter=true;\n"
     # s += "\tmargin=100;\n"
-    s += "\toverlap=false;\n"
-    s += '\tranksep="2";\n'
+    # s += "\toverlap=false;\n"
+    s += "\tranksep=2;\n"
+    s += "\tsearchsize=99999;\n"
     # s += "\tsplines=polyline\n"
     # s += "\tsplines=ortho\n"
     # s += "\tsplines=curved;\n"
@@ -646,7 +650,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
                 continue
             edges.append(
                 # f'\t{def2node[u]}:res -> {def2node[d]}:op{pnum} [sametail="{def2node[u]}_res"]'
-                f"\t{def2node[u]}:res:e -> {def2node[d]}:op{pnum}:w"
+                f"\t{def2node[u]}:res:e -> {def2node[d]}:op{pnum}:w [weight=0];"
             )
     # super_node_order_edges = [
     #     f"\tcluster_t{t} -> cluster_t{t + 1};" for t in range(len(batches_v2) - 1)
