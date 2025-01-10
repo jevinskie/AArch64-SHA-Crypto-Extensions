@@ -312,7 +312,7 @@ G = nx.relabel_nodes(G, nodes_map)
 def_uses: dict[str, tuple[str, ...]] = {}
 
 for definition in G.nodes():
-    # print(f"definition: {definition} G.in_edges(definition): {G.in_edges(definition)}")
+    # rprint(f"definition: {definition} G.in_edges(definition): {G.in_edges(definition)}")
     uses = tuple(e[0] for e in G.in_edges(definition))
     def_uses[definition] = uses
 
@@ -440,7 +440,17 @@ for i, batch in enumerate(nx.topological_generations(G)):
         binstr, _ = get_eun(definition)
         # print(f"binstr: {binstr}")
         binstrs.append(binstr)
-        duses = [e[0] for e in G.in_edges(definition)]
+        # duses = [e[0] for e in G.in_edges(definition)]
+        duses = []
+        for op in G.in_edges(definition):
+            # rprint(f"op: {G.edges[op]}")
+            edges = G.edges[op]
+            opnum = edges["opnum"]
+            if opnum >= 0:
+                duses.append((op[0], opnum))
+        duses = sorted(duses, key=lambda o: o[1])
+        duses = tuple(o[0] for o in duses)
+        # rprint(f"duses: {duses} G.in_edges(definition): {G.in_edges(definition)}")
         b_uses.update(duses)
         batches_v2_linear.append(definition)
     rprint(f"i: {i} batch: {batch}")
