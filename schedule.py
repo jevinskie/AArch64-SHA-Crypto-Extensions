@@ -11,6 +11,7 @@ import sys
 import tempfile
 import types
 from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 import attrs
 import bidict
@@ -556,6 +557,13 @@ rprint("val2live_range:")
 pprint(val2live_range)
 
 
+def write_live_vals(sched_info: Any, out_path: str) -> None:
+    s = ""
+    s += "dot\n"
+    with open(out_path, "w") as f:
+        f.write(s)
+
+
 PG = nx.DiGraph(outputorder="edgesfirst")
 for i, batch in enumerate(batches_v2):
     for ldef in batch:
@@ -792,6 +800,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
 
 
 write_pipeline_dot(object(), "pipeline.dot")
+write_live_vals(object(), "live-vals.pic")
 
 # rprint(G["sha1hN16"])
 
