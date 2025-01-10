@@ -12,6 +12,7 @@ import tempfile
 import types
 from collections.abc import Mapping, MutableMapping
 
+import attrs
 import bidict
 import networkx as nx
 import pandas as pd
@@ -414,6 +415,7 @@ batches_v2_vregidx = VRegIdx()
 all_instrs_set: set[str] = set()
 batch_uses: list[list[str]] = []
 batch_defs: list[list[str]] = []
+def2tick: dict[str, int] = {}
 
 for batch in nx.topological_generations(G):
     for definition in batch:
@@ -431,6 +433,7 @@ for i, batch in enumerate(nx.topological_generations(G)):
     b_uses: set[str] = set()
     batch_defs.append(batch)
     for definition in batch:
+        def2tick[definition] = i
         batches_v2_vregidx[definition]
         batches_v2_batchidx[definition] = i
         # print(f"definition: {definition}")
@@ -447,17 +450,100 @@ for i, batch in enumerate(nx.topological_generations(G)):
 
 assert all_unique(batches_v2_linear)
 
-rprint("batches_v2:")
-rprint(batches_v2)
-rprint("batches_v2_linear:")
-rprint(batches_v2_linear)
+
+@attrs.define(auto_attribs=True)
+class InstInfo:
+    val: str
+    uses: list[str] = attrs.field(converter=lambda x: list(x))
+    use_delays: list[int] = attrs.field(init=False)
+    inst: str = attrs.field(init=False)
+    num_ops: int = attrs.field(init=False)
+    tick: int = attrs.field(init=False)
+
+    def __attrs_post_init__(self) -> None:
+        self.inst, _ = get_eun(self.val)
+        self.num_ops = NumInPorts[self.inst]
+        assert self.num_ops == len(self.uses)
+        self.tick = def2tick[self.val]
+
+
+cycle2live: list[set[str]] = [set() for t in range(len(batches_v2))]
+cycle2lv_defs: list[set[str]] = [set() for t in range(len(batches_v2))]
+cycle2lv_kills: list[set[str]] = [set() for t in range(len(batches_v2))]
+val2first_cycle: dict[str, int] = {}
+val2last_cycle: dict[str, int] = {}
+val2live_range: dict[str, tuple[int, int]] = {}
+
+
+_live: set[str] = set()
+for i, batch in always_reversible(enumerate(batches_v2)):
+    cycle2live[i] = set(_live)
+    _live.difference_update(batch)
+    for ldef in batch:
+        _live.update(def_uses[ldef])
+
+for i, batch in enumerate(batches_v2):
+    cycle2lv_defs[i] = set(batch)
+
+for i in range(1, len(batches_v2)):
+    cycle2lv_kills[i] = cycle2live[i].difference(cycle2live[i - 1])
+
+for i, batch in enumerate(batches_v2):
+    for ldef in batch:
+        val2first_cycle[ldef] = i
+        for u in def_uses[ldef]:
+            if u not in val2first_cycle:
+                val2first_cycle[u] = i
+            else:
+                val2first_cycle[u] = min(val2first_cycle[u], i)
+
+for i, batch in enumerate(batches_v2):
+    for ldef in batch:
+        if i == 16 and ldef == "sha1pN4":
+            print(f"wat: batch: {batch}")
+        if ldef not in val2last_cycle:
+            val2last_cycle[ldef] = i
+        else:
+            val2last_cycle[ldef] = max(val2last_cycle[ldef], i)
+        for u in def_uses[ldef]:
+            if i == 16 and u == "sha1pN4":
+                print(f"wat2: batch: {batch} ldef: {ldef} u: {u} uses: {def_uses[ldef]}")
+            if u not in val2last_cycle:
+                val2last_cycle[u] = i
+            else:
+                val2last_cycle[u] = max(val2last_cycle[u], i)
+
+val2live_range = {
+    v: (val2first_cycle[v], val2last_cycle[v], val2last_cycle[v] - val2first_cycle[v])
+    for v in def_uses
+}
+
+rprint(f"batches_v2: (len: {len(batches_v2)})")
+pprint(batches_v2)
+# rprint("batches_v2_linear:")
+# rprint(batches_v2_linear)
 rprint("batches_v2_instrs:")
-rprint(batches_v2_instrs)
-rprint("batches_v2_vregidx:")
-rprint(batches_v2_vregidx)
-rprint(batches_v2_batchidx)
-rprint(f"batch_uses:\n{batch_uses}")
-rprint(f"batch_defs:\n{batch_defs}")
+pprint(batches_v2_instrs)
+# rprint("batches_v2_vregidx:")
+# pprint(batches_v2_vregidx)
+# rprint("batches_v2_batchidx:")
+# pprint(batches_v2_batchidx)
+rprint("batch_uses:")
+pprint(batch_uses)
+rprint("batch_defs:")
+pprint(batch_defs)
+rprint("cycle2live:")
+pprint(cycle2live)
+rprint("cycle2lv_defs:")
+pprint(cycle2lv_defs)
+rprint("cycle2lv_kills:")
+pprint(cycle2lv_kills)
+rprint("val2first_cycle:")
+pprint(val2first_cycle)
+rprint("val2last_cycle:")
+pprint(val2last_cycle)
+rprint("val2live_range:")
+pprint(val2live_range)
 
 
 PG = nx.DiGraph(outputorder="edgesfirst")
@@ -467,7 +553,7 @@ for i, batch in enumerate(batches_v2):
         PG.add_node(ldef, label=ldef_instr)
         # defs_port_uses[ldef] = [None] * NumInPorts[ldef_instr]
         ldef_uses = sorted(u for u, ui in G[ldef].items() if ui["opnum"] >= 0)
-        rprint(f"ldef: {ldef} ldef_uses: {ldef_uses}")
+        # rprint(f"ldef: {ldef} ldef_uses: {ldef_uses}")
         # for ldef_user, ldef_user_opnum in ldef_uses.items():
         # defs_port_uses[ldef_user][ldef_user_opnum] = ldef
 

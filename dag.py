@@ -125,31 +125,31 @@ def get_def_use(
             for tG in (G, GE, GEE):
                 for i in range(1, 0, -1):
                     if ld == f"vaddX_{i}":
-                        tG.add_edge(f"vaddX_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"vaddX_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(1, 0, -1):
                     if ld == f"vaddY_{i}":
-                        tG.add_edge(f"vaddY_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"vaddY_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(16, 0, -1):
                     if ld == f"vaddXY_{i}":
-                        tG.add_edge(f"vaddXY_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"vaddXY_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(15, 0, -1):
                     if ld == f"sha1su0_{i}":
-                        tG.add_edge(f"sha1su0_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"sha1su0_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(15, 0, -1):
                     if ld == f"sha1su1_{i}":
-                        tG.add_edge(f"sha1su0_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"sha1su0_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(19, 0, -1):
                     if ld == f"sha1h_{i}":
-                        tG.add_edge(f"sha1h_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"sha1h_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(9, 0, -1):
                     if ld == f"sha1p_{i}":
-                        tG.add_edge(f"sha1p_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"sha1p_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(4, 0, -1):
                     if ld == f"sha1m_{i}":
-                        tG.add_edge(f"sha1m_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"sha1m_{i - 1}", ld, opnum=-1, style="invis")
                 for i in range(4, 0, -1):
                     if ld == f"sha1c_{i}":
-                        tG.add_edge(f"sha1c_{i-1}", ld, opnum=-1, style="invis")
+                        tG.add_edge(f"sha1c_{i - 1}", ld, opnum=-1, style="invis")
     blocklist = ("blocksa", "abcda", "ea")
     for g in (G, GE, GES, GEE):
         for n in list(g.nodes()):
