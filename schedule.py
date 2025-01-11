@@ -635,6 +635,14 @@ for d, pu in defs_port_uses.items():
             instr_port_uses[instr][i][uinstr] = collections.Counter()
         instr_port_uses[instr][i][uinstr][f"d{dist}"] += 1
 
+for instr, port_uses in instr_port_uses.items():
+    for port in port_uses:
+        if port is None:
+            continue
+        else:
+            for src_instr in port:
+                port[src_instr] = dict(sorted(port[src_instr].items(), key=lambda o: o[0]))
+
 rprint("instr_port_uses:")
 pprint(instr_port_uses)
 
@@ -647,8 +655,8 @@ for i, instr in enumerate(list(instr_port_uses)):
         for oinstr in op_sources:
             _instr_op_delays[oinstr] += op_list[j][oinstr]
 
-rprint("_instr_op_delays:")
-pprint(_instr_op_delays)
+# rprint("_instr_op_delays:")
+# pprint(_instr_op_delays)
 
 instr_op_delays: dict[str, dict[int, int]] = {}
 for instr, delays in _instr_op_delays.items():
