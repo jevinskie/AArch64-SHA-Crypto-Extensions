@@ -315,7 +315,15 @@ def_uses: dict[str, tuple[str, ...]] = {}
 
 for definition in G.nodes():
     # rprint(f"definition: {definition} G.in_edges(definition): {G.in_edges(definition)}")
-    uses = tuple(e[0] for e in G.in_edges(definition))
+    uses = []
+    for op in G.in_edges(definition):
+        # rprint(f"op: {G.edges[op]}")
+        edges = G.edges[op]
+        opnum = edges["opnum"]
+        if opnum >= 0:
+            uses.append((op[0], opnum))
+    uses.sort(key=lambda o: o[1])
+    uses = tuple(o[0] for o in uses)
     def_uses[definition] = uses
 
 rprint(def_uses)
@@ -487,7 +495,8 @@ val2last_cycle: dict[str, int] = {}
 val2live_range: dict[str, tuple[int, int]] = {}
 
 
-_live: set[str] = set()
+_live: set[str] = set(batches_v2[-1])
+# _live: set[str] = set()
 for i, batch in always_reversible(enumerate(batches_v2)):
     cycle2live[i] = set(_live)
     _live.difference_update(batch)
@@ -499,6 +508,7 @@ for i, batch in enumerate(batches_v2):
 
 for i in range(1, len(batches_v2)):
     cycle2lv_kills[i] = cycle2live[i].difference(cycle2live[i - 1])
+cycle2lv_kills[-1].difference_update(batches_v2[-1])
 
 for i, batch in enumerate(batches_v2):
     for ldef in batch:
@@ -536,6 +546,19 @@ for val, rng in val2live_range.items():
         tick2num_live[f"t_{t}"] += 1
 
 
+tick2live_vals: dict[str, list[str]] = {f"t_{i}": [] for i in range(len(batches_v2))}
+for val, rng in val2live_range.items():
+    rprint(f"val: {val} rng: {rng}")
+    if rng[0] < rng[1]:
+        for t in range(rng[0], rng[1]):
+            tick2live_vals[f"t_{t}"].append(val)
+            tick2live_vals[f"t_{t}"].sort()
+    elif rng[0] == rng[1]:
+        tick2live_vals[f"t_{rng[0]}"].append(val)
+        tick2live_vals[f"t_{rng[0]}"].sort()
+    else:
+        raise ValueError(f"rng: {rng}")
+
 rprint(f"batches_v2: (len: {len(batches_v2)})")
 pprint(batches_v2)
 # rprint("batches_v2_linear:")
@@ -564,6 +587,8 @@ rprint("val2live_range:")
 pprint(val2live_range)
 rprint("tick2num_live:")
 pprint(tick2num_live)
+rprint("tick2live_vals:")
+pprint(tick2live_vals)
 
 
 def write_live_vals(sched_info: Any, out_path: str) -> None:
