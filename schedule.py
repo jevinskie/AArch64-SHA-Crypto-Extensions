@@ -530,6 +530,12 @@ val2live_range = {
     for v in def_uses
 }
 
+tick2num_live: dict[str, int] = {f"t_{i}": 0 for i in range(len(batches_v2))}
+for val, rng in val2live_range.items():
+    for t in range(rng[0], rng[1]):
+        tick2num_live[f"t_{t}"] += 1
+
+
 rprint(f"batches_v2: (len: {len(batches_v2)})")
 pprint(batches_v2)
 # rprint("batches_v2_linear:")
@@ -556,6 +562,8 @@ rprint("val2last_cycle:")
 pprint(val2last_cycle)
 rprint("val2live_range:")
 pprint(val2live_range)
+rprint("tick2num_live:")
+pprint(tick2num_live)
 
 
 def write_live_vals(sched_info: Any, out_path: str) -> None:
