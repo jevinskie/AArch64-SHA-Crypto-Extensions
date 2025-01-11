@@ -576,18 +576,13 @@ def write_live_vals_xlsx(sched_info: Any, out_path: str) -> None:
             s += f'box "{ldef}"\n'
             s += "move\n"
     wb = xlsxwriter.Workbook(out_path)
-    ws = wb.add_worksheet()
-    # Widen the first column to make the text clearer.
-    ws.set_column("A:A", 20)
-    # Add a bold format to use to highlight cells.
+    ws = wb.add_worksheet("Live Values")
     bold = wb.add_format({"bold": True})
-    # Write some simple text.
-    ws.write("A1", "Hello")
-    # Text with formatting.
-    ws.write("A2", "World", bold)
-    # Write some numbers, with row/column notation.
-    ws.write(2, 0, 123)
-    ws.write(3, 0, 123.456)
+    for i, val in enumerate(batches_v2_linear):
+        ws.write(0, i, val, bold)
+    for val, rng in val2live_range.items():
+        for t in range(rng[0], rng[1]):
+            ws.write(t + 1, batches_v2_linear.index(val), "X")
     wb.close()
 
 
