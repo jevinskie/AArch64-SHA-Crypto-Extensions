@@ -339,12 +339,17 @@ for d, us in def_uses.items():
 rprint(f"G2: {G2}")
 # pprint(nx.to_dict_of_dicts(G2))
 # pprint(nx.to_dict_of_lists(G2))  # better
+
+for i, batch in enumerate(nx.topological_generations(G2)):
+    batch.sort()
+    rprint(f"batch[{i:2}]: {batch}")
+
 G3 = G2.to_undirected()
 rprint(f"G3: {G3}")
-pprint(nx.to_dict_of_lists(G3))  # better
-rprint(f"number_of_cliques(G3): {nx.number_of_cliques(G3)}")
-for i, c in enumerate(nx.clique.enumerate_all_cliques(G3)):
-    rprint(f"ci: {i} c: {c}")
+# pprint(nx.to_dict_of_lists(G3))  # better
+# rprint(f"number_of_cliques(G3): {nx.number_of_cliques(G3)}")
+# for i, c in enumerate(nx.clique.enumerate_all_cliques(G3)):
+#     rprint(f"ci: {i} c: {c}")
 
 
 batches: list[list[str]] = []
