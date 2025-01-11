@@ -18,6 +18,7 @@ import bidict
 import networkx as nx
 import pandas as pd
 import tabulate
+import xlsxwriter
 from more_itertools import all_unique, always_reversible
 from ortools.sat.python import cp_model
 from rich import print as rprint
@@ -559,9 +560,35 @@ pprint(val2live_range)
 
 def write_live_vals(sched_info: Any, out_path: str) -> None:
     s = ""
-    s += "dot\n"
+    for i, batch in always_reversible(enumerate(batches_v2)):
+        for ldef in batch:
+            s += f'box "{ldef}"\n'
+            s += "move\n"
+    # s += 'box "sha1su0_XX" fit\n'
     with open(out_path, "w") as f:
         f.write(s)
+
+
+def write_live_vals_xlsx(sched_info: Any, out_path: str) -> None:
+    s = ""
+    for i, batch in always_reversible(enumerate(batches_v2)):
+        for ldef in batch:
+            s += f'box "{ldef}"\n'
+            s += "move\n"
+    wb = xlsxwriter.Workbook(out_path)
+    ws = wb.add_worksheet()
+    # Widen the first column to make the text clearer.
+    ws.set_column("A:A", 20)
+    # Add a bold format to use to highlight cells.
+    bold = wb.add_format({"bold": True})
+    # Write some simple text.
+    ws.write("A1", "Hello")
+    # Text with formatting.
+    ws.write("A2", "World", bold)
+    # Write some numbers, with row/column notation.
+    ws.write(2, 0, 123)
+    ws.write(3, 0, 123.456)
+    wb.close()
 
 
 PG = nx.DiGraph(outputorder="edgesfirst")
@@ -801,6 +828,7 @@ def write_pipeline_dot(sched_info: object, out_path: str) -> None:
 
 write_pipeline_dot(object(), "pipeline.dot")
 write_live_vals(object(), "live-vals.pic")
+write_live_vals_xlsx(object(), "live-vals.xlsx")
 
 # rprint(G["sha1hN16"])
 
