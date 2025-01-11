@@ -305,7 +305,7 @@ for n in G.nodes():
     nodes_map[n] = nize_def(n)
 
 G = nx.relabel_nodes(G, nodes_map)
-
+rprint(f"G: {G}")
 
 # for i in nx.edge_bfs(G):
 #     # inspect(i, all=True)
@@ -326,7 +326,26 @@ for definition in G.nodes():
     uses = tuple(o[0] for o in uses)
     def_uses[definition] = uses
 
-rprint(def_uses)
+rprint("def_uses:")
+pprint(def_uses)
+
+G2 = nx.DiGraph()
+for d in def_uses:
+    G2.add_node(d)
+for d, us in def_uses.items():
+    for u in us:
+        G2.add_edge(u, d)
+
+rprint(f"G2: {G2}")
+# pprint(nx.to_dict_of_dicts(G2))
+# pprint(nx.to_dict_of_lists(G2))  # better
+G3 = G2.to_undirected()
+rprint(f"G3: {G3}")
+pprint(nx.to_dict_of_lists(G3))  # better
+rprint(f"number_of_cliques(G3): {nx.number_of_cliques(G3)}")
+for i, c in enumerate(nx.clique.enumerate_all_cliques(G3)):
+    rprint(f"ci: {i} c: {c}")
+
 
 batches: list[list[str]] = []
 node2batch: dict[str, int] = {}
@@ -379,13 +398,10 @@ port_assignments = {
     portize_use(i, p): collections.defaultdict() for p in range(3) for i in clut.keys()
 }
 
-rprint(f"port_assignments:\n{port_assignments}")
-
 port_usage = {
     portize_use(i, p): collections.defaultdict(int) for p in range(3) for i in clut.keys()
 }
 
-rprint(f"port_usage:\n{port_usage}")
 
 for i, batch in enumerate(trace):
     # rprint(f"batch[{i:2}]:")
