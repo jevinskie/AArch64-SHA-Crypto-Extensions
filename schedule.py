@@ -9,8 +9,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import types
 from collections.abc import Mapping, MutableMapping
+from itertools import combinations
 from typing import Any
 
 import attrs
@@ -59,6 +61,51 @@ instr_sizes: dict[str, tuple[float, float]] = {
     "vaddXY": (1.5243, 1.1736),
     "vaddY": (1.5243, 1.1736),
 }
+
+
+# https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_all_different.ipynb
+def solve_coloring(
+    g: nx.Graph,
+    use_all_different: bool,
+    disable_infer_diff: bool = False,
+    add_single_all_different: bool = False,
+) -> int:
+    """
+    Solves the graph coloring problem for the given graph.
+    :param g: the graph to color
+    :param use_all_different: whether to use the all_different constraint or != constraint
+    :param disable_infer_diff: whether to disable the all_different constraint inference for !=
+    :param add_single_all_different: whether to add a single all_different constraint
+    """
+    model = cp_model.CpModel()
+    # specify valid coloring
+    x = [model.new_int_var(0, g.degree[v] - 1, f"v{v}") for v in g.nodes()]
+    for v, w in g.edges():
+        if use_all_different:
+            model.add_all_different([x[v], x[w]])
+        else:
+            model.add(x[v] != x[w])
+    if add_single_all_different:
+        # adding a single all_different will disable the inference of all_different
+        # for the != constraint and drastically increase the runtime
+        v, w = next(iter(g.edges()))
+        model.add_all_different([x[v], x[w]])
+    # minimize the maximum color
+    max_x = model.new_int_var(0, max(g.degree[v] for v in g.nodes()), "xc")
+    model.add_max_equality(max_x, x)
+    model.minimize(max_x)
+    # set up solver
+    solver = cp_model.CpSolver()
+    if disable_infer_diff:
+        solver.parameters.infer_all_diffs = False
+    solver.parameters.max_time_in_seconds = 300
+    solver.parameters.log_search_progress = True
+    solver.log_callback = rprint
+    pprint(model)
+    status = solver.solve(model)
+    rprint(f"status: {status}")
+    pprint(model)
+    return status
 
 
 def dot_format(dot_src: str) -> str:
@@ -595,6 +642,7 @@ _live: set[str] = set(batches_v2[-1])
 # _live: set[str] = set()
 for i, batch in always_reversible(enumerate(batches_v2)):
     cycle2live[i] = set(_live)
+    # _live.symmetric_difference_update(batch)
     _live.difference_update(batch)
     for ldef in batch:
         _live.update(def_uses[ldef])
@@ -603,8 +651,11 @@ for i, batch in enumerate(batches_v2):
     cycle2lv_defs[i] = set(batch)
 
 for i in range(1, len(batches_v2)):
-    cycle2lv_kills[i] = cycle2live[i].difference(cycle2live[i - 1])
-cycle2lv_kills[-1].difference_update(batches_v2[-1])
+    cycle2lv_kills[i] = cycle2live[i - 1].difference(cycle2live[i])
+    # cycle2lv_kills[i] = cycle2live[i].difference(cycle2live[i - 1])
+# cycle2lv_kills[-1].difference_update(batches_v2[-1])
+#     cycle2lv_kills[i] = cycle2live[i].symmetric_difference(cycle2live[i - 1])
+# # cycle2lv_kills[-1].symmetric_difference_update(batches_v2[-1])
 
 for i, batch in enumerate(batches_v2):
     for ldef in batch:
@@ -693,6 +744,47 @@ rprint("tick2num_live:")
 pprint(tick2num_live)
 rprint("tick2live_vals:")
 pprint(tick2live_vals)
+
+
+GI = nx.Graph()
+for d in batches_v2_linear:
+    GI.add_node(d)
+for live_set in cycle2live:
+    for lv_pair in combinations(live_set, 2):
+        if GI.has_edge(*lv_pair):
+            continue
+        GI.add_edge(*lv_pair)
+
+rprint(f"GI: {GI}")
+pprint(nx.to_dict_of_lists(GI))
+nx.nx_agraph.write_dot(GI, "interference.dot")
+
+GII = nx.Graph()
+for d in batches_v2_linear:
+    if d in ("sha1hN19", "sha1pN9"):
+        continue
+    GII.add_node(batches_v2_linear.index(d))
+for live_set in cycle2live:
+    for lv_pair in combinations(live_set, 2):
+        if lv_pair == ("sha1hN19", "sha1pN9") or lv_pair == ("sha1pN9", "sha1hN19"):
+            rprint(f"skipping lv_pair: {lv_pair}")
+            continue
+        a, b = map(batches_v2_linear.index, lv_pair)
+        if GII.has_edge(a, b):
+            continue
+        GII.add_edge(a, b)
+
+
+rprint(f"GII: {GII}")
+pprint(nx.to_dict_of_lists(GII))
+nx.nx_agraph.write_dot(GII, "interference-int.dot")
+
+tstart = time.process_time_ns()
+res = solve_coloring(GII, False)
+tend = time.process_time_ns()
+rprint("solve_coloring(GI, False)")
+rprint(f"took {tend - tstart:_} nanoseconds")
+rprint(f"res:\n{res}")
 
 
 def write_live_vals(sched_info: Any, out_path: str) -> None:
