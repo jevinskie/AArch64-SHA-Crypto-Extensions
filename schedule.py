@@ -66,6 +66,7 @@ instr_sizes: dict[str, tuple[float, float]] = {
 # https://github.com/d-krupke/cpsat-primer/blob/main/examples/add_all_different.ipynb
 def solve_coloring(
     g: nx.Graph,
+    nlut: dict[int, str],
     use_all_different: bool,
     disable_infer_diff: bool = False,
     add_single_all_different: bool = False,
@@ -79,7 +80,7 @@ def solve_coloring(
     """
     model = cp_model.CpModel()
     # specify valid coloring
-    x = [model.new_int_var(0, g.degree[v] - 1, f"v{v}") for v in g.nodes()]
+    x = [model.new_int_var(0, g.degree[v] - 1, f"v{v}_{nlut[v]}") for v in g.nodes()]
     for v, w in g.edges():
         if use_all_different:
             model.add_all_different([x[v], x[w]])
@@ -94,6 +95,10 @@ def solve_coloring(
     max_x = model.new_int_var(0, max(g.degree[v] for v in g.nodes()), "xc")
     model.add_max_equality(max_x, x)
     model.minimize(max_x)
+
+    for i, v in enumerate(model.proto.variables):
+        rprint(f"Domain (init) for variable {i} '{v.name}' v: {v}")
+
     # set up solver
     solver = cp_model.CpSolver()
     if disable_infer_diff:
@@ -112,13 +117,25 @@ def solve_coloring(
 
     # Statistics.
     print("\nStatistics")
-    print(f"  - booleans : {solver.num_booleans}")
-    print(f"  - conflicts: {solver.num_conflicts}")
-    print(f"  - branches : {solver.num_branches}")
-    print(f"  - wall time: {solver.wall_time:0.3} s")
+    rprint(f"  - booleans : {solver.num_booleans}")
+    rprint(f"  - conflicts: {solver.num_conflicts}")
+    rprint(f"  - branches : {solver.num_branches}")
+    rprint(f"  - wall time: {solver.wall_time:0.3} s")
 
-    print(solver.solution_info())
-    print(model.model_stats())
+    rprint(solver.solution_info())
+    rprint(model.model_stats())
+    for i, v in enumerate(model.proto.variables):
+        rprint(f"Domain for variable {i} '{v.name}' v: {v}")
+
+    ls: list[int] = []
+    for v in x:
+        # for v2 in v1:
+        s = solver.value(v)
+        ls.append(s)
+        # print(s)
+        rprint(f"v: {v} s: {s}")
+    rprint(f"max(ls): {max(ls)} +1: {max(ls) + 1}")
+
     return status
 
 
@@ -811,7 +828,7 @@ pprint(nx.to_dict_of_lists(GII))
 nx.nx_agraph.write_dot(GII, "interference-int.dot")
 
 tstart = time.process_time_ns()
-res = solve_coloring(GII, False)
+res = solve_coloring(GII, batches_v2_linear, False)
 tend = time.process_time_ns()
 rprint("solve_coloring(GI, False)")
 rprint(f"took {tend - tstart:_} nanoseconds")
