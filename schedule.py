@@ -214,6 +214,15 @@ good_ordering_top2bot: dict[str, int] = {
     "sha1c": 8,
 }
 
+
+def gv_instr_sort(instrs: list[str]) -> list[str]:
+    return sorted(instrs, key=lambda t: good_ordering_top2bot[t])
+
+
+def gv_def_sort(defs: list[str]) -> list[str]:
+    return sorted(defs, key=lambda d: (good_ordering_top2bot[get_eun(d)[0]], get_eun(d)[1]))
+
+
 clut_palette_d_9 = {
     "sha1c": 0,
     "sha1h": 2,
@@ -324,6 +333,11 @@ for definition in G.nodes():
             uses.append((op[0], opnum))
     uses.sort(key=lambda o: o[1])
     uses = tuple(o[0] for o in uses)
+    uses = tuple(
+        sorted(
+            uses, key=lambda u: (good_ordering_top2bot[get_eun(u)[0]], get_eun(u)[1]), reverse=True
+        )
+    )
     def_uses[definition] = uses
 
 rprint("def_uses:")
@@ -342,7 +356,7 @@ rprint(f"G2: {G2}")
 
 for i, batch in enumerate(nx.topological_generations(G2)):
     batch.sort()
-    rprint(f"batch[{i:2}]: {batch}")
+    rprint(f"G2 batch[{i:2}]: {batch}")
 
 G3 = G2.to_undirected()
 rprint(f"G3: {G3}")
@@ -407,10 +421,10 @@ port_usage = {
     portize_use(i, p): collections.defaultdict(int) for p in range(3) for i in clut.keys()
 }
 
-
 for i, batch in enumerate(trace):
-    # rprint(f"batch[{i:2}]:")
+    rprint(f"batch[{i:2}]: {batch}")
     # rprint(f"batch[{i:2}]: {[x[0] for x in batch]}")
+    batch = sorted(batch, key=lambda b: good_ordering_top2bot[get_eun(b[0])[0]], reverse=True)
     batch_inputs = []
     for j, instr in enumerate(batch):
         # rprint(f"batch[{i:2}]: instr[{j}]: {instr}")
@@ -426,8 +440,8 @@ for i, batch in enumerate(trace):
             port_usage[portize_use(name, k)][pname] += 1
     # batch_inputs = list(sorted(batch_inputs, key=lambda v: (v[0], v[1])))
     # rprint(f"batch_inputs[{i:2}]: {batch_inputs}")
-    rprint(f"batch[{i:2}]: ", end="")
-    print(" ".join([f"{b[3]}{b[0]}{cf.reset}" for b in batch_inputs]))
+    # rprint(f"batch[{i:2}]: ", end="")
+    # print(" ".join([f"{b[3]}{b[0]}{cf.reset}" for b in batch_inputs]))
 
 for k in list(port_usage.keys()):
     if len(port_usage[k]) == 0:
@@ -490,6 +504,67 @@ for i, batch in enumerate(nx.topological_generations(G)):
     batch_uses.append(list(sorted(b_uses)))
 
 assert all_unique(batches_v2_linear)
+
+print()
+rprint("batch defs:")
+for i, batch in enumerate(batches_v2):
+    batch_defs = []
+    for j, instr in enumerate(batch):
+        name, _ = get_eun(instr)
+        batch_defs.append((instr, op_color(clut[name], 0), good_ordering_top2bot[name]))
+    batch_defs.sort(key=lambda d: d[2], reverse=True)
+    rprint(f"batch_defs[{i:2}]: ", end="")
+    print(" ".join([f"{b[1]}{b[0]}{cf.reset}" for b in batch_defs]))
+print()
+
+
+rprint("batch uses:")
+for i, batch in enumerate(batches_v2):
+    batch = sorted(batch, key=lambda b: good_ordering_top2bot[get_eun(b)[0]], reverse=True)
+    batch_inputs = []
+    for j, instr in enumerate(batch):
+        name, _ = get_eun(instr)
+        for k, p in enumerate(
+            sorted(
+                def_uses[instr], key=lambda b: good_ordering_top2bot[get_eun(b)[0]], reverse=True
+            )
+        ):
+            pname, _ = get_eun(p)
+            batch_inputs.append((name, k, pname, op_color(clut[pname], k)))
+    rprint(f"batch_uses[{i:2}]: ", end="")
+    print(" ".join([f"{b[3]}{b[0]}{cf.reset}" for b in batch_inputs]))
+print()
+
+
+rprint("batch uses detailed:")
+for i, batch in enumerate(batches_v2):
+    batch = sorted(batch, key=lambda b: good_ordering_top2bot[get_eun(b)[0]], reverse=True)
+    batch_inputs = []
+    for j, instr in enumerate(batch):
+        name, _ = get_eun(instr)
+        for p in sorted(
+            def_uses[instr], key=lambda b: good_ordering_top2bot[get_eun(b)[0]], reverse=True
+        ):
+            pname, _ = get_eun(p)
+            batch_inputs.append((p, op_color(clut[pname], 0)))
+    rprint(f"batch_uses[{i:2}]: ", end="")
+    print(" ".join([f"{b[1]}{b[0]}{cf.reset}" for b in batch_inputs]))
+print()
+
+rprint("batch uses detailed delta:")
+for i, batch in enumerate(batches_v2):
+    batch = sorted(batch, key=lambda b: good_ordering_top2bot[get_eun(b)[0]], reverse=True)
+    batch_inputs = []
+    for j, instr in enumerate(batch):
+        name, _ = get_eun(instr)
+        for p in sorted(
+            def_uses[instr], key=lambda b: good_ordering_top2bot[get_eun(b)[0]], reverse=True
+        ):
+            pname, _ = get_eun(p)
+            batch_inputs.append((p, op_color(clut[pname], 0)))
+    rprint(f"batch_uses[{i:2}]: ", end="")
+    print(" ".join([f"{b[1]}{b[0]}{cf.reset}" for b in batch_inputs]))
+print()
 
 
 @attrs.define(auto_attribs=True)
@@ -569,7 +644,7 @@ for val, rng in val2live_range.items():
 
 tick2live_vals: dict[str, list[str]] = {f"t_{i}": [] for i in range(len(batches_v2))}
 for val, rng in val2live_range.items():
-    rprint(f"val: {val} rng: {rng}")
+    # rprint(f"val: {val} rng: {rng}")
     if rng[0] < rng[1]:
         for t in range(rng[0], rng[1]):
             tick2live_vals[f"t_{t}"].append(val)
@@ -580,12 +655,17 @@ for val, rng in val2live_range.items():
     else:
         raise ValueError(f"rng: {rng}")
 
-rprint(f"batches_v2: (len: {len(batches_v2)})")
-pprint(batches_v2)
+# rprint(f"batches_v2: (len: {len(batches_v2)})")
+# pprint(batches_v2)
 # rprint("batches_v2_linear:")
 # rprint(batches_v2_linear)
-rprint("batches_v2_instrs:")
-pprint(batches_v2_instrs)
+rprint("batch instrs:")
+# pprint(batches_v2_instrs)
+for i, batch_instrs in enumerate(batches_v2_instrs):
+    batch_instrs.sort(key=lambda i: good_ordering_top2bot[i], reverse=True)
+    rprint(f"batch_instrs[{i:2}]: ", end="")
+    print(" ".join([f"{op_color(clut[i], 0)}{i}{cf.reset}" for i in batch_instrs]))
+print()
 # rprint("batches_v2_vregidx:")
 # pprint(batches_v2_vregidx)
 # rprint("batches_v2_batchidx:")
