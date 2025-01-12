@@ -508,13 +508,13 @@ assert all_unique(batches_v2_linear)
 print()
 rprint("batch defs:")
 for i, batch in enumerate(batches_v2):
-    batch_defs = []
+    bd = []
     for j, instr in enumerate(batch):
         name, _ = get_eun(instr)
-        batch_defs.append((instr, op_color(clut[name], 0), good_ordering_top2bot[name]))
-    batch_defs.sort(key=lambda d: d[2], reverse=True)
+        bd.append((instr, op_color(clut[name], 0), good_ordering_top2bot[name]))
+    bd.sort(key=lambda d: d[2], reverse=True)
     rprint(f"batch_defs[{i:2}]: ", end="")
-    print(" ".join([f"{b[1]}{b[0]}{cf.reset}" for b in batch_defs]))
+    print(" ".join([f"{b[1]}{b[0]}{cf.reset}" for b in bd]))
 print()
 
 
