@@ -100,11 +100,25 @@ def solve_coloring(
         solver.parameters.infer_all_diffs = False
     solver.parameters.max_time_in_seconds = 300
     solver.parameters.log_search_progress = True
-    solver.log_callback = rprint
-    pprint(model)
+    # solver.log_callback = print
+    # pprint(model)
     status = solver.solve(model)
-    rprint(f"status: {status}")
-    pprint(model)
+    # rprint(f"status: {status}")
+    # pprint(model)
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        print(f"Solution: {solver.status_name(status)}")
+    else:
+        print("No solution found.")
+
+    # Statistics.
+    print("\nStatistics")
+    print(f"  - booleans : {solver.num_booleans}")
+    print(f"  - conflicts: {solver.num_conflicts}")
+    print(f"  - branches : {solver.num_branches}")
+    print(f"  - wall time: {solver.wall_time:0.3} s")
+
+    print(solver.solution_info())
+    print(model.model_stats())
     return status
 
 
@@ -643,7 +657,8 @@ _live: set[str] = set(batches_v2[-1])
 for i, batch in always_reversible(enumerate(batches_v2)):
     cycle2live[i] = set(_live)
     # _live.symmetric_difference_update(batch)
-    _live.difference_update(batch)
+    # _live.difference_update(batch)
+    _live = set(batch).difference(_live)
     for ldef in batch:
         _live.update(def_uses[ldef])
 
@@ -748,9 +763,19 @@ pprint(tick2live_vals)
 
 GI = nx.Graph()
 for d in batches_v2_linear:
+    # if d in ("sha1hN19", "sha1pN9"):
+    # continue
     GI.add_node(d)
+    uses = def_uses[d]
+    for u in uses:
+        if GI.has_edge(d, u):
+            continue
+        GI.add_edge(d, u)
 for live_set in cycle2live:
     for lv_pair in combinations(live_set, 2):
+        # if lv_pair == ("sha1hN19", "sha1pN9") or lv_pair == ("sha1pN9", "sha1hN19"):
+        # rprint(f"skipping lv_pair: {lv_pair}")
+        # continue
         if GI.has_edge(*lv_pair):
             continue
         GI.add_edge(*lv_pair)
@@ -761,14 +786,20 @@ nx.nx_agraph.write_dot(GI, "interference.dot")
 
 GII = nx.Graph()
 for d in batches_v2_linear:
-    if d in ("sha1hN19", "sha1pN9"):
-        continue
+    # if d in ("sha1hN19", "sha1pN9"):
+    # continue
     GII.add_node(batches_v2_linear.index(d))
+    uses = def_uses[d]
+    for u in uses:
+        di, ui = map(batches_v2_linear.index, (d, u))
+        if GII.has_edge(di, ui):
+            continue
+        GII.add_edge(di, ui)
 for live_set in cycle2live:
     for lv_pair in combinations(live_set, 2):
-        if lv_pair == ("sha1hN19", "sha1pN9") or lv_pair == ("sha1pN9", "sha1hN19"):
-            rprint(f"skipping lv_pair: {lv_pair}")
-            continue
+        # if lv_pair == ("sha1hN19", "sha1pN9") or lv_pair == ("sha1pN9", "sha1hN19"):
+        # rprint(f"skipping lv_pair: {lv_pair}")
+        # continue
         a, b = map(batches_v2_linear.index, lv_pair)
         if GII.has_edge(a, b):
             continue
