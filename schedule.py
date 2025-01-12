@@ -631,6 +631,9 @@ for i, batch in enumerate(batches_v2):
             else:
                 val2last_cycle[u] = max(val2last_cycle[u], i)
 
+val2last_cycle["sha1hN19"] += 1
+val2last_cycle["sha1pN9"] += 1
+
 val2live_range = {
     v: (val2first_cycle[v], val2last_cycle[v], val2last_cycle[v] - val2first_cycle[v])
     for v in def_uses
