@@ -10,5 +10,6 @@ class UniqueBiDict(bidict.bidict):
         b = self._invm.get(key, sentinel)
         if a is sentinel and b is sentinel:
             raise KeyError(key)
-        assert (a is sentinel) ^ (b is sentinel)
+        if not ((a is sentinel) ^ (b is sentinel)):
+            raise KeyError(key)
         return a if b is sentinel else b
